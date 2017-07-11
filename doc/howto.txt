@@ -1,0 +1,19 @@
+
+HOW TO USE  GIT?
+
+
+after modifying some file:
+
+git pull = git fetch & git merge
+
+
+	0. git pull
+for (..) {
+	1. git status
+	2. git add <filename>
+      ( 3. git add <filename> )
+      ( ... 		  )
+	4. git commit -m "This is the commit message"
+}
+
+	5. git push
