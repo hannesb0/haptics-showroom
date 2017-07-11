@@ -38,7 +38,7 @@ bool useOculus = false;
 //------------------------------------------------------------------------------
 
 // convert to resource path
-#define RESOURCE_PATH(p)    (char*)((resourceRoot+string(p)).c_str())
+#define RESOURCE_PATH(p)    (char*)((resourcesPath+string(p)).c_str())
 #define WINDOW_SIZE_W		1000
 #define WINDOW_SIZE_H		1000
 #define TOOL_RADIUS			0.02
@@ -97,7 +97,7 @@ cVector3d deviceOffset2 = cVector3d(0.2, 0.1, 0.0);
 
 // variable for changing the perspective and for walking
 double currentAngle = 0;
-double speed = 0.004;
+double speed = 0.006;
 double rotationalSpeed = 0.006;
 
 // variable to store state of keys
@@ -130,10 +130,10 @@ void processEvents();
 void computeMatricesFromInput();
 
 // function to create a new object at runtime
-int new_object(int argc, char **argv, cVector3d position, int property);
+int new_object(int argc, char **argv, cVector3d position, cVector3d size, int property);
 
 // for testing purposes !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-int new_wall(int argc, char **argv);
+//int new_wall(int argc, char **argv);
 void delete_object();
 
 
@@ -157,12 +157,21 @@ int main(int argc, char **argv)
 	cout << "Keyboard Options:" << endl << endl;
 	cout << "Space  - Recenter view point" << endl;
 	cout << "Escape - Exit application" << endl;
-	cout << "OTHERS ARE FOLLOWING AND NEED TO BE DEFINED" << endl;
+	cout << "[a]    - Turn left" << endl;
+	cout << "[d]    - Turn right" << endl;
+	cout << "[w]    - Move forward" << endl;
+	cout << "[s]    - Move backwards" << endl;
+	cout << "[1]    - Hot test" << endl;
+	cout << "[2]    - Cold test" << endl;
+	cout << "[q]    - Raise" << endl;
+	cout << "[e]    - Lower" << endl;
 	cout << endl << endl;
 
-	// parse first arg to try and locate resources
+	// get the location of the executable
 	resourceRoot = string(argv[0]).substr(0, string(argv[0]).find_last_of("/\\") + 1);
-	resourcesPath = resourceRoot + string("../../examples/haptics-showroom-V02/resources/");
+	
+	// this is the location of the resources
+	resourcesPath = resourceRoot + string("../../examples/SDL/haptics-showroom-V02/resources/");
 
 	//--------------------------------------------------------------------------
 	// SETUP DISPLAY CONTEXT
@@ -351,7 +360,7 @@ int main(int argc, char **argv)
 	// create a texture
 	cTexture2dPtr texture = cTexture2d::create();
 
-	bool fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/brick-color.png"));
+	bool fileload = texture->loadFromFile(RESOURCE_PATH("images/brick-color.png"));
 	if (!fileload)
 	{
 #if defined(_MSVC)
@@ -399,7 +408,7 @@ int main(int argc, char **argv)
 	cNormalMapPtr normalMap = cNormalMap::create();
 
 	// load normal map from file
-	fileload = normalMap->loadFromFile(RESOURCE_PATH("../resources/images/brick-normal.png"));
+	fileload = normalMap->loadFromFile(RESOURCE_PATH("images/brick-normal.png"));
 	if (!fileload)
 	{
 	#if defined(_MSVC)
@@ -473,32 +482,57 @@ int main(int argc, char **argv)
 	programShader->setUniformf("uInvRadius", 0.0f);
 
 	// insert 7 fixed cubes
-	if (new_object(argc, argv, cVector3d(-1.5, -1.5, 0.0), 0) == -1) {
+	if (new_object(argc, argv, cVector3d(-1.5, -1.5, 0.0), cVector3d(0.2, 0.2, 0.2), 0) == -1) {
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object(argc, argv, cVector3d(-1.5, -1.0, 0.0), 1) == -1) {
+	if (new_object(argc, argv, cVector3d(-1.5, -1.0, 0.0), cVector3d(0.2, 0.2, 0.2), 1) == -1) {
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object(argc, argv, cVector3d(-1.5, -0.5, 0.0), 2) == -1) {
+	if (new_object(argc, argv, cVector3d(-1.5, -0.5, 0.0), cVector3d(0.2, 0.2, 0.2), 2) == -1) {
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object(argc, argv, cVector3d(-1.5, 0.0, 0.0), 3) == -1) {
+	if (new_object(argc, argv, cVector3d(-1.5, 0.0, 0.0), cVector3d(0.2, 0.2, 0.2), 3) == -1) {
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object(argc, argv, cVector3d(-1.5, 0.5, 0.0), 4) == -1) {
+	if (new_object(argc, argv, cVector3d(-1.5, 0.5, 0.0), cVector3d(0.2, 0.2, 0.2), 4) == -1) {
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object(argc, argv, cVector3d(-1.5, 1.0, 0.0), 5) == -1) {
+	if (new_object(argc, argv, cVector3d(-1.5, 1.0, 0.0), cVector3d(0.2, 0.2, 0.2), 5) == -1) {
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object(argc, argv, cVector3d(-1.5, 1.5, 0.0), 6) == -1) {
+	if (new_object(argc, argv, cVector3d(-1.5, 1.5, 0.0), cVector3d(0.2, 0.2, 0.2), 6) == -1) {
 		cout << "Error - New object could not be created." << endl;
 	}
 
-	// insert a wall
-	if (new_wall(argc, argv) == -1) {
+	/*
+	// insert the walls
+	// back wall
+	if (new_object(argc, argv, cVector3d(-2.9, 0.0, 1.6), cVector3d(0.01, 4.0, 4.0), 7) == -1) {
+		cout << "Error - New object could not be created." << endl;
+	}
+	// left wall
+	if (new_object(argc, argv, cVector3d(0.0, -1.95, 1.6), cVector3d(6.0, 0.01, 4.0), 7) == -1) {
 		cout << "Error - New wall could not be created." << endl;
 	}
+	// right wall
+	if (new_object(argc, argv, cVector3d(0.0, 1.95, 1.6), cVector3d(6.0, 0.01, 4.0), 7) == -1) {
+		cout << "Error - New wall could not be created." << endl;
+	}
+	// cealing
+	if (new_object(argc, argv, cVector3d(0.0, 0.0, 4.0), cVector3d(6.0, 4.0, 0.01), 7) == -1) {
+		cout << "Error - New wall could not be created." << endl;
+	}
+	// floor
+	if (new_object(argc, argv, cVector3d(0.0, 0.0, -0.3), cVector3d(6.0, 4.0, 0.01), 7) == -1) {
+		cout << "Error - New wall could not be created." << endl;
+	}
+	// front wall
+	if (new_object(argc, argv, cVector3d(2.9, 0.0, 1.6), cVector3d(0.01, 4.0, 4.0), 7) == -1) {
+		cout << "Error - New wall could not be created." << endl;
+	}
+
+	*/
+
 	
 	//--------------------------------------------------------------------------
 	// CREATE ENVIRONMENT GLOBE
@@ -586,7 +620,7 @@ int main(int argc, char **argv)
 	// create a texture
 	cTexture2dPtr textureSpace = cTexture2d::create();
 
-	fileload = textureSpace->loadFromFile(RESOURCE_PATH("../resources/images/infinity.jpg"));
+	fileload = textureSpace->loadFromFile(RESOURCE_PATH("images/infinity.jpg"));
 	if (!fileload)
 	{
 	#if defined(_MSVC)
@@ -856,6 +890,7 @@ void computeMatricesFromInput()
 	{
 		currentPosition = INITIAL_POSITION;
 		currentAngle = 0;
+		tool->setDeviceGlobalPos(currentPosition);
 	}
 	if (keyState[(unsigned char)'q'] == 1) // raise
 	{
@@ -875,17 +910,17 @@ void computeMatricesFromInput()
 	}
 
 	// make sure that it is not possible to walk out of the room
-	if (currentPosition.x() > 2.5) {
-		currentPosition.x(2.5);
+	if (currentPosition.x() > 2.15) {
+		currentPosition.x(2.15);
 	}
-	if (currentPosition.x() < -2.5) {
-		currentPosition.x(-2.5);
+	if (currentPosition.x() < -2.15) {
+		currentPosition.x(-2.15);
 	}
-	if (currentPosition.y() > 1.5) {
-		currentPosition.y(1.5);
+	if (currentPosition.y() > 1.15) {
+		currentPosition.y(1.15);
 	}
-	if (currentPosition.y() < -1.5) {
-		currentPosition.y(-1.5);
+	if (currentPosition.y() < -1.15) {
+		currentPosition.y(-1.15);
 	}
 	if (currentPosition.z() > 3.0) {
 		currentPosition.z(3.0);
@@ -1055,25 +1090,13 @@ void updateHaptics(void)
 
 //------------------------------------------------------------------------------
 
-int new_object(int argc, char **argv, cVector3d position, int property)
+int new_object(int argc, char **argv, cVector3d position, cVector3d size, int property)
 {
 	// retrieve information about the current haptic device
 	cHapticDeviceInfo hapticDeviceInfoX = hapticDevice->getSpecifications();
 
 	// define the radius of the tool (sphere)
-	double toolRadius = 0.02;
-
-	// parse first arg to try and locate resources
-	//string resourceRoot = string(argv[0]).substr(0, string(argv[0]).find_last_of("/\\") + 1);
-	//resourcesPath = resourceRoot + string("../examples/SDL/finalproject/resources/");
-
-	// convert to resource path
-//#define RESOURCE_PATH(p)    (char*)((resourceRoot+string(p)).c_str())
-//	string path;
-
-	// --------------------------------------------------------
-	// copied from 01-cube.cpp and changed names of variables
-	// --------------------------------------------------------
+	//double toolRadius = 0.02;
 
 	// read the scale factor between the physical workspace of the haptic
 	// device and the virtual workspace defined for the tool
@@ -1092,7 +1115,7 @@ int new_object(int argc, char **argv, cVector3d position, int property)
 	objectX->setLocalPos(position);
 
 	// create cube
-	cCreateBox(objectX, 0.2, 0.2, 0.2);
+	cCreateBox(objectX, size.x(), size.y(), size.z());
 
 	// create a texture
 	cTexture2dPtr texture = cTexture2d::create();
@@ -1103,7 +1126,7 @@ int new_object(int argc, char **argv, cVector3d position, int property)
 	switch (property)
 	{
 	case(0) :
-		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/brick-color.png"));
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/brick-color.png"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1118,7 +1141,7 @@ int new_object(int argc, char **argv, cVector3d position, int property)
 		}
 		break;
 	case(1) :
-		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/color1.png"));
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/color1.png"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1133,7 +1156,7 @@ int new_object(int argc, char **argv, cVector3d position, int property)
 		}
 		break;
 	case(2) :
-		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/G1RhombAluminumMesh.JPG"));
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/G1RhombAluminumMesh.JPG"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1148,7 +1171,7 @@ int new_object(int argc, char **argv, cVector3d position, int property)
 		}
 		break;
 	case(3) :
-		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/whitefoam.jpg"));
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/whitefoam.jpg"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1163,7 +1186,7 @@ int new_object(int argc, char **argv, cVector3d position, int property)
 		}
 		break;
 	case(4) :
-		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/brownboard.jpg"));
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/brownboard.jpg"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1178,7 +1201,7 @@ int new_object(int argc, char **argv, cVector3d position, int property)
 		}
 		break;
 	case(5) :
-		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/blackstone.jpg"));
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/blackstone.jpg"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1193,7 +1216,7 @@ int new_object(int argc, char **argv, cVector3d position, int property)
 		}
 		break;
 	case(6) :
-		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/redplastic.jpg"));
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/redplastic.jpg"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1206,6 +1229,23 @@ int new_object(int argc, char **argv, cVector3d position, int property)
 			close();
 			return (-1);
 		}
+		break;
+	case(7) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/stone.jpg"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = texture->loadFromFile("../../../bin/resources/images/stone.jpg");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	default:
 		break;
 	}
 
@@ -1222,7 +1262,7 @@ int new_object(int argc, char **argv, cVector3d position, int property)
 	objectX->m_material->setWhite();
 
 	// compute collision detection algorithm
-	objectX->createAABBCollisionDetector(toolRadius);
+	objectX->createAABBCollisionDetector(TOOL_RADIUS);
 
 	// define a default stiffness for the object
 	objectX->m_material->setStiffness(0.3 * maxStiffness);
@@ -1246,7 +1286,7 @@ int new_object(int argc, char **argv, cVector3d position, int property)
 	switch (property)
 	{
 	case(0) :
-		fileload = normalMap->loadFromFile(RESOURCE_PATH("../resources/images/brick-normal.png"));
+		fileload = normalMap->loadFromFile(RESOURCE_PATH("images/brick-normal.png"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1261,7 +1301,7 @@ int new_object(int argc, char **argv, cVector3d position, int property)
 		}
 		break;
 	case(1) :
-		fileload = normalMap->loadFromFile(RESOURCE_PATH("../resources/images/normal1.png"));
+		fileload = normalMap->loadFromFile(RESOURCE_PATH("images/normal1.png"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1276,7 +1316,7 @@ int new_object(int argc, char **argv, cVector3d position, int property)
 		}
 		break;
 	case(2) :
-		fileload = normalMap->loadFromFile(RESOURCE_PATH("../resources/images/G1RhombAluminumMeshNormal.png"));
+		fileload = normalMap->loadFromFile(RESOURCE_PATH("images/G1RhombAluminumMeshNormal.png"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1302,17 +1342,38 @@ int new_object(int argc, char **argv, cVector3d position, int property)
 	case(6) :
 		normalMap->createMap(objectX->m_texture);
 		break;
+	case(7) :
+		//normalMap->createMap(objectX->m_texture);
+		/*
+		fileload = normalMap->loadFromFile(RESOURCE_PATH("images/white-brick-wall-large-normal.jpg"));
+		if (!fileload)
+		{
+		#if defined(_MSVC)
+			fileload = normalMap->loadFromFile("../../../bin/resources/images/white-brick-wall-large-normal.jpg");
+		#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		*/
+		break;
+	default:
+		break;
 	}
 
-	// assign normal map to object
-	objectX->m_normalMap = normalMap;
+	if (property != 7) {
+		// assign normal map to object
+		objectX->m_normalMap = normalMap;
 
-	// compute surface normals
-	objectX->computeAllNormals();
+		// compute surface normals
+		objectX->computeAllNormals();
 
-	// compute tangent vectors
-	objectX->m_triangles->computeBTN();
-
+		// compute tangent vectors
+		objectX->m_triangles->computeBTN();
+	}
 
 
 	//--------------------------------------------------------------------------
@@ -1377,7 +1438,7 @@ void delete_object()
 }
 
 //------------------------------------------------------------------------------
-
+#if 0
 int new_wall(int argc, char **argv)
 {
 	// retrieve information about the current haptic device
@@ -1415,7 +1476,7 @@ int new_wall(int argc, char **argv)
 	bool fileload;
 
 
-	fileload = texture->loadFromFile(RESOURCE_PATH("../../examples/SDL/haptics-showroom-V02/resources/images/stone.jpg"));
+	fileload = texture->loadFromFile(RESOURCE_PATH("images/stone.jpg"));
 
 	//cout << "resourcesPath = " << resourcesPath << endl;
 
@@ -1451,7 +1512,7 @@ int new_wall(int argc, char **argv)
 	objectX->m_material->setWhite();
 
 	// compute collision detection algorithm
-	objectX->createAABBCollisionDetector(toolRadius);
+	objectX->createAABBCollisionDetector(TOOL_RADIUS);
 
 	// define a default stiffness for the object
 	objectX->m_material->setStiffness(0.3 * maxStiffness);
@@ -1554,3 +1615,5 @@ int new_wall(int argc, char **argv)
 
 	return 0;
 }
+
+#endif
