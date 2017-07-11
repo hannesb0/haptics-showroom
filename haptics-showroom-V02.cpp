@@ -27,18 +27,10 @@ using namespace std;
 //------------------------------------------------------------------------------
 
 
-
-
-
-/////////////////////////////////
-/////////////////////////////////
-// use OCULUS
+////////////////////////////////////////
+// define if Oculus Rift is used or not
 bool useOculus = false;
-/////////////////////////////////
-/////////////////////////////////
-
-
-
+////////////////////////////////////////
 
 
 //------------------------------------------------------------------------------
@@ -53,15 +45,18 @@ cCamera* camera;
 
 // a light source
 cSpotLight *light;
+//cDirectionalLight *light;
 
 // a haptic device handler
 cHapticDeviceHandler* handler;
 
 // a pointer to the current haptic device
 cGenericHapticDevicePtr hapticDevice;
+cGenericHapticDevicePtr hapticDevice2;
 
 // a virtual tool representing the haptic device in the scene
 cToolCursor* tool;
+cToolCursor* tool2;
 
 // a virtual mesh like object
 cMesh* object;
@@ -75,6 +70,25 @@ bool simulationFinished = false;
 // frequency counter to measure the simulation haptic rate
 cFrequencyCounter frequencyCounter;
 
+// NEW ########################
+
+// new path to the resources (included in the repository)
+string resourcesPath;
+
+// Initial position : on +Z //change for testing to: cVector3d(1.0, 0.0, 0.2) For Presentation:cVector3d(2.0, 0.0, 0.2)
+//cVector3d currentPosition = cVector3d(1.3, 0.0, 0.2);
+cVector3d currentPosition = cVector3d(0.6, 0.3, 0.0);
+cVector3d currentDirection = cVector3d(1.0, 0.0, 0.0);
+
+// 
+double currentAngle = 0;
+double speed = 0.005;
+double rotationalSpeed = 0.005;
+
+// variable to store state of keys
+unsigned int keyState[255];
+
+
 
 //------------------------------------------------------------------------------
 // OCULUS RIFT
@@ -86,14 +100,17 @@ cOVRRenderContext renderContext;
 // oculus device
 cOVRDevice oculusVR;
 
-
 //------------------------------------------------------------------------------
 // DECLARED MACROS
 //------------------------------------------------------------------------------
 
 // convert to resource path
 #define RESOURCE_PATH(p)    (char*)((resourceRoot+string(p)).c_str())
-
+#define PROJECT_FOLDER		haptics-showroom-V02
+#define WINDOW_SIZE_W		1000
+#define WINDOW_SIZE_H		1000
+#define TOOL_RADIUS			0.02
+#define TOOL_WORKSPACE		0.3
 
 //------------------------------------------------------------------------------
 // DECLARED FUNCTIONS
@@ -108,6 +125,8 @@ void updateHaptics(void);
 // process keyboard events
 void processEvents();
 
+// function that computes movements through key input
+void computeMatricesFromInput();
 
 //==============================================================================
 // MAIN FUNCTION
@@ -122,16 +141,19 @@ int main(int argc, char **argv)
 	cout << endl;
 	cout << "-----------------------------------" << endl;
 	cout << "CHAI3D" << endl;
-	cout << "Demo: 01-cube" << endl;
-	cout << "Copyright 2003-2016" << endl;
+	cout << "Project: Haptics Showroom" << endl;
+	cout << "Team:    Naina Dhingra, Ke Xu, Hannes Bohnengel" << endl;
+	cout << "Rev.:    0.2" << endl;
 	cout << "-----------------------------------" << endl << endl << endl;
 	cout << "Keyboard Options:" << endl << endl;
-	cout << "[ ] - Recenter view point" << endl;
-	cout << "[q] - Exit application" << endl;
+	cout << "Space  - Recenter view point" << endl;
+	cout << "Escape - Exit application" << endl;
+	cout << "OTHERS ARE FOLLOWING AND NEED TO BE DEFINED" << endl;
 	cout << endl << endl;
 
 	// parse first arg to try and locate resources
 	string resourceRoot = string(argv[0]).substr(0, string(argv[0]).find_last_of("/\\") + 1);
+	resourcesPath = resourceRoot + string("../examples/SDL/PROJECT_FOLDER/resources/");
 
 
 	//--------------------------------------------------------------------------
@@ -145,8 +167,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	////////////////////////////////////////////////////////////////////////////
-	//if (!oculusVR.initVR())
+	// check if Oculus should be used
 	if (!oculusVR.initVR() && useOculus)
 	{
 		cout << "failed to initialize Oculus" << endl;
@@ -155,7 +176,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	////////////////////////////////////////////////////////////////////////////
+	// check if Oculus should be used
 	if (useOculus)
 	{
 		ovrSizei hmdResolution = oculusVR.getResolution();
@@ -163,16 +184,14 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		////////////////////////////////////////////////////////////////////////////
-		//renderContext.init("CHAI3D", 100, 100, windowSize.w, windowSize.h);
-		renderContext.init("CHAI3D", 100, 100, 1000, 1000);
+		renderContext.init("CHAI3D", 100, 100, WINDOW_SIZE_W, WINDOW_SIZE_H);
 	}
 
 	SDL_ShowCursor(SDL_DISABLE);
 
 	if (glewInit() != GLEW_OK)
 	{
-		////////////////////////////////////////////////////////////////////////
+		// check if Oculus should be used
 		if (useOculus)
 		{
 			oculusVR.destroyVR();
@@ -182,7 +201,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	////////////////////////////////////////////////////////////////////////////
+	// check if Oculus should be used
 	if (useOculus)
 	{
 		ovrSizei hmdResolution = oculusVR.getResolution();
@@ -213,7 +232,7 @@ int main(int argc, char **argv)
 	world->addChild(camera);
 
 	// position and orient the camera
-	camera->set(cVector3d(0.6, 0.3, 0.0),    // camera position (eye)
+	camera->set(currentPosition,    // camera position (eye)
 		cVector3d(0.0, 0.0, 0.0),    // lookat position (target)
 		cVector3d(0.0, 0.0, 1.0));   // direction of the "up" vector
 
@@ -223,6 +242,7 @@ int main(int argc, char **argv)
 
 	// create a light source
 	light = new cSpotLight(world);
+	//light = new cDirectionalLight(world);
 
 	// add light to world
 	world->addChild(light);
@@ -238,6 +258,9 @@ int main(int argc, char **argv)
 
 	// set light cone half angle
 	light->setCutOffAngleDeg(50);
+	//light->m_ambient.set(0.4f, 0.4f, 0.4f);
+	//light->m_diffuse.set(0.8f, 0.8f, 0.8f);
+	//light->m_specular.set(1.0f, 1.0f, 1.0f);
 
 
 	//--------------------------------------------------------------------------
@@ -249,43 +272,55 @@ int main(int argc, char **argv)
 
 	// get access to the first available haptic device
 	handler->getDevice(hapticDevice, 0);
+	handler->getDevice(hapticDevice2, 1);
 
 	// retrieve information about the current haptic device
 	cHapticDeviceInfo hapticDeviceInfo = hapticDevice->getSpecifications();
+	cHapticDeviceInfo hapticDeviceInfo2 = hapticDevice2->getSpecifications();
 
 	// create a 3D tool and add it to the world
 	tool = new cToolCursor(world);
 	world->addChild(tool);
+	tool2 = new cToolCursor(world);
+	world->addChild(tool2);
 
 	// connect the haptic device to the tool
 	tool->setHapticDevice(hapticDevice);
+	tool2->setHapticDevice(hapticDevice2);
 
 	// define the radius of the tool (sphere)
-	double toolRadius = 0.02;
+	//double toolRadius = TOOL_RADIUS;
 
 	// define a radius for the tool
-	tool->setRadius(toolRadius);
+	tool->setRadius(TOOL_RADIUS);
+	tool2->setRadius(TOOL_RADIUS);
 
 	// enable if objects in the scene are going to rotate of translate
 	// or possibly collide against the tool. If the environment
 	// is entirely static, you can set this parameter to "false"
 	tool->enableDynamicObjects(true);
+	tool2->enableDynamicObjects(true);
 
 	// map the physical workspace of the haptic device to a larger virtual workspace.
-	tool->setWorkspaceRadius(0.3);
+	tool->setWorkspaceRadius(TOOL_WORKSPACE);
+	tool2->setWorkspaceRadius(TOOL_WORKSPACE);
 
 	// haptic forces are enabled only if small forces are first sent to the device;
 	// this mode avoids the force spike that occurs when the application starts when 
 	// the tool is located inside an object for instance. 
 	tool->setWaitForSmallForce(true);
+	tool2->setWaitForSmallForce(true);
 
 	// start the haptic tool
 	tool->start();
+	tool2->start();
 
 
 	//--------------------------------------------------------------------------
 	// CREATE OBJECT
 	//--------------------------------------------------------------------------
+
+
 
 	// read the scale factor between the physical workspace of the haptic
 	// device and the virtual workspace defined for the tool
@@ -336,7 +371,7 @@ int main(int argc, char **argv)
 	object->m_material->setWhite();
 
 	// compute collision detection algorithm
-	object->createAABBCollisionDetector(toolRadius);
+	object->createAABBCollisionDetector(TOOL_RADIUS);
 
 	// define a default stiffness for the object
 	object->m_material->setStiffness(0.3 * maxStiffness);
@@ -360,9 +395,9 @@ int main(int argc, char **argv)
 	fileload = normalMap->loadFromFile(RESOURCE_PATH("../resources/images/brick-normal.png"));
 	if (!fileload)
 	{
-#if defined(_MSVC)
+	#if defined(_MSVC)
 		fileload = normalMap->loadFromFile("../../../bin/resources/images/brick-normal.png");
-#endif
+	#endif
 	}
 	if (!fileload)
 	{
@@ -435,6 +470,71 @@ int main(int argc, char **argv)
 	// CREATE ENVIRONMENT GLOBE
 	//--------------------------------------------------------------------------
 
+#if 1
+
+	// create a virtual mesh
+	cMesh* floor = new cMesh();
+	cMesh* wall = new cMesh();
+
+	// add object to world
+	world->addChild(floor);
+	world->addChild(wall);
+
+	// set the position of the object at the center of the world
+	floor->setLocalPos(0.0, 0.0, -0.3);
+	wall->setLocalPos(0.0, 0.0, 1.6);
+
+	// create room
+	cCreatePlane(floor, 6, 4);
+	floor->setUseDisplayList(true);
+
+	cCreateBox(wall, 6, 4, 4);
+	wall->setUseDisplayList(true);
+
+	// create a texture
+	cTexture2dPtr textureFloor = cTexture2d::create();
+	cTexture2dPtr textureWall = cTexture2d::create();
+
+	fileload = textureFloor->loadFromFile("./resources/images/sand-wall.png");
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = textureFloor->loadFromFile("./resources/images/sand-wall.png");
+#endif
+	}
+	bool fileload2 = textureWall->loadFromFile("./resources/images/white-wall.png");
+	if (!fileload2)
+	{
+#if defined(_MSVC)
+		fileload2 = textureWall->loadFromFile("./resources/images/white-wall.png");
+#endif
+	}
+	if (!(fileload && fileload2))
+	{
+		cout << "Error - Texture image failed to load correctly." << endl;
+		close();
+		return (-1);
+	}
+
+	// apply texture to object
+	floor->setTexture(textureFloor);
+	wall->setTexture(textureWall);
+
+	// enable texture rendering 
+	floor->setUseTexture(true);
+	wall->setUseTexture(true);
+
+
+	// Since we don't need to see our polygons from both sides, we enable culling.
+	floor->setUseCulling(false);
+	wall->setUseCulling(false);
+
+	// disable material properties and lighting
+	floor->setUseMaterial(false);
+	wall->setUseMaterial(false);
+
+#else
+
 	// create a virtual mesh
 	cMesh* globe = new cMesh();
 
@@ -455,9 +555,9 @@ int main(int argc, char **argv)
 	fileload = textureSpace->loadFromFile(RESOURCE_PATH("../resources/images/infinity.jpg"));
 	if (!fileload)
 	{
-#if defined(_MSVC)
+	#if defined(_MSVC)
 		fileload = textureSpace->loadFromFile("../../../bin/resources/images/infinity.jpg");
-#endif
+	#endif
 	}
 	if (!fileload)
 	{
@@ -477,6 +577,8 @@ int main(int argc, char **argv)
 
 	// disable material properties and lighting
 	globe->setUseMaterial(false);
+
+#endif
 
 
 	//--------------------------------------------------------------------------
@@ -500,7 +602,10 @@ int main(int argc, char **argv)
 		// handle key presses
 		processEvents();
 
-		////////////////////////////////////////////////////////////////////////////
+		// react to key input
+		computeMatricesFromInput();
+
+		// check if Oculus should be used
 		if (useOculus)
 		{
 			// start rendering
@@ -512,64 +617,63 @@ int main(int argc, char **argv)
 		{
 			// retrieve projection and modelview matrix from oculus
 			cTransform projectionMatrix, modelViewMatrix;
-			////////////////////////////////////////////////////////////////////////////
+			// check if Oculus should be used
 			if (useOculus)
 			{
 				oculusVR.onEyeRender(eyeIndex, projectionMatrix, modelViewMatrix);
 			}
 
-			////////////////////////////////////////////////////////////////////////////
-			//camera->m_useCustomProjectionMatrix = true;
+			// check if Oculus should be used
 			camera->m_useCustomProjectionMatrix = useOculus;
 
-			////////////////////////////////////////////////////////////////////////////
+			// check if Oculus should be used
 			if (useOculus)
 			{
 				camera->m_projectionMatrix = projectionMatrix;
 			}
 
-			////////////////////////////////////////////////////////////////////////////
+			// check if Oculus should be used
 			//camera->m_useCustomModelViewMatrix = true;
 			camera->m_useCustomModelViewMatrix = useOculus;
 			
-			////////////////////////////////////////////////////////////////////////////
+			// check if Oculus should be used
 			if (useOculus)
 			{
 				camera->m_modelViewMatrix = modelViewMatrix;
 			}
 
-			// render world
-			////////////////////////////////////////////////////////////////////////////
+			// check if Oculus should be used
 			if (useOculus)
 			{
+				// render world
 				ovrSizei size = oculusVR.getEyeTextureSize(eyeIndex);
 				camera->renderView(size.w, size.h, 0, C_STEREO_LEFT_EYE, false);
 			}
 			else
 				camera->renderView(1000, 1000, 0, C_STEREO_LEFT_EYE, false);
 
-			// finalize rendering
-			////////////////////////////////////////////////////////////////////////////
+			// check if Oculus should be used
 			if (useOculus)
 			{
+				// finalize rendering
 				oculusVR.onEyeRenderFinish(eyeIndex);
 			}
 		}
 
-		// update frames
-		////////////////////////////////////////////////////////////////////////////
+		// check if Oculus should be used
 		if (useOculus)
 		{
+			// update frames
 			oculusVR.submitFrame();
 			oculusVR.blitMirror();
 		}
 		SDL_GL_SwapWindow(renderContext.window);
 	}
 
-	// cleanup
-	////////////////////////////////////////////////////////////////////////////
+	// check if Oculus should be used
 	if (useOculus)
 	{
+		// cleanup
 		oculusVR.destroyVR();
 		renderContext.destroy();
 	}
@@ -591,53 +695,98 @@ void processEvents()
 		switch (event.type)
 		{
 		case SDL_KEYDOWN:
-			// esc
-			if (event.key.keysym.sym == SDLK_q || event.key.keysym.sym == SDLK_ESCAPE)
+			if (event.key.keysym.sym == SDLK_ESCAPE)
 			{
 				close();
 				break;
 			}
-
 			// spacebar
+			/*
 			if (event.key.keysym.sym == SDLK_SPACE)
 			{
 				oculusVR.recenterPose();
 				break;
 			}
-
-//////////////////////////////////////////////////////////////////////////////////
+			*/
+			if (event.key.keysym.sym == SDLK_SPACE)
+			{
+				keyState[(unsigned char)' '] = 1;
+			}
+			if (event.key.keysym.sym == SDLK_1)
+			{
+				keyState[(unsigned char)'1'] = 1;
+			}
+			if (event.key.keysym.sym == SDLK_2)
+			{
+				keyState[(unsigned char)'2'] = 1;
+			}
 			if (event.key.keysym.sym == SDLK_w)
 			{
-				//keyState[(unsigned char)'w'] = 0;
-				//currentPosition += speed * currentDirection;
+				keyState[(unsigned char)'w'] = 1;
 			}
-
 			if (event.key.keysym.sym == SDLK_s)
 			{
-				//keyState[(unsigned char)'s'] = 0;
-				//currentPosition -= speed * currentDirection;
+				keyState[(unsigned char)'s'] = 1;
 			}
-//////////////////////////////////////////////////////////////////////////////////
-
+			if (event.key.keysym.sym == SDLK_a)
+			{
+				keyState[(unsigned char)'a'] = 1;
+			}
+			if (event.key.keysym.sym == SDLK_d)
+			{
+				keyState[(unsigned char)'d'] = 1;
+			}
+			if (event.key.keysym.sym == SDLK_q)
+			{
+				keyState[(unsigned char)'q'] = 1;
+			}
+			if (event.key.keysym.sym == SDLK_e)
+			{
+				keyState[(unsigned char)'e'] = 1;
+			}
 
 			break;
 
-/*
-//////////////////////////////////////////////////////////////////////////////////
 		case SDL_KEYUP:
 
+			if (event.key.keysym.sym == SDLK_SPACE)
+			{
+				keyState[(unsigned char)' '] = 0;
+			}
+			if (event.key.keysym.sym == SDLK_1)
+			{
+				keyState[(unsigned char)'1'] = 0;
+			}
+			if (event.key.keysym.sym == SDLK_2)
+			{
+				keyState[(unsigned char)'2'] = 0;
+			}
 			if (event.key.keysym.sym == SDLK_w)
 			{
 				keyState[(unsigned char)'w'] = 0;
 			}
-
 			if (event.key.keysym.sym == SDLK_s)
 			{
 				keyState[(unsigned char)'s'] = 0;
 			}
+			if (event.key.keysym.sym == SDLK_a)
+			{
+				keyState[(unsigned char)'a'] = 0;
+			}
+			if (event.key.keysym.sym == SDLK_d)
+			{
+				keyState[(unsigned char)'d'] = 0;
+			}
+			if (event.key.keysym.sym == SDLK_q)
+			{
+				keyState[(unsigned char)'q'] = 0;
+			}
+			if (event.key.keysym.sym == SDLK_e)
+			{
+				keyState[(unsigned char)'e'] = 0;
+			}
+
 			break;
-//////////////////////////////////////////////////////////////////////////////////
-*/
 
 		case SDL_QUIT:
 			close();
@@ -647,6 +796,108 @@ void processEvents()
 			break;
 		}
 	}
+}
+
+//------------------------------------------------------------------------------
+
+void computeMatricesFromInput()
+{
+
+	if (keyState[(unsigned char)'w'] == 1) // Walk forward
+	{
+		currentPosition += speed * currentDirection;
+
+	}
+	if (keyState[(unsigned char)'s'] == 1) // Walk backward
+	{
+		currentPosition -= speed * currentDirection;
+	}
+
+
+	if (keyState[(unsigned char)'a'] == 1) // Turn left //Add "Angular Jump"?
+	{
+		currentAngle += rotationalSpeed;
+	}
+
+	if (keyState[(unsigned char)'d'] == 1) // Turn right //Add "Angular Jump"?
+	{
+		currentAngle -= rotationalSpeed;
+	}
+
+	if (keyState[(unsigned char)' '] == 1) // Recenter
+	{
+		currentPosition = cVector3d(2.0, 0.0, 0.2);
+		currentAngle = 0;
+	}
+
+	if (keyState[(unsigned char)'q'] == 1) // raise
+	{
+		currentPosition += speed * cVector3d(0.0, 0.0, 1.0);
+	}
+
+	if (keyState[(unsigned char)'e'] == 1) // lower
+	{
+		currentPosition -= speed * cVector3d(0.0, 0.0, 1.0);
+	}
+
+
+	/*
+	if (keyState[(unsigned char)'c'] == 1 ) // show nodes of GEL structure
+	{
+	sendSurfacePropertiesToController(true, 1, 5, 3, 3);
+	BumpServo(1);
+	}
+	*/
+	/*
+	if (keyState[(unsigned char)'C'] == 1) // show nodes of GEL structure
+	{
+
+	BumpServo(4);
+	}
+	*/
+	/*
+	if (keyState[(unsigned char)'n'] == 0) // show nodes of GEL structure
+	{
+	PreCondN = true;
+	}*/
+
+	/*if ( currentAngle<-90)
+	{
+	currentAngle = -90;
+	}
+	if (currentAngle<-90)
+	{
+	currentAngle = 90;
+	}*/
+
+
+	if (currentPosition.x() > 2.5) {
+		currentPosition.x(2.5);
+	}
+
+	if (currentPosition.x() < -2.5) {
+		currentPosition.x(-2.5);
+	}
+
+	if (currentPosition.y() > 1.5) {
+		currentPosition.y(1.5);
+	}
+	if (currentPosition.y() < -1.5) {
+		currentPosition.y(-1.5);
+	}
+
+	if (currentPosition.z() > 3.0) {
+		currentPosition.z(3.0);
+	}
+	if (currentPosition.z() < 0.0) {
+		currentPosition.z(0.0);
+	}
+
+
+	currentDirection = cVector3d(-cos(currentAngle), -sin(currentAngle), 0.0);
+
+	camera->set(currentPosition, currentPosition + currentDirection, cVector3d(0, 0, 1));   // direction of the "up" vector
+
 }
 
 //------------------------------------------------------------------------------
@@ -708,9 +959,17 @@ void updateHaptics(void)
 
 		// update position and orientation of tool
 		tool->updateFromDevice();
+		cMatrix3d RotForce = cMatrix3d(cos(currentAngle), sin(currentAngle), 0.0, -sin(currentAngle), cos(currentAngle), 0.0, 0.0, 0.0, 1.0);
+		cMatrix3d Rot = cMatrix3d(cos(currentAngle), -sin(currentAngle), 0.0, sin(currentAngle), cos(currentAngle), 0.0, 0.0, 0.0, 1.0);
+		//tool->setDeviceGlobalRot(Rot);
+		cVector3d tmp = tool->getDeviceLocalPos();
+		tool->setDeviceGlobalPos(Rot*tmp + currentPosition + currentDirection);
 
 		// compute interaction forces
 		tool->computeInteractionForces();
+
+		tool->setDeviceGlobalTorque(RotForce*(tool->getDeviceGlobalTorque()));
+		tool->setDeviceGlobalForce(RotForce*(tool->getDeviceGlobalForce()));
 
 		// send forces to haptic device
 		tool->applyToDevice();
