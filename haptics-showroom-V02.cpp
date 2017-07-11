@@ -34,6 +34,18 @@ bool useOculus = false;
 
 
 //------------------------------------------------------------------------------
+// DECLARED MACROS
+//------------------------------------------------------------------------------
+
+// convert to resource path
+#define RESOURCE_PATH(p)    (char*)((resourceRoot+string(p)).c_str())
+#define WINDOW_SIZE_W		1000
+#define WINDOW_SIZE_H		1000
+#define TOOL_RADIUS			0.02
+#define TOOL_WORKSPACE		0.3
+#define INITIAL_POSITION	cVector3d(2.0, 0.0, 0.2)
+
+//------------------------------------------------------------------------------
 // CHAI3D
 //------------------------------------------------------------------------------
 
@@ -44,8 +56,8 @@ cWorld* world;
 cCamera* camera;
 
 // a light source
-cSpotLight *light;
-//cDirectionalLight *light;
+//cSpotLight *light;
+cDirectionalLight *light;
 
 // a haptic device handler
 cHapticDeviceHandler* handler;
@@ -60,6 +72,7 @@ cToolCursor* tool2;
 
 // a virtual mesh like object
 cMesh* object;
+cMesh* objectX;
 
 // indicates if the haptic simulation currently running
 bool simulationRunning = false;
@@ -70,25 +83,25 @@ bool simulationFinished = false;
 // frequency counter to measure the simulation haptic rate
 cFrequencyCounter frequencyCounter;
 
-// NEW ########################
-
 // new path to the resources (included in the repository)
-string resourcesPath;
+string resourcesPath, resourceRoot;
 
-// Initial position : on +Z //change for testing to: cVector3d(1.0, 0.0, 0.2) For Presentation:cVector3d(2.0, 0.0, 0.2)
-//cVector3d currentPosition = cVector3d(1.3, 0.0, 0.2);
-cVector3d currentPosition = cVector3d(0.6, 0.3, 0.0);
+// initial position : on +Z //change for testing to: cVector3d(1.0, 0.0, 0.2) For Presentation:cVector3d(2.0, 0.0, 0.2)
+cVector3d currentPosition = INITIAL_POSITION;
 cVector3d currentDirection = cVector3d(1.0, 0.0, 0.0);
+cVector3d deviceOffset = cVector3d(0.2, 0.0, 0.0);
 
-// 
+// if two haptic devices are used they need to be separated in space
+cVector3d deviceOffset1 = cVector3d(0.2, -0.1, 0.0);
+cVector3d deviceOffset2 = cVector3d(0.2, 0.1, 0.0);
+
+// variable for changing the perspective and for walking
 double currentAngle = 0;
-double speed = 0.005;
-double rotationalSpeed = 0.005;
+double speed = 0.004;
+double rotationalSpeed = 0.006;
 
 // variable to store state of keys
 unsigned int keyState[255];
-
-
 
 //------------------------------------------------------------------------------
 // OCULUS RIFT
@@ -99,18 +112,6 @@ cOVRRenderContext renderContext;
 
 // oculus device
 cOVRDevice oculusVR;
-
-//------------------------------------------------------------------------------
-// DECLARED MACROS
-//------------------------------------------------------------------------------
-
-// convert to resource path
-#define RESOURCE_PATH(p)    (char*)((resourceRoot+string(p)).c_str())
-#define PROJECT_FOLDER		haptics-showroom-V02
-#define WINDOW_SIZE_W		1000
-#define WINDOW_SIZE_H		1000
-#define TOOL_RADIUS			0.02
-#define TOOL_WORKSPACE		0.3
 
 //------------------------------------------------------------------------------
 // DECLARED FUNCTIONS
@@ -127,6 +128,14 @@ void processEvents();
 
 // function that computes movements through key input
 void computeMatricesFromInput();
+
+// function to create a new object at runtime
+int new_object(int argc, char **argv, cVector3d position, int property);
+
+// for testing purposes !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+int new_wall(int argc, char **argv);
+void delete_object();
+
 
 //==============================================================================
 // MAIN FUNCTION
@@ -152,9 +161,8 @@ int main(int argc, char **argv)
 	cout << endl << endl;
 
 	// parse first arg to try and locate resources
-	string resourceRoot = string(argv[0]).substr(0, string(argv[0]).find_last_of("/\\") + 1);
-	resourcesPath = resourceRoot + string("../examples/SDL/PROJECT_FOLDER/resources/");
-
+	resourceRoot = string(argv[0]).substr(0, string(argv[0]).find_last_of("/\\") + 1);
+	resourcesPath = resourceRoot + string("../../examples/haptics-showroom-V02/resources/");
 
 	//--------------------------------------------------------------------------
 	// SETUP DISPLAY CONTEXT
@@ -241,8 +249,8 @@ int main(int argc, char **argv)
 	camera->setClippingPlanes(0.01, 20.0);
 
 	// create a light source
-	light = new cSpotLight(world);
-	//light = new cDirectionalLight(world);
+	//light = new cSpotLight(world);
+	light = new cDirectionalLight(world);
 
 	// add light to world
 	world->addChild(light);
@@ -254,13 +262,14 @@ int main(int argc, char **argv)
 	light->setLocalPos(3.5, 2.0, 0.0);
 
 	// define the direction of the light beam
-	light->setDir(-3.5, -2.0, 0.0);
+	//light->setDir(-3.5, -2.0, 0.0);
+	light->setDir(0.0, 0.0, -30.0);
 
 	// set light cone half angle
-	light->setCutOffAngleDeg(50);
-	//light->m_ambient.set(0.4f, 0.4f, 0.4f);
-	//light->m_diffuse.set(0.8f, 0.8f, 0.8f);
-	//light->m_specular.set(1.0f, 1.0f, 1.0f);
+	//light->setCutOffAngleDeg(50);
+	light->m_ambient.set(0.4f, 0.4f, 0.4f);
+	light->m_diffuse.set(0.8f, 0.8f, 0.8f);
+	light->m_specular.set(1.0f, 1.0f, 1.0f);
 
 
 	//--------------------------------------------------------------------------
@@ -319,8 +328,6 @@ int main(int argc, char **argv)
 	//--------------------------------------------------------------------------
 	// CREATE OBJECT
 	//--------------------------------------------------------------------------
-
-
 
 	// read the scale factor between the physical workspace of the haptic
 	// device and the virtual workspace defined for the tool
@@ -465,7 +472,34 @@ int main(int argc, char **argv)
 	programShader->setUniformi("uNormalMap", 2);
 	programShader->setUniformf("uInvRadius", 0.0f);
 
+	// insert 7 fixed cubes
+	if (new_object(argc, argv, cVector3d(-1.5, -1.5, 0.0), 0) == -1) {
+		cout << "Error - New object could not be created." << endl;
+	}
+	if (new_object(argc, argv, cVector3d(-1.5, -1.0, 0.0), 1) == -1) {
+		cout << "Error - New object could not be created." << endl;
+	}
+	if (new_object(argc, argv, cVector3d(-1.5, -0.5, 0.0), 2) == -1) {
+		cout << "Error - New object could not be created." << endl;
+	}
+	if (new_object(argc, argv, cVector3d(-1.5, 0.0, 0.0), 3) == -1) {
+		cout << "Error - New object could not be created." << endl;
+	}
+	if (new_object(argc, argv, cVector3d(-1.5, 0.5, 0.0), 4) == -1) {
+		cout << "Error - New object could not be created." << endl;
+	}
+	if (new_object(argc, argv, cVector3d(-1.5, 1.0, 0.0), 5) == -1) {
+		cout << "Error - New object could not be created." << endl;
+	}
+	if (new_object(argc, argv, cVector3d(-1.5, 1.5, 0.0), 6) == -1) {
+		cout << "Error - New object could not be created." << endl;
+	}
 
+	// insert a wall
+	if (new_wall(argc, argv) == -1) {
+		cout << "Error - New wall could not be created." << endl;
+	}
+	
 	//--------------------------------------------------------------------------
 	// CREATE ENVIRONMENT GLOBE
 	//--------------------------------------------------------------------------
@@ -802,90 +836,57 @@ void processEvents()
 
 void computeMatricesFromInput()
 {
-
 	if (keyState[(unsigned char)'w'] == 1) // Walk forward
 	{
 		currentPosition += speed * currentDirection;
-
 	}
 	if (keyState[(unsigned char)'s'] == 1) // Walk backward
 	{
 		currentPosition -= speed * currentDirection;
 	}
-
-
-	if (keyState[(unsigned char)'a'] == 1) // Turn left //Add "Angular Jump"?
+	if (keyState[(unsigned char)'a'] == 1) // Turn left
 	{
 		currentAngle += rotationalSpeed;
 	}
-
-	if (keyState[(unsigned char)'d'] == 1) // Turn right //Add "Angular Jump"?
+	if (keyState[(unsigned char)'d'] == 1) // Turn right
 	{
 		currentAngle -= rotationalSpeed;
 	}
-
 	if (keyState[(unsigned char)' '] == 1) // Recenter
 	{
-		currentPosition = cVector3d(2.0, 0.0, 0.2);
+		currentPosition = INITIAL_POSITION;
 		currentAngle = 0;
 	}
-
 	if (keyState[(unsigned char)'q'] == 1) // raise
 	{
 		currentPosition += speed * cVector3d(0.0, 0.0, 1.0);
 	}
-
 	if (keyState[(unsigned char)'e'] == 1) // lower
 	{
 		currentPosition -= speed * cVector3d(0.0, 0.0, 1.0);
 	}
-
-
-	/*
-	if (keyState[(unsigned char)'c'] == 1 ) // show nodes of GEL structure
+	if (keyState[(unsigned char)'1'] == 1) // special function 1
 	{
-	sendSurfacePropertiesToController(true, 1, 5, 3, 3);
-	BumpServo(1);
+		delete_object();
 	}
-	*/
-	/*
-	if (keyState[(unsigned char)'C'] == 1) // show nodes of GEL structure
+	if (keyState[(unsigned char)'2'] == 1) // special function 2
 	{
-
-	BumpServo(4);
+		//delete_object()
 	}
-	*/
-	/*
-	if (keyState[(unsigned char)'n'] == 0) // show nodes of GEL structure
-	{
-	PreCondN = true;
-	}*/
 
-	/*if ( currentAngle<-90)
-	{
-	currentAngle = -90;
-	}
-	if (currentAngle<-90)
-	{
-	currentAngle = 90;
-	}*/
-
-
+	// make sure that it is not possible to walk out of the room
 	if (currentPosition.x() > 2.5) {
 		currentPosition.x(2.5);
 	}
-
 	if (currentPosition.x() < -2.5) {
 		currentPosition.x(-2.5);
 	}
-
 	if (currentPosition.y() > 1.5) {
 		currentPosition.y(1.5);
 	}
 	if (currentPosition.y() < -1.5) {
 		currentPosition.y(-1.5);
 	}
-
 	if (currentPosition.z() > 3.0) {
 		currentPosition.z(3.0);
 	}
@@ -893,13 +894,12 @@ void computeMatricesFromInput()
 		currentPosition.z(0.0);
 	}
 
-
+	// recalculate the viewing direction
 	currentDirection = cVector3d(-cos(currentAngle), -sin(currentAngle), 0.0);
 
-	camera->set(currentPosition, currentPosition + currentDirection, cVector3d(0, 0, 1));   // direction of the "up" vector
-
+	// recalculate the direction of the "up" vector
+	camera->set(currentPosition, currentPosition + currentDirection, cVector3d(0, 0, 1));   
 }
-
 //------------------------------------------------------------------------------
 
 void close(void)
@@ -961,7 +961,7 @@ void updateHaptics(void)
 		tool->updateFromDevice();
 		cMatrix3d RotForce = cMatrix3d(cos(currentAngle), sin(currentAngle), 0.0, -sin(currentAngle), cos(currentAngle), 0.0, 0.0, 0.0, 1.0);
 		cMatrix3d Rot = cMatrix3d(cos(currentAngle), -sin(currentAngle), 0.0, sin(currentAngle), cos(currentAngle), 0.0, 0.0, 0.0, 1.0);
-		//tool->setDeviceGlobalRot(Rot);
+		tool->setDeviceGlobalRot(Rot);
 		cVector3d tmp = tool->getDeviceLocalPos();
 		tool->setDeviceGlobalPos(Rot*tmp + currentPosition + currentDirection);
 
@@ -979,63 +979,73 @@ void updateHaptics(void)
 		// DYNAMIC SIMULATION
 		/////////////////////////////////////////////////////////////////////
 
-		// some constants
-		const double INERTIA = 0.4;
-		const double MAX_ANG_VEL = 10.0;
-		const double DAMPING = 0.1;
+		cVector3d tmp2 = tool->getDeviceGlobalPos();
 
-		// get position of cursor in global coordinates
-		cVector3d toolPos = tool->getDeviceGlobalPos();
-
-		// get position of object in global coordinates
-		cVector3d objectPos = object->getGlobalPos();
-
-		// compute a vector from the center of mass of the object (point of rotation) to the tool
-		cVector3d v = cSub(toolPos, objectPos);
-
-		// compute angular acceleration based on the interaction forces
-		// between the tool and the object
-		cVector3d angAcc(0, 0, 0);
-		if (v.length() > 0.0)
+		if (tmp2.x() < 0.3 && tmp2.x() > -0.3 && tmp2.y() < 0.3 && tmp2.y() > -0.3 
+			&& tmp2.z() < 0.3 && tmp2.z() > -0.3)
 		{
-			// get the last force applied to the cursor in global coordinates
-			// we negate the result to obtain the opposite force that is applied on the
-			// object
-			cVector3d toolForce = -tool->getDeviceGlobalForce();
+			// some constants
+			const double INERTIA = 0.4;
+			const double MAX_ANG_VEL = 10.0;
+			const double DAMPING = 0.1;
 
-			// compute the effective force that contributes to rotating the object.
-			cVector3d force = toolForce - cProject(toolForce, v);
+			// get position of cursor in global coordinates
+			cVector3d toolPos = tool->getDeviceGlobalPos();
 
-			// compute the resulting torque
-			cVector3d torque = cMul(v.length(), cCross(cNormalize(v), force));
+			// get position of object in global coordinates
+			cVector3d objectPos = object->getGlobalPos();
 
-			// update rotational acceleration
-			angAcc = (1.0 / INERTIA) * torque;
+			// compute a vector from the center of mass of the object (point of rotation) to the tool
+			cVector3d v = cSub(toolPos, objectPos);
+
+			// compute angular acceleration based on the interaction forces
+			// between the tool and the object
+			cVector3d angAcc(0, 0, 0);
+			if (v.length() > 0.0)
+			{
+				// get the last force applied to the cursor in global coordinates
+				// we negate the result to obtain the opposite force that is applied on the
+				// object
+				cVector3d toolForce = -tool->getDeviceGlobalForce();
+
+				// compute the effective force that contributes to rotating the object.
+				cVector3d force = toolForce - cProject(toolForce, v);
+
+				// compute the resulting torque
+				cVector3d torque = cMul(v.length(), cCross(cNormalize(v), force));
+
+				// update rotational acceleration
+				angAcc = (1.0 / INERTIA) * torque;
+			}
+
+			// update rotational velocity
+			angVel.add(timeInterval * angAcc);
+
+			// set a threshold on the rotational velocity term
+			double vel = angVel.length();
+			if (vel > MAX_ANG_VEL)
+			{
+				angVel.mul(MAX_ANG_VEL / vel);
+			}
+
+			// add some damping too
+			angVel.mul(1.0 - DAMPING * timeInterval);
+
+			// if user switch is pressed, set velocity to zero
+			if (tool->getUserSwitch(0) == 1)
+			{
+				angVel.zero();
+			}
+
+			// compute the next rotation configuration of the object
+			if (angVel.length() > C_SMALL)
+			{
+				object->rotateAboutGlobalAxisRad(cNormalize(angVel), timeInterval * angVel.length());
+			}
 		}
-
-		// update rotational velocity
-		angVel.add(timeInterval * angAcc);
-
-		// set a threshold on the rotational velocity term
-		double vel = angVel.length();
-		if (vel > MAX_ANG_VEL)
-		{
-			angVel.mul(MAX_ANG_VEL / vel);
-		}
-
-		// add some damping too
-		angVel.mul(1.0 - DAMPING * timeInterval);
-
-		// if user switch is pressed, set velocity to zero
-		if (tool->getUserSwitch(0) == 1)
+		else
 		{
 			angVel.zero();
-		}
-
-		// compute the next rotation configuration of the object
-		if (angVel.length() > C_SMALL)
-		{
-			object->rotateAboutGlobalAxisRad(cNormalize(angVel), timeInterval * angVel.length());
 		}
 	}
 
@@ -1044,3 +1054,503 @@ void updateHaptics(void)
 }
 
 //------------------------------------------------------------------------------
+
+int new_object(int argc, char **argv, cVector3d position, int property)
+{
+	// retrieve information about the current haptic device
+	cHapticDeviceInfo hapticDeviceInfoX = hapticDevice->getSpecifications();
+
+	// define the radius of the tool (sphere)
+	double toolRadius = 0.02;
+
+	// parse first arg to try and locate resources
+	//string resourceRoot = string(argv[0]).substr(0, string(argv[0]).find_last_of("/\\") + 1);
+	//resourcesPath = resourceRoot + string("../examples/SDL/finalproject/resources/");
+
+	// convert to resource path
+//#define RESOURCE_PATH(p)    (char*)((resourceRoot+string(p)).c_str())
+//	string path;
+
+	// --------------------------------------------------------
+	// copied from 01-cube.cpp and changed names of variables
+	// --------------------------------------------------------
+
+	// read the scale factor between the physical workspace of the haptic
+	// device and the virtual workspace defined for the tool
+	double workspaceScaleFactor = tool->getWorkspaceScaleFactor();
+
+	// stiffness properties
+	double maxStiffness = hapticDeviceInfoX.m_maxLinearStiffness / workspaceScaleFactor;
+
+	// create a virtual mesh
+	objectX = new cMesh();
+
+	// add object to world
+	world->addChild(objectX);
+
+	// set the position of the object at the center of the world
+	objectX->setLocalPos(position);
+
+	// create cube
+	cCreateBox(objectX, 0.2, 0.2, 0.2);
+
+	// create a texture
+	cTexture2dPtr texture = cTexture2d::create();
+
+	bool fileload;
+
+
+	switch (property)
+	{
+	case(0) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/brick-color.png"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = texture->loadFromFile("../../../bin/resources/images/brick-color.png");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(1) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/color1.png"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = texture->loadFromFile("../../../bin/resources/images/color1.png");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(2) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/G1RhombAluminumMesh.JPG"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = texture->loadFromFile("../../../bin/resources/images/G1RhombAluminumMesh.JPG");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(3) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/whitefoam.jpg"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = texture->loadFromFile("../../../bin/resources/images/whitefoam.jpg");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(4) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/brownboard.jpg"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = texture->loadFromFile("../../../bin/resources/images/brownboard.jpg");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(5) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/blackstone.jpg"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = texture->loadFromFile("../../../bin/resources/images/blackstone.jpg");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(6) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/redplastic.jpg"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = texture->loadFromFile("../../../bin/resources/images/redplastic.jpg");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	}
+
+	// apply texture to object
+	objectX->setTexture(texture);
+
+	// enable texture rendering 
+	objectX->setUseTexture(true);
+
+	// Since we don't need to see our polygons from both sides, we enable culling.
+	objectX->setUseCulling(true);
+
+	// set material properties to light gray
+	objectX->m_material->setWhite();
+
+	// compute collision detection algorithm
+	objectX->createAABBCollisionDetector(toolRadius);
+
+	// define a default stiffness for the object
+	objectX->m_material->setStiffness(0.3 * maxStiffness);
+
+	// define some static friction
+	objectX->m_material->setStaticFriction(0.2);
+
+	// define some dynamic friction
+	objectX->m_material->setDynamicFriction(0.2);
+
+	// define some texture rendering
+	objectX->m_material->setTextureLevel(0.1);
+
+	// render triangles haptically on front side only
+	objectX->m_material->setHapticTriangleSides(true, false);
+
+	// create a normal texture
+	cNormalMapPtr normalMap = cNormalMap::create();
+
+	// load normal map from file
+	switch (property)
+	{
+	case(0) :
+		fileload = normalMap->loadFromFile(RESOURCE_PATH("../resources/images/brick-normal.png"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = normalMap->loadFromFile("../../../bin/resources/images/brick-normal.png");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(1) :
+		fileload = normalMap->loadFromFile(RESOURCE_PATH("../resources/images/normal1.png"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = normalMap->loadFromFile("../../../bin/resources/images/normal1.png");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(2) :
+		fileload = normalMap->loadFromFile(RESOURCE_PATH("../resources/images/G1RhombAluminumMeshNormal.png"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = normalMap->loadFromFile("../../../bin/resources/images/G1RhombAluminumMeshNormal.png");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(3) :
+		normalMap->createMap(objectX->m_texture);
+		break;
+	case(4) :
+		normalMap->createMap(objectX->m_texture);
+		break;
+	case(5) :
+		normalMap->createMap(objectX->m_texture);
+		break;
+	case(6) :
+		normalMap->createMap(objectX->m_texture);
+		break;
+	}
+
+	// assign normal map to object
+	objectX->m_normalMap = normalMap;
+
+	// compute surface normals
+	objectX->computeAllNormals();
+
+	// compute tangent vectors
+	objectX->m_triangles->computeBTN();
+
+
+
+	//--------------------------------------------------------------------------
+	// CREATE SHADERS
+	//--------------------------------------------------------------------------
+
+	// create vertex shader
+	cShaderPtr vertexShader = cShader::create(C_VERTEX_SHADER);
+
+	// load vertex shader from file
+	fileload = vertexShader->loadSourceFile("../resources/shaders/bump.vert");
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = vertexShader->loadSourceFile("../../../bin/resources/shaders/bump.vert");
+#endif
+	}
+
+	// create fragment shader
+	cShaderPtr fragmentShader = cShader::create(C_FRAGMENT_SHADER);
+
+	// load fragment shader from file
+	fileload = fragmentShader->loadSourceFile("../resources/shaders/bump.frag");
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = fragmentShader->loadSourceFile("../../../bin/resources/shaders/bump.frag");
+#endif
+	}
+
+
+
+	// create program shader
+	cShaderProgramPtr programShader = cShaderProgram::create();
+
+	// assign vertex shader to program shader
+	programShader->attachShader(vertexShader);
+
+	// assign fragment shader to program shader
+	programShader->attachShader(fragmentShader);
+
+	// assign program shader to object
+	objectX->setShaderProgram(programShader);
+
+	// link program shader
+	programShader->linkProgram();
+
+	// set uniforms
+	programShader->setUniformi("uColorMap", 0);
+	programShader->setUniformi("uShadowMap", 0);
+	programShader->setUniformi("uNormalMap", 2);
+	programShader->setUniformf("uInvRadius", 0.0f);
+
+	return 0;
+}
+
+//------------------------------------------------------------------------------
+
+void delete_object()
+{
+	world->removeChild(objectX);
+}
+
+//------------------------------------------------------------------------------
+
+int new_wall(int argc, char **argv)
+{
+	// retrieve information about the current haptic device
+	cHapticDeviceInfo hapticDeviceInfoX = hapticDevice->getSpecifications();
+
+	// define the radius of the tool (sphere)
+	double toolRadius = 0.02;
+
+	// --------------------------------------------------------
+	// copied from 01-cube.cpp and changed names of variables
+	// --------------------------------------------------------
+
+	// read the scale factor between the physical workspace of the haptic
+	// device and the virtual workspace defined for the tool
+	double workspaceScaleFactor = tool->getWorkspaceScaleFactor();
+
+	// stiffness properties
+	double maxStiffness = hapticDeviceInfoX.m_maxLinearStiffness / workspaceScaleFactor;
+
+	// create a virtual mesh
+	objectX = new cMesh();
+
+	// add object to world
+	world->addChild(objectX);
+
+	// set the position of the object at the center of the world
+	objectX->setLocalPos(-2.9, 0.0, 1.6);
+
+	// create cube
+	cCreateBox(objectX, 0.01, 4.0, 4.0);
+
+	// create a texture
+	cTexture2dPtr texture = cTexture2d::create();
+
+	bool fileload;
+
+
+	fileload = texture->loadFromFile(RESOURCE_PATH("../../examples/SDL/haptics-showroom-V02/resources/images/stone.jpg"));
+
+	//cout << "resourcesPath = " << resourcesPath << endl;
+
+	//cout << "image to be loaded: " << RESOURCE_PATH("../../examples/SDL/haptics-showroom-V02/resources/images/stone.jpg") << endl;
+
+	if (!fileload)
+	{
+#if defined(_MSVC)
+	//fileload = texture->loadFromFile("../../../bin/resources/images/stone.jpg");
+	//fileload = texture->loadFromFile("D:/Users/ga87taq/Desktop/Labs/chai3d-3.1.0/modules/OCULUS/examples/SDL/haptics-showroom-V02/resources/images/stone.jpg");
+	fileload = texture->loadFromFile("./../../examples/SDL/haptics-showroom-V02/resources/images/stone.jpg");
+	//fileload = texture->loadFromFile("./stone.jpg");
+	cout << "Loaded from somewhere else" << endl;
+#endif
+	}
+	if (!fileload)
+	{
+		cout << "Error - Texture image failed to load correctly. XXX" << endl;
+		close();
+		return (-1);
+	}
+
+	// apply texture to object
+	objectX->setTexture(texture);
+
+	// enable texture rendering 
+	objectX->setUseTexture(true);
+
+	// Since we don't need to see our polygons from both sides, we enable culling.
+	objectX->setUseCulling(true);
+
+	// set material properties to light gray
+	objectX->m_material->setWhite();
+
+	// compute collision detection algorithm
+	objectX->createAABBCollisionDetector(toolRadius);
+
+	// define a default stiffness for the object
+	objectX->m_material->setStiffness(0.3 * maxStiffness);
+
+	// define some static friction
+	objectX->m_material->setStaticFriction(0.2);
+
+	// define some dynamic friction
+	objectX->m_material->setDynamicFriction(0.2);
+
+	// define some texture rendering
+	objectX->m_material->setTextureLevel(0.1);
+
+	// render triangles haptically on front side only
+	objectX->m_material->setHapticTriangleSides(true, false);
+
+	// create a normal texture
+	//cNormalMapPtr normalMap = cNormalMap::create();
+
+	// load normal map from file
+#if 0
+	fileload = normalMap->loadFromFile(RESOURCE_PATH("../resources/images/brick-normal.png"));
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = normalMap->loadFromFile("../../../bin/resources/images/brick-normal.png");
+#endif
+	}
+	if (!fileload)
+	{
+		cout << "Error - Texture image failed to load correctly." << endl;
+		close();
+		return (-1);
+	}
+#else
+	//normalMap->createMap(objectX->m_texture);
+#endif
+
+	// assign normal map to object
+	//objectX->m_normalMap = normalMap;
+
+	// compute surface normals
+	//objectX->computeAllNormals();
+
+	// compute tangent vectors
+	//objectX->m_triangles->computeBTN();
+
+
+
+	//--------------------------------------------------------------------------
+	// CREATE SHADERS
+	//--------------------------------------------------------------------------
+
+	// create vertex shader
+	cShaderPtr vertexShader = cShader::create(C_VERTEX_SHADER);
+
+	// load vertex shader from file
+	fileload = vertexShader->loadSourceFile("../resources/shaders/bump.vert");
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = vertexShader->loadSourceFile("../../../bin/resources/shaders/bump.vert");
+#endif
+	}
+
+	// create fragment shader
+	cShaderPtr fragmentShader = cShader::create(C_FRAGMENT_SHADER);
+
+	// load fragment shader from file
+	fileload = fragmentShader->loadSourceFile("../resources/shaders/bump.frag");
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = fragmentShader->loadSourceFile("../../../bin/resources/shaders/bump.frag");
+#endif
+	}
+
+
+
+	// create program shader
+	cShaderProgramPtr programShader = cShaderProgram::create();
+
+	// assign vertex shader to program shader
+	programShader->attachShader(vertexShader);
+
+	// assign fragment shader to program shader
+	programShader->attachShader(fragmentShader);
+
+	// assign program shader to object
+	objectX->setShaderProgram(programShader);
+
+	// link program shader
+	programShader->linkProgram();
+
+	// set uniforms
+	programShader->setUniformi("uColorMap", 0);
+	programShader->setUniformi("uShadowMap", 0);
+	programShader->setUniformi("uNormalMap", 2);
+	programShader->setUniformf("uInvRadius", 0.0f);
+
+	return 0;
+}
