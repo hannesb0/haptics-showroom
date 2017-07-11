@@ -21,14 +21,14 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\OVRDevice.cpp" />
     <ClCompile Include="..\..\..\src\OVRRenderContext.cpp" />
-    <ClCompile Include="haptics_showroom-V02.cpp" />
+    <ClCompile Include="haptics-showroom-V02.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\OVRDevice.h" />
     <ClInclude Include="..\..\..\src\OVRRenderContext.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>haptics_showroom-V02</ProjectName>
+    <ProjectName>haptics-showroom-V02</ProjectName>
     <ProjectGuid>{DF4A1F32-BA3E-4604-A9F5-721CAAA9EA71}</ProjectGuid>
     <RootNamespace>01-devices</RootNamespace>
     <Keyword>Win32Proj</Keyword>
