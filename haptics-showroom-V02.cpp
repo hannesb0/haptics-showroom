@@ -73,6 +73,8 @@ cToolCursor* tool2;
 // a virtual mesh like object
 cMesh* object;
 cMesh* objectX;
+// a mesh model
+cMultiMesh* object1;
 
 // indicates if the haptic simulation currently running
 bool simulationRunning = false;
@@ -112,6 +114,15 @@ cOVRRenderContext renderContext;
 
 // oculus device
 cOVRDevice oculusVR;
+
+
+// ------------------------------------------------------------------------------
+// DECLARED MACROS
+//------------------------------------------------------------------------------
+
+// convert to resource path
+#define RESOURCE_PATH(p)    (char*)((resourceRoot+string(p)).c_str())
+
 
 //------------------------------------------------------------------------------
 // DECLARED FUNCTIONS
@@ -421,6 +432,77 @@ int main(int argc, char **argv)
 
 	// compute tangent vectors
 	object->m_triangles->computeBTN();
+
+	//--------------------------------------------------------------------------
+	// CREATE OBJECT
+	//--------------------------------------------------------------------------
+
+	// read the scale factor between the physical workspace of the haptic
+	// device and the virtual workspace defined for the tool
+	double workspaceScaleFactor1 = tool->getWorkspaceScaleFactor();
+
+	// stiffness properties
+	double maxStiffness1 = hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor1;
+
+	// create a virtual mesh
+	object1 = new cMultiMesh();
+
+	// add object to world
+	world->addChild(object1);
+
+	// rotate the object 90 degrees
+	object1->rotateAboutGlobalAxisDeg(cVector3d(0.5, 0.5, 1), 90);
+
+	// load an object file
+	bool fileload1;
+	fileload1 = object1->loadFromFile(RESOURCE_PATH("../resources/models/table/simpleTable.3ds"));
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload1 = object1->loadFromFile("../../../bin/resources/models/table/simpleTable.3ds");
+#endif
+	}
+	if (!fileload1)
+	{
+		cout << "Error - 3D Model failed to load correctly." << endl;
+		close();
+		return (-1);
+	}
+
+	// get dimensions of object
+	object1->computeBoundaryBox(true);
+	double size = cSub(object1->getBoundaryMax(), object1->getBoundaryMin()).length();
+
+	// resize object to screen
+	if (size > 0.001)
+	{
+		object1->scale(1/size);
+	}
+
+	// compute collision detection algorithm
+	object1->createAABBCollisionDetector(.02);
+
+	// disable culling so that faces are rendered on both sides
+	object1->setUseCulling(false);
+
+	// enable display list for faster graphic rendering
+	object1->setUseDisplayList(true);
+
+	// center object in scene
+	object1->setLocalPos(-1.0 * object->getBoundaryCenter());
+
+	// rotate object in scene
+	object1->rotateExtrinsicEulerAnglesDeg(0, 0, 90, C_EULER_ORDER_XYZ);
+
+	// set haptic properties
+	cMaterial mat;
+	mat.setHapticTriangleSides(true, true);
+	mat.setStiffness(0.2 * maxStiffness);
+	mat.setStaticFriction(0.2);
+	mat.setDynamicFriction(0.1);
+	object1->setMaterial(mat);
+
+
 
 
 	//--------------------------------------------------------------------------
@@ -834,6 +916,45 @@ void processEvents()
 
 //------------------------------------------------------------------------------
 
+void processEvents1()
+{
+	SDL_Event event;
+
+	while (SDL_PollEvent(&event))
+	{
+		switch (event.type)
+		{
+		case SDL_KEYDOWN:
+			// esc
+			if (event.key.keysym.sym == SDLK_q || event.key.keysym.sym == SDLK_ESCAPE)
+			{
+				close();
+				break;
+			}
+
+			// spacebar
+			if (event.key.keysym.sym == SDLK_SPACE)
+			{
+				oculusVR.recenterPose();
+				break;
+			}
+
+			break;
+
+		case SDL_QUIT:
+			close();
+			break;
+
+		default:
+			break;
+		}
+	}
+}
+
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+
 void computeMatricesFromInput()
 {
 	if (keyState[(unsigned char)'w'] == 1) // Walk forward
@@ -973,6 +1094,10 @@ void updateHaptics(void)
 
 		// send forces to haptic device
 		tool->applyToDevice();
+
+
+
+
 
 
 		/////////////////////////////////////////////////////////////////////
