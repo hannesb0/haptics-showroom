@@ -1,11 +1,11 @@
 //==============================================================================
 /*
-	Filename:	haptics_showroom-V02.cpp
-	Project:	Haptics Showroom
-    Authors:	Naina Dhingra, Ke Xu, Hannes Bohnengel 
-    Revision:	0.2
-	Remarks:	These files are tracked with git and are available on the github
-				repository: https://github.com/hannesb0/haptics-showroom
+Filename:	haptics_showroom-V02.cpp
+Project:	Haptics Showroom
+Authors:	Naina Dhingra, Ke Xu, Hannes Bohnengel
+Revision:	0.2
+Remarks:	These files are tracked with git and are available on the github
+repository: https://github.com/hannesb0/haptics-showroom
 */
 //==============================================================================
 
@@ -74,6 +74,19 @@ cToolCursor* tool2;
 cMesh* object;
 cMesh* objectX;
 
+// audio device to play sound
+cAudioDevice* audioDevice;
+
+// audio buffers to store sound files
+cAudioBuffer* audioBuffer1;
+cAudioBuffer* audioBuffer2;
+cAudioBuffer* audioBuffer3;
+cAudioBuffer* audioBuffer4;
+cAudioBuffer* audioBuffer5;
+cAudioBuffer* audioBuffer6;
+cAudioBuffer* audioBuffer7;
+
+
 // indicates if the haptic simulation currently running
 bool simulationRunning = false;
 
@@ -130,11 +143,11 @@ void processEvents();
 void computeMatricesFromInput();
 
 // function to create a new object at runtime
-int new_object(int argc, char **argv, cVector3d position, cVector3d size, int property);
+int new_object(int argc, char **argv, cVector3d position, cVector3d size, int property, int sound);
 
 // for testing purposes !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //int new_wall(int argc, char **argv);
-void delete_object();
+//void delete_object();
 
 
 //==============================================================================
@@ -169,7 +182,7 @@ int main(int argc, char **argv)
 
 	// get the location of the executable
 	resourceRoot = string(argv[0]).substr(0, string(argv[0]).find_last_of("/\\") + 1);
-	
+
 	// this is the location of the resources
 	resourcesPath = resourceRoot + string("../../examples/SDL/haptics-showroom-V02/resources/");
 
@@ -360,7 +373,7 @@ int main(int argc, char **argv)
 	// create a texture
 	cTexture2dPtr texture = cTexture2d::create();
 
-	bool fileload = texture->loadFromFile(RESOURCE_PATH("images/brick-color.png"));
+	bool fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/brick-color.png"));
 	if (!fileload)
 	{
 #if defined(_MSVC)
@@ -408,12 +421,12 @@ int main(int argc, char **argv)
 	cNormalMapPtr normalMap = cNormalMap::create();
 
 	// load normal map from file
-	fileload = normalMap->loadFromFile(RESOURCE_PATH("images/brick-normal.png"));
+	fileload = normalMap->loadFromFile(RESOURCE_PATH("../resources/images/brick-normal.png"));
 	if (!fileload)
 	{
-	#if defined(_MSVC)
+#if defined(_MSVC)
 		fileload = normalMap->loadFromFile("../../../bin/resources/images/brick-normal.png");
-	#endif
+#endif
 	}
 	if (!fileload)
 	{
@@ -430,6 +443,29 @@ int main(int argc, char **argv)
 
 	// compute tangent vectors
 	object->m_triangles->computeBTN();
+
+
+	//--------------------------------------------------------------------------
+	// SETUP AUDIO MATERIAL
+	//--------------------------------------------------------------------------
+	// create an audio device to play sounds
+	audioDevice = new cAudioDevice();
+
+	// attach audio device to camera
+	camera->attachAudioDevice(audioDevice);
+
+	// create an audio buffer and load audio wave file
+	audioBuffer1 = audioDevice->newAudioBuffer();
+	// load sound from file
+
+	bool soundload = audioBuffer1->loadFromFile(RESOURCE_PATH("../resources/sounds/metal-scraping.wav"));
+	if (!soundload)
+	{
+#if defined(_MSVC)
+		soundload = audioBuffer1->loadFromFile("../../../bin/resources/sounds/metal-scraping.wav");
+#endif
+	}
+
 
 
 	//--------------------------------------------------------------------------
@@ -482,58 +518,58 @@ int main(int argc, char **argv)
 	programShader->setUniformf("uInvRadius", 0.0f);
 
 	// insert 7 fixed cubes
-	if (new_object(argc, argv, cVector3d(-1.5, -1.5, 0.0), cVector3d(0.2, 0.2, 0.2), 0) == -1) {
+	if (new_object(argc, argv, cVector3d(-1.5, -1.5, 0.0), cVector3d(0.2, 0.2, 0.2), 0, 0) == -1) {
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object(argc, argv, cVector3d(-1.5, -1.0, 0.0), cVector3d(0.2, 0.2, 0.2), 1) == -1) {
+	if (new_object(argc, argv, cVector3d(-1.5, -1.0, 0.0), cVector3d(0.2, 0.2, 0.2), 1, 1) == -1) {
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object(argc, argv, cVector3d(-1.5, -0.5, 0.0), cVector3d(0.2, 0.2, 0.2), 2) == -1) {
+	if (new_object(argc, argv, cVector3d(-1.5, -0.5, 0.0), cVector3d(0.2, 0.2, 0.2), 2, 2) == -1) {
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object(argc, argv, cVector3d(-1.5, 0.0, 0.0), cVector3d(0.2, 0.2, 0.2), 3) == -1) {
+	if (new_object(argc, argv, cVector3d(-1.5, 0.0, 0.0), cVector3d(0.2, 0.2, 0.2), 3, 3) == -1) {
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object(argc, argv, cVector3d(-1.5, 0.5, 0.0), cVector3d(0.2, 0.2, 0.2), 4) == -1) {
+	if (new_object(argc, argv, cVector3d(-1.5, 0.5, 0.0), cVector3d(0.2, 0.2, 0.2), 4, 4) == -1) {
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object(argc, argv, cVector3d(-1.5, 1.0, 0.0), cVector3d(0.2, 0.2, 0.2), 5) == -1) {
+	if (new_object(argc, argv, cVector3d(-1.5, 1.0, 0.0), cVector3d(0.2, 0.2, 0.2), 5, 5) == -1) {
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object(argc, argv, cVector3d(-1.5, 1.5, 0.0), cVector3d(0.2, 0.2, 0.2), 6) == -1) {
+	if (new_object(argc, argv, cVector3d(-1.5, 1.5, 0.0), cVector3d(0.2, 0.2, 0.2), 6, 6) == -1) {
 		cout << "Error - New object could not be created." << endl;
 	}
 
 	/*
 	// insert the walls
 	// back wall
-	if (new_object(argc, argv, cVector3d(-2.9, 0.0, 1.6), cVector3d(0.01, 4.0, 4.0), 7) == -1) {
-		cout << "Error - New object could not be created." << endl;
+	if (new_object(argc, argv, cVector3d(-2.9, 0.0, 1.6), cVector3d(0.01, 4.0, 4.0), 7,7) == -1) {
+	cout << "Error - New object could not be created." << endl;
 	}
 	// left wall
-	if (new_object(argc, argv, cVector3d(0.0, -1.95, 1.6), cVector3d(6.0, 0.01, 4.0), 7) == -1) {
-		cout << "Error - New wall could not be created." << endl;
+	if (new_object(argc, argv, cVector3d(0.0, -1.95, 1.6), cVector3d(6.0, 0.01, 4.0), 7,7) == -1) {
+	cout << "Error - New wall could not be created." << endl;
 	}
 	// right wall
-	if (new_object(argc, argv, cVector3d(0.0, 1.95, 1.6), cVector3d(6.0, 0.01, 4.0), 7) == -1) {
-		cout << "Error - New wall could not be created." << endl;
+	if (new_object(argc, argv, cVector3d(0.0, 1.95, 1.6), cVector3d(6.0, 0.01, 4.0), 7,7) == -1) {
+	cout << "Error - New wall could not be created." << endl;
 	}
-	// cealing
-	if (new_object(argc, argv, cVector3d(0.0, 0.0, 4.0), cVector3d(6.0, 4.0, 0.01), 7) == -1) {
-		cout << "Error - New wall could not be created." << endl;
+	// ceiling
+	if (new_object(argc, argv, cVector3d(0.0, 0.0, 3.6), cVector3d(6.0, 4.0, 0.01), 7,7) == -1) {
+	cout << "Error - New wall could not be created." << endl;
 	}
 	// floor
-	if (new_object(argc, argv, cVector3d(0.0, 0.0, -0.3), cVector3d(6.0, 4.0, 0.01), 7) == -1) {
-		cout << "Error - New wall could not be created." << endl;
+	if (new_object(argc, argv, cVector3d(0.0, 0.0, -0.3), cVector3d(6.0, 4.0, 0.01), 7,7) == -1) {
+	cout << "Error - New wall could not be created." << endl;
 	}
 	// front wall
-	if (new_object(argc, argv, cVector3d(2.9, 0.0, 1.6), cVector3d(0.01, 4.0, 4.0), 7) == -1) {
-		cout << "Error - New wall could not be created." << endl;
+	if (new_object(argc, argv, cVector3d(2.9, 0.0, 1.6), cVector3d(0.01, 4.0, 4.0), 7,7) == -1) {
+	cout << "Error - New wall could not be created." << endl;
 	}
 
 	*/
 
-	
+
 	//--------------------------------------------------------------------------
 	// CREATE ENVIRONMENT GLOBE
 	//--------------------------------------------------------------------------
@@ -623,9 +659,9 @@ int main(int argc, char **argv)
 	fileload = textureSpace->loadFromFile(RESOURCE_PATH("images/infinity.jpg"));
 	if (!fileload)
 	{
-	#if defined(_MSVC)
+#if defined(_MSVC)
 		fileload = textureSpace->loadFromFile("../../../bin/resources/images/infinity.jpg");
-	#endif
+#endif
 	}
 	if (!fileload)
 	{
@@ -703,8 +739,13 @@ int main(int argc, char **argv)
 			// check if Oculus should be used
 			//camera->m_useCustomModelViewMatrix = true;
 			camera->m_useCustomModelViewMatrix = useOculus;
-			
-			// check if Oculus should be used
+			<< << << < HEAD:haptics_showroom - V02.cpp
+
+				// check if Oculus should be used
+				== == == =
+
+				////////////////////////////////////////////////////////////////////////////
+				>> >> >> > master:material / 01 - cube.cpp
 			if (useOculus)
 			{
 				camera->m_modelViewMatrix = modelViewMatrix;
@@ -772,9 +813,10 @@ void processEvents()
 			/*
 			if (event.key.keysym.sym == SDLK_SPACE)
 			{
-				oculusVR.recenterPose();
-				break;
+			oculusVR.recenterPose();
+			break;
 			}
+			<<<<<<< HEAD:haptics_showroom-V02.cpp
 			*/
 			if (event.key.keysym.sym == SDLK_SPACE)
 			{
@@ -788,6 +830,10 @@ void processEvents()
 			{
 				keyState[(unsigned char)'2'] = 1;
 			}
+			== == == =
+
+				//////////////////////////////////////////////////////////////////////////////////
+				>> >> >> > master:material / 01 - cube.cpp
 			if (event.key.keysym.sym == SDLK_w)
 			{
 				keyState[(unsigned char)'w'] = 1;
@@ -812,49 +858,65 @@ void processEvents()
 			{
 				keyState[(unsigned char)'e'] = 1;
 			}
+			<< << << < HEAD:haptics_showroom - V02.cpp
 
-			break;
+				break;
 
 		case SDL_KEYUP:
+			== == == =
+				//////////////////////////////////////////////////////////////////////////////////
+
+
+				break;
+
+			/*
+			//////////////////////////////////////////////////////////////////////////////////
+			case SDL_KEYUP:
+			>>>>>>> master:material/01-cube.cpp
 
 			if (event.key.keysym.sym == SDLK_SPACE)
 			{
-				keyState[(unsigned char)' '] = 0;
+			keyState[(unsigned char)' '] = 0;
 			}
 			if (event.key.keysym.sym == SDLK_1)
 			{
-				keyState[(unsigned char)'1'] = 0;
+			keyState[(unsigned char)'1'] = 0;
 			}
 			if (event.key.keysym.sym == SDLK_2)
 			{
-				keyState[(unsigned char)'2'] = 0;
+			keyState[(unsigned char)'2'] = 0;
 			}
 			if (event.key.keysym.sym == SDLK_w)
 			{
-				keyState[(unsigned char)'w'] = 0;
+			keyState[(unsigned char)'w'] = 0;
 			}
 			if (event.key.keysym.sym == SDLK_s)
 			{
-				keyState[(unsigned char)'s'] = 0;
+			keyState[(unsigned char)'s'] = 0;
 			}
 			if (event.key.keysym.sym == SDLK_a)
 			{
-				keyState[(unsigned char)'a'] = 0;
+			keyState[(unsigned char)'a'] = 0;
 			}
 			if (event.key.keysym.sym == SDLK_d)
 			{
-				keyState[(unsigned char)'d'] = 0;
+			keyState[(unsigned char)'d'] = 0;
 			}
 			if (event.key.keysym.sym == SDLK_q)
 			{
-				keyState[(unsigned char)'q'] = 0;
+			keyState[(unsigned char)'q'] = 0;
 			}
 			if (event.key.keysym.sym == SDLK_e)
 			{
-				keyState[(unsigned char)'e'] = 0;
+			keyState[(unsigned char)'e'] = 0;
 			}
 
 			break;
+			<<<<<<< HEAD:haptics_showroom-V02.cpp
+			=======
+			//////////////////////////////////////////////////////////////////////////////////
+			*/
+			>> >> >> > master:material / 01 - cube.cpp
 
 		case SDL_QUIT:
 			close();
@@ -902,7 +964,7 @@ void computeMatricesFromInput()
 	}
 	if (keyState[(unsigned char)'1'] == 1) // special function 1
 	{
-		delete_object();
+		//delete_object();
 	}
 	if (keyState[(unsigned char)'2'] == 1) // special function 2
 	{
@@ -933,7 +995,7 @@ void computeMatricesFromInput()
 	currentDirection = cVector3d(-cos(currentAngle), -sin(currentAngle), 0.0);
 
 	// recalculate the direction of the "up" vector
-	camera->set(currentPosition, currentPosition + currentDirection, cVector3d(0, 0, 1));   
+	camera->set(currentPosition, currentPosition + currentDirection, cVector3d(0, 0, 1));
 }
 //------------------------------------------------------------------------------
 
@@ -1016,7 +1078,7 @@ void updateHaptics(void)
 
 		cVector3d tmp2 = tool->getDeviceGlobalPos();
 
-		if (tmp2.x() < 0.3 && tmp2.x() > -0.3 && tmp2.y() < 0.3 && tmp2.y() > -0.3 
+		if (tmp2.x() < 0.3 && tmp2.x() > -0.3 && tmp2.y() < 0.3 && tmp2.y() > -0.3
 			&& tmp2.z() < 0.3 && tmp2.z() > -0.3)
 		{
 			// some constants
@@ -1090,7 +1152,7 @@ void updateHaptics(void)
 
 //------------------------------------------------------------------------------
 
-int new_object(int argc, char **argv, cVector3d position, cVector3d size, int property)
+int new_object(int argc, char **argv, cVector3d position, cVector3d size, int property, int sound)
 {
 	// retrieve information about the current haptic device
 	cHapticDeviceInfo hapticDeviceInfoX = hapticDevice->getSpecifications();
@@ -1120,13 +1182,18 @@ int new_object(int argc, char **argv, cVector3d position, cVector3d size, int pr
 	// create a texture
 	cTexture2dPtr texture = cTexture2d::create();
 
-	bool fileload;
+	// create an audio device to play sounds
+	audioDevice = new cAudioDevice();
 
+	// attach audio device to camera
+	camera->attachAudioDevice(audioDevice);
+
+	bool fileload;
 
 	switch (property)
 	{
 	case(0) :
-		fileload = texture->loadFromFile(RESOURCE_PATH("images/brick-color.png"));
+		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/brick-color.png"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1141,7 +1208,7 @@ int new_object(int argc, char **argv, cVector3d position, cVector3d size, int pr
 		}
 		break;
 	case(1) :
-		fileload = texture->loadFromFile(RESOURCE_PATH("images/color1.png"));
+		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/color1.png"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1156,7 +1223,7 @@ int new_object(int argc, char **argv, cVector3d position, cVector3d size, int pr
 		}
 		break;
 	case(2) :
-		fileload = texture->loadFromFile(RESOURCE_PATH("images/G1RhombAluminumMesh.JPG"));
+		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/G1RhombAluminumMesh.JPG"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1171,7 +1238,7 @@ int new_object(int argc, char **argv, cVector3d position, cVector3d size, int pr
 		}
 		break;
 	case(3) :
-		fileload = texture->loadFromFile(RESOURCE_PATH("images/whitefoam.jpg"));
+		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/whitefoam.jpg"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1186,7 +1253,7 @@ int new_object(int argc, char **argv, cVector3d position, cVector3d size, int pr
 		}
 		break;
 	case(4) :
-		fileload = texture->loadFromFile(RESOURCE_PATH("images/brownboard.jpg"));
+		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/brownboard.jpg"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1201,7 +1268,7 @@ int new_object(int argc, char **argv, cVector3d position, cVector3d size, int pr
 		}
 		break;
 	case(5) :
-		fileload = texture->loadFromFile(RESOURCE_PATH("images/blackstone.jpg"));
+		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/blackstone.jpg"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1216,7 +1283,7 @@ int new_object(int argc, char **argv, cVector3d position, cVector3d size, int pr
 		}
 		break;
 	case(6) :
-		fileload = texture->loadFromFile(RESOURCE_PATH("images/redplastic.jpg"));
+		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/redplastic.jpg"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1231,7 +1298,7 @@ int new_object(int argc, char **argv, cVector3d position, cVector3d size, int pr
 		}
 		break;
 	case(7) :
-		fileload = texture->loadFromFile(RESOURCE_PATH("images/stone.jpg"));
+		fileload = texture->loadFromFile(RESOURCE_PATH("../resources/images/stone.jpg"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1286,7 +1353,7 @@ int new_object(int argc, char **argv, cVector3d position, cVector3d size, int pr
 	switch (property)
 	{
 	case(0) :
-		fileload = normalMap->loadFromFile(RESOURCE_PATH("images/brick-normal.png"));
+		fileload = normalMap->loadFromFile(RESOURCE_PATH("../resources/images/brick-normal.png"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1301,7 +1368,7 @@ int new_object(int argc, char **argv, cVector3d position, cVector3d size, int pr
 		}
 		break;
 	case(1) :
-		fileload = normalMap->loadFromFile(RESOURCE_PATH("images/normal1.png"));
+		fileload = normalMap->loadFromFile(RESOURCE_PATH("../resources/images/normal1.png"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1316,7 +1383,7 @@ int new_object(int argc, char **argv, cVector3d position, cVector3d size, int pr
 		}
 		break;
 	case(2) :
-		fileload = normalMap->loadFromFile(RESOURCE_PATH("images/G1RhombAluminumMeshNormal.png"));
+		fileload = normalMap->loadFromFile(RESOURCE_PATH("../resources/images/G1RhombAluminumMeshNormal.png"));
 		if (!fileload)
 		{
 #if defined(_MSVC)
@@ -1349,14 +1416,14 @@ int new_object(int argc, char **argv, cVector3d position, cVector3d size, int pr
 		if (!fileload)
 		{
 		#if defined(_MSVC)
-			fileload = normalMap->loadFromFile("../../../bin/resources/images/white-brick-wall-large-normal.jpg");
+		fileload = normalMap->loadFromFile("../../../bin/resources/images/white-brick-wall-large-normal.jpg");
 		#endif
 		}
 		if (!fileload)
 		{
-			cout << "Error - Texture image failed to load correctly." << endl;
-			close();
-			return (-1);
+		cout << "Error - Texture image failed to load correctly." << endl;
+		close();
+		return (-1);
 		}
 		*/
 		break;
@@ -1374,6 +1441,148 @@ int new_object(int argc, char **argv, cVector3d position, cVector3d size, int pr
 		// compute tangent vectors
 		objectX->m_triangles->computeBTN();
 	}
+
+
+	bool soundload;
+
+	switch (sound)
+	{
+	case(0) :
+
+		soundload = audioBuffer1->loadFromFile(RESOURCE_PATH("sounds/paper-impact.wav"));
+		if (!soundload)
+		{
+#if defined(_MSVC)
+			soundload = audioBuffer1->loadFromFile("../../../bin/resources/sounds/paper-impact.wav");
+#endif
+		}
+		if (!soundload)
+		{
+			cout << "Error - Texture image failed to load correctly1." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(1) :
+
+		soundload = audioBuffer2->loadFromFile(RESOURCE_PATH("../resources/sounds/paper-impact.wav"));
+		if (!soundload)
+		{
+#if defined(_MSVC)
+			soundload = audioBuffer2->loadFromFile("../../../bin/resources/sounds/paper-impact.wav");
+#endif
+		}
+		if (!soundload)
+		{
+			cout << "Error - Texture image failed to load correctly2." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(2) :
+
+		soundload = audioBuffer3->loadFromFile(RESOURCE_PATH("../resources/sounds/paper-impact.wav"));
+		if (!soundload)
+		{
+#if defined(_MSVC)
+			soundload = audioBuffer3->loadFromFile("../../../bin/resources/sounds/paper-impact.wav");
+#endif
+		}
+		if (!soundload)
+		{
+			cout << "Error - Texture image failed to load correctly3." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(3) :
+
+		soundload = audioBuffer4->loadFromFile(RESOURCE_PATH("../resources/sounds/metal-scraping.wav"));
+		if (!soundload)
+		{
+#if defined(_MSVC)
+			soundload = audioBuffer4->loadFromFile("../../../bin/resources/sounds/metal-scraping.wav");
+#endif
+		}
+		if (!soundload)
+		{
+			cout << "Error - Texture image failed to load correctly4." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(4) :
+
+		soundload = audioBuffer5->loadFromFile(RESOURCE_PATH("../resources/sounds/metal-scraping.wav"));
+		if (!soundload)
+		{
+#if defined(_MSVC)
+			soundload = audioBuffer5->loadFromFile("../../../bin/resources/sounds/metal-scraping.wav");
+#endif
+		}
+		if (!soundload)
+		{
+			cout << "Error - Texture image failed to load correctly5." << endl;
+			close();
+			return (-1);
+		}
+		break;
+		/*case(5) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/blackstone.jpg"));
+		if (!fileload)
+		{
+		#if defined(_MSVC)
+		fileload = texture->loadFromFile("../../../bin/resources/images/blackstone.jpg");
+		#endif
+		}
+		if (!fileload)
+		{
+		cout << "Error - Texture image failed to load correctly." << endl;
+		close();
+		return (-1);
+		}
+		break;
+		case(6) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/redplastic.jpg"));
+		if (!fileload)
+		{
+		#if defined(_MSVC)
+		fileload = texture->loadFromFile("../../../bin/resources/images/redplastic.jpg");
+		#endif
+		}
+		if (!fileload)
+		{
+		cout << "Error - Texture image failed to load correctly." << endl;
+		close();
+		return (-1);
+		}
+		break;
+		case(7) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/stone.jpg"));
+		if (!fileload)
+		{
+		#if defined(_MSVC)
+		fileload = texture->loadFromFile("../../../bin/resources/images/stone.jpg");
+		#endif
+		}
+		if (!fileload)
+		{
+		cout << "Error - Texture image failed to load correctly." << endl;
+		close();
+		return (-1);
+		}
+		break;
+		*/
+	default:
+		break;
+	}
+	// here we convert all files to mono. this allows for 3D sound support. if this code
+	// is commented files are kept in stereo format and 3D sound is disabled. Compare both!
+	audioBuffer1->convertToMono();
+	audioBuffer2->convertToMono();
+	audioBuffer3->convertToMono();
+	audioBuffer4->convertToMono();
+	audioBuffer5->convertToMono();
 
 
 	//--------------------------------------------------------------------------
@@ -1476,7 +1685,7 @@ int new_wall(int argc, char **argv)
 	bool fileload;
 
 
-	fileload = texture->loadFromFile(RESOURCE_PATH("images/stone.jpg"));
+	fileload = texture->loadFromFile(RESOURCE_PATH("images/G2GraniteTypeVeneziano.jpg"));
 
 	//cout << "resourcesPath = " << resourcesPath << endl;
 
@@ -1485,11 +1694,11 @@ int new_wall(int argc, char **argv)
 	if (!fileload)
 	{
 #if defined(_MSVC)
-	//fileload = texture->loadFromFile("../../../bin/resources/images/stone.jpg");
-	//fileload = texture->loadFromFile("D:/Users/ga87taq/Desktop/Labs/chai3d-3.1.0/modules/OCULUS/examples/SDL/haptics-showroom-V02/resources/images/stone.jpg");
-	fileload = texture->loadFromFile("./../../examples/SDL/haptics-showroom-V02/resources/images/stone.jpg");
-	//fileload = texture->loadFromFile("./stone.jpg");
-	cout << "Loaded from somewhere else" << endl;
+		//fileload = texture->loadFromFile("../../../bin/resources/images/stone.jpg");
+		//fileload = texture->loadFromFile("D:/Users/ga87taq/Desktop/Labs/chai3d-3.1.0/modules/OCULUS/examples/SDL/haptics-showroom-V02/resources/images/stone.jpg");
+		fileload = texture->loadFromFile("./../../examples/SDL/haptics-showroom-V02/resources/images/G2GraniteTypeVeneziano.jpg");
+		//fileload = texture->loadFromFile("./stone.jpg");
+		cout << "Loaded from somewhere else" << endl;
 #endif
 	}
 	if (!fileload)
@@ -1533,8 +1742,9 @@ int new_wall(int argc, char **argv)
 	//cNormalMapPtr normalMap = cNormalMap::create();
 
 	// load normal map from file
+	* /
 #if 0
-	fileload = normalMap->loadFromFile(RESOURCE_PATH("../resources/images/brick-normal.png"));
+		fileload = normalMap->loadFromFile(RESOURCE_PATH("../resources/images/brick-normal.png"));
 	if (!fileload)
 	{
 #if defined(_MSVC)
@@ -1547,9 +1757,9 @@ int new_wall(int argc, char **argv)
 		close();
 		return (-1);
 	}
-#else
+#endif 
 	//normalMap->createMap(objectX->m_texture);
-#endif
+
 
 	// assign normal map to object
 	//objectX->m_normalMap = normalMap;
