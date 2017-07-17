@@ -29,7 +29,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectName>haptics_showroom-V02</ProjectName>
-    <ProjectGuid>{DF4A1F32-BA3E-4604-A9F5-721CAAA9EA71}</ProjectGuid>
+    <ProjectGuid>{67AFEFE6-9446-44FD-A18F-8A1C54ACC6F4}</ProjectGuid>
     <RootNamespace>01-devices</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
