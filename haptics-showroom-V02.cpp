@@ -739,13 +739,11 @@ int main(int argc, char **argv)
 			// check if Oculus should be used
 			//camera->m_useCustomModelViewMatrix = true;
 			camera->m_useCustomModelViewMatrix = useOculus;
-			<< << << < HEAD:haptics_showroom - V02.cpp
 
 				// check if Oculus should be used
-				== == == =
 
 				////////////////////////////////////////////////////////////////////////////
-				>> >> >> > master:material / 01 - cube.cpp
+				
 			if (useOculus)
 			{
 				camera->m_modelViewMatrix = modelViewMatrix;
@@ -830,10 +828,8 @@ void processEvents()
 			{
 				keyState[(unsigned char)'2'] = 1;
 			}
-			== == == =
 
 				//////////////////////////////////////////////////////////////////////////////////
-				>> >> >> > master:material / 01 - cube.cpp
 			if (event.key.keysym.sym == SDLK_w)
 			{
 				keyState[(unsigned char)'w'] = 1;
@@ -858,12 +854,11 @@ void processEvents()
 			{
 				keyState[(unsigned char)'e'] = 1;
 			}
-			<< << << < HEAD:haptics_showroom - V02.cpp
+		
 
 				break;
 
 		case SDL_KEYUP:
-			== == == =
 				//////////////////////////////////////////////////////////////////////////////////
 
 
@@ -916,7 +911,6 @@ void processEvents()
 			=======
 			//////////////////////////////////////////////////////////////////////////////////
 			*/
-			>> >> >> > master:material / 01 - cube.cpp
 
 		case SDL_QUIT:
 			close();
@@ -1450,6 +1444,8 @@ int new_object(int argc, char **argv, cVector3d position, cVector3d size, int pr
 	case(0) :
 
 		soundload = audioBuffer1->loadFromFile(RESOURCE_PATH("sounds/paper-impact.wav"));
+
+		cout << "Sound to load: " << RESOURCE_PATH("sounds/paper-impact.wav");
 		if (!soundload)
 		{
 #if defined(_MSVC)
