@@ -22,6 +22,9 @@ repository: https://github.com/hannesb0/haptics-showroom
 #include "OVRRenderContext.h"
 #include "OVRDevice.h"
 //------------------------------------------------------------------------------
+#include "MyProperties.h"
+#include "Global.h"
+//------------------------------------------------------------------------------
 using namespace chai3d;
 using namespace std;
 //------------------------------------------------------------------------------
@@ -96,6 +99,10 @@ bool simulationFinished = false;
 // frequency counter to measure the simulation haptic rate
 cFrequencyCounter frequencyCounter;
 
+//------------------------------------------------------------------------------
+// Custum variables
+//------------------------------------------------------------------------------
+
 // new path to the resources (included in the repository)
 string resourcesPath, resourceRoot;
 
@@ -115,6 +122,8 @@ double rotationalSpeed = 0.006;
 
 // variable to store state of keys
 unsigned int keyState[255];
+
+//MyProperties test;
 
 //------------------------------------------------------------------------------
 // OCULUS RIFT
@@ -143,7 +152,14 @@ void processEvents();
 void computeMatricesFromInput();
 
 // function to create a new object at runtime
+<<<<<<< HEAD
 int new_object(int argc, char **argv, cVector3d position, cVector3d size, int property, int sound);
+=======
+int new_object(cVector3d position, cVector3d size, int property);
+
+// function to create a new object at runtime with properties
+int new_object_with_properties(cVector3d position, cVector3d size, MyProperties property);
+>>>>>>> 8375c7605cdedda21c6368ca4da52a356e710aa7
 
 // for testing purposes !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //int new_wall(int argc, char **argv);
@@ -518,6 +534,7 @@ int main(int argc, char **argv)
 	programShader->setUniformf("uInvRadius", 0.0f);
 
 	// insert 7 fixed cubes
+<<<<<<< HEAD
 	if (new_object(argc, argv, cVector3d(-1.5, -1.5, 0.0), cVector3d(0.2, 0.2, 0.2), 0, 0) == -1) {
 		cout << "Error - New object could not be created." << endl;
 	}
@@ -537,6 +554,27 @@ int main(int argc, char **argv)
 		cout << "Error - New object could not be created." << endl;
 	}
 	if (new_object(argc, argv, cVector3d(-1.5, 1.5, 0.0), cVector3d(0.2, 0.2, 0.2), 6, 6) == -1) {
+=======
+	if (new_object(cVector3d(-1.5, -1.5, 0.0), cVector3d(0.2, 0.2, 0.2), 0) == -1) {
+		cout << "Error - New object could not be created." << endl;
+	}
+	if (new_object(cVector3d(-1.5, -1.0, 0.0), cVector3d(0.2, 0.2, 0.2), 1) == -1) {
+		cout << "Error - New object could not be created." << endl;
+	}
+	if (new_object(cVector3d(-1.5, -0.5, 0.0), cVector3d(0.2, 0.2, 0.2), 2) == -1) {
+		cout << "Error - New object could not be created." << endl;
+	}
+	if (new_object(cVector3d(-1.5, 0.0, 0.0), cVector3d(0.2, 0.2, 0.2), 3) == -1) {
+		cout << "Error - New object could not be created." << endl;
+	}
+	if (new_object(cVector3d(-1.5, 0.5, 0.0), cVector3d(0.2, 0.2, 0.2), 4) == -1) {
+		cout << "Error - New object could not be created." << endl;
+	}
+	if (new_object(cVector3d(-1.5, 1.0, 0.0), cVector3d(0.2, 0.2, 0.2), 5) == -1) {
+		cout << "Error - New object could not be created." << endl;
+	}
+	if (new_object(cVector3d(-1.5, 1.5, 0.0), cVector3d(0.2, 0.2, 0.2), 6) == -1) {
+>>>>>>> 8375c7605cdedda21c6368ca4da52a356e710aa7
 		cout << "Error - New object could not be created." << endl;
 	}
 
@@ -1146,7 +1184,11 @@ void updateHaptics(void)
 
 //------------------------------------------------------------------------------
 
+<<<<<<< HEAD
 int new_object(int argc, char **argv, cVector3d position, cVector3d size, int property, int sound)
+=======
+int new_object(cVector3d position, cVector3d size, int property)
+>>>>>>> 8375c7605cdedda21c6368ca4da52a356e710aa7
 {
 	// retrieve information about the current haptic device
 	cHapticDeviceInfo hapticDeviceInfoX = hapticDevice->getSpecifications();
@@ -1610,6 +1652,353 @@ int new_object(int argc, char **argv, cVector3d position, cVector3d size, int pr
 	}
 
 
+
+	// create program shader
+	cShaderProgramPtr programShader = cShaderProgram::create();
+
+	// assign vertex shader to program shader
+	programShader->attachShader(vertexShader);
+
+	// assign fragment shader to program shader
+	programShader->attachShader(fragmentShader);
+
+	// assign program shader to object
+	objectX->setShaderProgram(programShader);
+
+	// link program shader
+	programShader->linkProgram();
+
+	// set uniforms
+	programShader->setUniformi("uColorMap", 0);
+	programShader->setUniformi("uShadowMap", 0);
+	programShader->setUniformi("uNormalMap", 2);
+	programShader->setUniformf("uInvRadius", 0.0f);
+
+	return 0;
+}
+
+//------------------------------------------------------------------------------
+
+int new_object_with_properties(cVector3d position, cVector3d size, MyProperties property)
+{
+	// retrieve information about the current haptic device
+	cHapticDeviceInfo hapticDeviceInfoX = hapticDevice->getSpecifications();
+
+	// read the scale factor between the physical workspace of the haptic
+	// device and the virtual workspace defined for the tool
+	double workspaceScaleFactor = tool->getWorkspaceScaleFactor();
+
+	// stiffness properties
+	double maxStiffness = hapticDeviceInfoX.m_maxLinearStiffness / workspaceScaleFactor;
+
+	// create a virtual mesh
+	objectX = new cMesh();
+
+	// add object to world
+	world->addChild(objectX);
+
+	// set the position of the object at the center of the world
+	objectX->setLocalPos(position);
+
+	// create cube
+	cCreateBox(objectX, size.x(), size.y(), size.z());
+
+	// create a texture
+	cTexture2dPtr texture = cTexture2d::create();
+
+	bool fileload;
+
+#if 0
+	switch (property)
+	{
+	case(0) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/brick-color.png"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = texture->loadFromFile("../../../bin/resources/images/brick-color.png");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(1) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/color1.png"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = texture->loadFromFile("../../../bin/resources/images/color1.png");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(2) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/G1RhombAluminumMesh.JPG"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = texture->loadFromFile("../../../bin/resources/images/G1RhombAluminumMesh.JPG");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(3) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/whitefoam.jpg"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = texture->loadFromFile("../../../bin/resources/images/whitefoam.jpg");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(4) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/brownboard.jpg"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = texture->loadFromFile("../../../bin/resources/images/brownboard.jpg");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(5) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/blackstone.jpg"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = texture->loadFromFile("../../../bin/resources/images/blackstone.jpg");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(6) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/redplastic.jpg"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = texture->loadFromFile("../../../bin/resources/images/redplastic.jpg");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(7) :
+		fileload = texture->loadFromFile(RESOURCE_PATH("images/stone.jpg"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = texture->loadFromFile("../../../bin/resources/images/stone.jpg");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	default:
+		break;
+	}
+
+#endif
+
+	// apply texture to object
+	objectX->setTexture(texture);
+
+	// enable texture rendering 
+	objectX->setUseTexture(true);
+
+	// Since we don't need to see our polygons from both sides, we enable culling.
+	objectX->setUseCulling(true);
+
+	// set material properties to light gray
+	objectX->m_material->setWhite();
+
+	// compute collision detection algorithm
+	objectX->createAABBCollisionDetector(TOOL_RADIUS);
+
+	// define a default stiffness for the object
+	objectX->m_material->setStiffness(property.stiffness * maxStiffness);
+
+	// define some static friction
+	objectX->m_material->setStaticFriction(property.staticFriction);
+
+	// define some dynamic friction
+	objectX->m_material->setDynamicFriction(property.dynamicFriction);
+
+	// define some texture rendering
+	objectX->m_material->setTextureLevel(property.textureLevel);
+
+	// render triangles haptically on front side only
+	objectX->m_material->setHapticTriangleSides(true, false);
+
+	// create a normal texture
+	cNormalMapPtr normalMap = cNormalMap::create();
+
+#if 0
+
+	// load normal map from file
+	switch (property)
+	{
+	case(0) :
+		fileload = normalMap->loadFromFile(RESOURCE_PATH("images/brick-normal.png"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = normalMap->loadFromFile("../../../bin/resources/images/brick-normal.png");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(1) :
+		fileload = normalMap->loadFromFile(RESOURCE_PATH("images/normal1.png"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = normalMap->loadFromFile("../../../bin/resources/images/normal1.png");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(2) :
+		fileload = normalMap->loadFromFile(RESOURCE_PATH("images/G1RhombAluminumMeshNormal.png"));
+		if (!fileload)
+		{
+#if defined(_MSVC)
+			fileload = normalMap->loadFromFile("../../../bin/resources/images/G1RhombAluminumMeshNormal.png");
+#endif
+		}
+		if (!fileload)
+		{
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
+		}
+		break;
+	case(3) :
+		normalMap->createMap(objectX->m_texture);
+		break;
+	case(4) :
+		normalMap->createMap(objectX->m_texture);
+		break;
+	case(5) :
+		normalMap->createMap(objectX->m_texture);
+		break;
+	case(6) :
+		normalMap->createMap(objectX->m_texture);
+		break;
+	case(7) :
+		//normalMap->createMap(objectX->m_texture);
+		/*
+		fileload = normalMap->loadFromFile(RESOURCE_PATH("images/white-brick-wall-large-normal.jpg"));
+		if (!fileload)
+		{
+		#if defined(_MSVC)
+		fileload = normalMap->loadFromFile("../../../bin/resources/images/white-brick-wall-large-normal.jpg");
+		#endif
+		}
+		if (!fileload)
+		{
+		cout << "Error - Texture image failed to load correctly." << endl;
+		close();
+		return (-1);
+		}
+		*/
+		break;
+	default:
+		break;
+	}
+
+#endif
+
+#if 0
+
+	if (property != 7) {
+		// assign normal map to object
+		objectX->m_normalMap = normalMap;
+
+		// compute surface normals
+		objectX->computeAllNormals();
+
+		// compute tangent vectors
+		objectX->m_triangles->computeBTN();
+	}
+
+#endif
+
+	//--------------------------------------------------------------------------
+	// CREATE SHADERS
+	//--------------------------------------------------------------------------
+
+	// create vertex shader
+	cShaderPtr vertexShader = cShader::create(C_VERTEX_SHADER);
+
+	// load vertex shader from file
+	fileload = vertexShader->loadSourceFile("../resources/shaders/bump.vert");
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		cout << "asdfasdf";
+		fileload = vertexShader->loadSourceFile("../../../bin/resources/shaders/bump.vert");
+#endif
+	}
+
+	// create fragment shader
+	cShaderPtr fragmentShader = cShader::create(C_FRAGMENT_SHADER);
+
+	// load fragment shader from file
+	fileload = fragmentShader->loadSourceFile("../resources/shaders/bump.frag");
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = fragmentShader->loadSourceFile("../../../bin/resources/shaders/bump.frag");
+#endif
+	}
 
 	// create program shader
 	cShaderProgramPtr programShader = cShaderProgram::create();
