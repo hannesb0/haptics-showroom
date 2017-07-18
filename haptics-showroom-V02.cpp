@@ -1,11 +1,11 @@
 //==============================================================================
 /*
-Filename:	haptics_showroom-V02.cpp
-Project:	Haptics Showroom
-Authors:	Naina Dhingra, Ke Xu, Hannes Bohnengel
-Revision:	0.2
-Remarks:	These files are tracked with git and are available on the github
-repository: https://github.com/hannesb0/haptics-showroom
+	Filename:	haptics_showroom-V02.cpp
+	Project:	Haptics Showroom
+    Authors:	Naina Dhingra, Ke Xu, Hannes Bohnengel 
+    Revision:	0.2
+	Remarks:	These files are tracked with git and are available on the github
+				repository: https://github.com/hannesb0/haptics-showroom
 */
 //==============================================================================
 
@@ -181,7 +181,7 @@ int main(int argc, char **argv)
 
 	// get the location of the executable
 	resourceRoot = string(argv[0]).substr(0, string(argv[0]).find_last_of("/\\") + 1);
-
+	
 	// this is the location of the resources
 	resourcesPath = resourceRoot + string("../../examples/SDL/haptics-showroom-V02/resources/");
 
@@ -423,9 +423,9 @@ int main(int argc, char **argv)
 	fileload = normalMap->loadFromFile(RESOURCE_PATH("images/brick-normal.png"));
 	if (!fileload)
 	{
-#if defined(_MSVC)
+	#if defined(_MSVC)
 		fileload = normalMap->loadFromFile("../../../bin/resources/images/brick-normal.png");
-#endif
+	#endif
 	}
 	if (!fileload)
 	{
@@ -520,60 +520,279 @@ int main(int argc, char **argv)
 	// insert the walls
 	// back wall
 	if (new_object(argc, argv, cVector3d(-2.9, 0.0, 1.6), cVector3d(0.01, 4.0, 4.0), 7) == -1) {
-	cout << "Error - New object could not be created." << endl;
+		cout << "Error - New object could not be created." << endl;
 	}
 	// left wall
 	if (new_object(argc, argv, cVector3d(0.0, -1.95, 1.6), cVector3d(6.0, 0.01, 4.0), 7) == -1) {
-	cout << "Error - New wall could not be created." << endl;
+		cout << "Error - New wall could not be created." << endl;
 	}
 	// right wall
 	if (new_object(argc, argv, cVector3d(0.0, 1.95, 1.6), cVector3d(6.0, 0.01, 4.0), 7) == -1) {
-	cout << "Error - New wall could not be created." << endl;
+		cout << "Error - New wall could not be created." << endl;
 	}
 	// cealing
 	if (new_object(argc, argv, cVector3d(0.0, 0.0, 4.0), cVector3d(6.0, 4.0, 0.01), 7) == -1) {
-	cout << "Error - New wall could not be created." << endl;
+		cout << "Error - New wall could not be created." << endl;
 	}
 	// floor
 	if (new_object(argc, argv, cVector3d(0.0, 0.0, -0.3), cVector3d(6.0, 4.0, 0.01), 7) == -1) {
-	cout << "Error - New wall could not be created." << endl;
+		cout << "Error - New wall could not be created." << endl;
 	}
 	// front wall
 	if (new_object(argc, argv, cVector3d(2.9, 0.0, 1.6), cVector3d(0.01, 4.0, 4.0), 7) == -1) {
-	cout << "Error - New wall could not be created." << endl;
+		cout << "Error - New wall could not be created." << endl;
 	}
 
 	*/
 
+	
+	//--------------------------------------------------------------------------
+	// CREATE WALLS			TESTING
+	//--------------------------------------------------------------------------
+	
+	// create a mesh
+	cMesh* wall01 = new cMesh();
+	
+	// create plane
+	cCreatePlane(wall01, 6.0, 6.0);
+
+	// create collision detector
+	wall01->createAABBCollisionDetector(TOOL_RADIUS);
+
+	// add object to world
+	world->addChild(wall01);
+
+	// set the position of the object
+	wall01->setLocalPos(-3.0, 0.0, 3.0);
+
+	// set graphic properties
+	wall01->m_texture = cTexture2d::create();
+	fileload = wall01->m_texture->loadFromFile(RESOURCE_PATH("../resources/images/whitefoam.jpg"));
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = wall01->m_texture->loadFromFile("../../../bin/resources/images/whitefoam.jpg");
+#endif
+	}
+	if (!fileload)
+	{
+		cout << "Error - Texture image failed to load correctly." << endl;
+		close();
+		return (-1);
+	}
+	//back wall
+	// enable texture mapping
+	wall01->setUseTexture(true);
+	wall01->m_material->setWhite();
+
+	// create normal map from texture data
+	cNormalMapPtr normalMap1 = cNormalMap::create();
+	normalMap1->createMap(wall01->m_texture);
+	wall01->m_normalMap = normalMap1;
+
+	// set haptic properties
+	wall01->m_material->setStiffness(0.1 * maxStiffness);
+	wall01->m_material->setStaticFriction(0.0);
+	wall01->m_material->setDynamicFriction(0.3);
+	wall01->m_material->setTextureLevel(1.5);
+	wall01->m_material->setHapticTriangleSides(true, false);
+
+	double x1=0.0;
+	double y1 = 1.0;
+	double z1 = 0.0;
+	wall01->rotateAboutLocalAxisDeg(cVector3d(x1,y1,z1), 90);
+
+	//front wall
+	// create a mesh
+	cMesh* wall02 = new cMesh();
+
+	// create plane
+	cCreatePlane(wall02, 6.0, 6.0);
+
+	// create collision detector
+	wall02->createAABBCollisionDetector(TOOL_RADIUS);
+
+	// add object to world
+	world->addChild(wall02);
+
+	// set the position of the object
+	wall02->setLocalPos(3.0, 0.0, 3.0);
+
+	// set graphic properties
+	wall02->m_texture = cTexture2d::create();
+	fileload = wall02->m_texture->loadFromFile(RESOURCE_PATH("../resources/images/whitefoam.jpg"));
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = wall02->m_texture->loadFromFile("../../../bin/resources/images/whitefoam.jpg");
+#endif
+	}
+	if (!fileload)
+	{
+		cout << "Error - Texture image failed to load correctly." << endl;
+		close();
+		return (-1);
+	}
+
+	// enable texture mapping
+	wall02->setUseTexture(true);
+	wall02->m_material->setWhite();
+
+	// create normal map from texture data
+	cNormalMapPtr normalMap2 = cNormalMap::create();
+	normalMap2->createMap(wall02->m_texture);
+	wall02->m_normalMap = normalMap2;
+
+	// set haptic properties
+	wall02->m_material->setStiffness(0.1 * maxStiffness);
+	wall02->m_material->setStaticFriction(0.0);
+	wall02->m_material->setDynamicFriction(0.3);
+	wall02->m_material->setTextureLevel(1.5);
+	wall02->m_material->setHapticTriangleSides(true, false);
+
+   wall02->rotateAboutLocalAxisDeg(cVector3d(x1, y1, z1), -90);
+
+     
+    //right wall
+	// create a mesh
+	cMesh* wall03 = new cMesh();
+
+	// create plane
+	cCreatePlane(wall03, 6.0, 6.0);
+
+	// create collision detector
+	wall03->createAABBCollisionDetector(TOOL_RADIUS);
+
+	// add object to world
+	world->addChild(wall03);
+
+	// set the position of the object
+	wall03->setLocalPos(0.0, 2.9, 3.0);
+
+	// set graphic properties
+	wall03->m_texture = cTexture2d::create();
+	fileload = wall03->m_texture->loadFromFile(RESOURCE_PATH("../resources/images/whitefoam.jpg"));
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = wall03->m_texture->loadFromFile("../../../bin/resources/images/whitefoam.jpg");
+#endif
+	}
+	if (!fileload)
+	{
+		cout << "Error - Texture image failed to load correctly." << endl;
+		close();
+		return (-1);
+	}
+
+	// enable texture mapping
+	wall03->setUseTexture(true);
+	wall03->m_material->setWhite();
+
+	// create normal map from texture data
+	cNormalMapPtr normalMap3 = cNormalMap::create();
+	normalMap3->createMap(wall03->m_texture);
+	wall03->m_normalMap = normalMap3;
+
+	// set haptic properties
+	wall03->m_material->setStiffness(0.1 * maxStiffness);
+	wall03->m_material->setStaticFriction(0.0);
+	wall03->m_material->setDynamicFriction(0.3);
+	wall03->m_material->setTextureLevel(1.5);
+	wall03->m_material->setHapticTriangleSides(true, false);
+
+	double x2 = 1.0;
+	double y2 = 0.0;
+	double z2 = 0.0;
+	wall03->rotateAboutLocalAxisDeg(cVector3d(x2, y2, z2), 90);
+
+
+	//left wall
+	// create a mesh
+	cMesh* wall04 = new cMesh();
+
+	// create plane
+	cCreatePlane(wall04, 6.0, 6.0);
+
+	// create collision detector
+	wall04->createAABBCollisionDetector(TOOL_RADIUS);
+
+	// add object to world
+	world->addChild(wall04);
+
+	// set the position of the object
+	wall04->setLocalPos(0.0, -2.9, 3.0);
+
+	// set graphic properties
+	wall04->m_texture = cTexture2d::create();
+	fileload = wall04->m_texture->loadFromFile(RESOURCE_PATH("../resources/images/whitefoam.jpg"));
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = wall04->m_texture->loadFromFile("../../../bin/resources/images/whitefoam.jpg");
+#endif
+	}
+	if (!fileload)
+	{
+		cout << "Error - Texture image failed to load correctly." << endl;
+		close();
+		return (-1);
+	}
+
+	// enable texture mapping
+	wall04->setUseTexture(true);
+	wall04->m_material->setWhite();
+
+	// create normal map from texture data
+	cNormalMapPtr normalMap4 = cNormalMap::create();
+	normalMap4->createMap(wall04->m_texture);
+	wall04->m_normalMap = normalMap4;
+
+	// set haptic properties
+	wall04->m_material->setStiffness(0.1 * maxStiffness);
+	wall04->m_material->setStaticFriction(0.0);
+	wall04->m_material->setDynamicFriction(0.3);
+	wall04->m_material->setTextureLevel(1.5);
+	wall04->m_material->setHapticTriangleSides(true, false);
+
+	
+	wall04->rotateAboutLocalAxisDeg(cVector3d(x2, y2, z2), 90);
+	// size
+
+	// position
 
 	//--------------------------------------------------------------------------
 	// CREATE ENVIRONMENT GLOBE
 	//--------------------------------------------------------------------------
 
+
 #if 1
 
 	// create a virtual mesh
 	cMesh* floor = new cMesh();
-	cMesh* wall = new cMesh();
+	//cMesh* wall = new cMesh();
 
 	// add object to world
 	world->addChild(floor);
-	world->addChild(wall);
+	//world->addChild(wall);
 
 	// set the position of the object at the center of the world
 	floor->setLocalPos(0.0, 0.0, -0.3);
-	wall->setLocalPos(0.0, 0.0, 1.6);
+	//wall->setLocalPos(0.0, 0.0, 1.6);
+
+
 
 	// create room
 	cCreatePlane(floor, 6, 4);
 	floor->setUseDisplayList(true);
 
-	cCreateBox(wall, 6, 4, 4);
-	wall->setUseDisplayList(true);
+	//cCreateBox(wall, 6, 4, 4);
+	//wall->setUseDisplayList(true);
 
 	// create a texture
 	cTexture2dPtr textureFloor = cTexture2d::create();
-	cTexture2dPtr textureWall = cTexture2d::create();
+	/*
+    cTexture2dPtr textureWall = cTexture2d::create();
 
 	fileload = textureFloor->loadFromFile("./resources/images/sand-wall.png");
 	if (!fileload)
@@ -595,23 +814,23 @@ int main(int argc, char **argv)
 		close();
 		return (-1);
 	}
-
+	*/
 	// apply texture to object
 	floor->setTexture(textureFloor);
-	wall->setTexture(textureWall);
+	//wall->setTexture(textureWall);
 
 	// enable texture rendering 
 	floor->setUseTexture(true);
-	wall->setUseTexture(true);
+	//wall->setUseTexture(true);
 
 
 	// Since we don't need to see our polygons from both sides, we enable culling.
 	floor->setUseCulling(false);
-	wall->setUseCulling(false);
+	//wall->setUseCulling(false);
 
 	// disable material properties and lighting
 	floor->setUseMaterial(false);
-	wall->setUseMaterial(false);
+	//wall->setUseMaterial(false);
 
 #else
 
@@ -635,9 +854,9 @@ int main(int argc, char **argv)
 	fileload = textureSpace->loadFromFile(RESOURCE_PATH("images/infinity.jpg"));
 	if (!fileload)
 	{
-#if defined(_MSVC)
+	#if defined(_MSVC)
 		fileload = textureSpace->loadFromFile("../../../bin/resources/images/infinity.jpg");
-#endif
+	#endif
 	}
 	if (!fileload)
 	{
@@ -715,7 +934,7 @@ int main(int argc, char **argv)
 			// check if Oculus should be used
 			//camera->m_useCustomModelViewMatrix = true;
 			camera->m_useCustomModelViewMatrix = useOculus;
-
+			
 			// check if Oculus should be used
 			if (useOculus)
 			{
@@ -784,8 +1003,8 @@ void processEvents()
 			/*
 			if (event.key.keysym.sym == SDLK_SPACE)
 			{
-			oculusVR.recenterPose();
-			break;
+				oculusVR.recenterPose();
+				break;
 			}
 			*/
 			if (event.key.keysym.sym == SDLK_SPACE)
@@ -945,7 +1164,7 @@ void computeMatricesFromInput()
 	currentDirection = cVector3d(-cos(currentAngle), -sin(currentAngle), 0.0);
 
 	// recalculate the direction of the "up" vector
-	camera->set(currentPosition, currentPosition + currentDirection, cVector3d(0, 0, 1));
+	camera->set(currentPosition, currentPosition + currentDirection, cVector3d(0, 0, 1));   
 }
 //------------------------------------------------------------------------------
 
@@ -1028,7 +1247,7 @@ void updateHaptics(void)
 
 		cVector3d tmp2 = tool->getDeviceGlobalPos();
 
-		if (tmp2.x() < 0.3 && tmp2.x() > -0.3 && tmp2.y() < 0.3 && tmp2.y() > -0.3
+		if (tmp2.x() < 0.3 && tmp2.x() > -0.3 && tmp2.y() < 0.3 && tmp2.y() > -0.3 
 			&& tmp2.z() < 0.3 && tmp2.z() > -0.3)
 		{
 			// some constants
@@ -1361,14 +1580,14 @@ int new_object(cVector3d position, cVector3d size, int property)
 		if (!fileload)
 		{
 		#if defined(_MSVC)
-		fileload = normalMap->loadFromFile("../../../bin/resources/images/white-brick-wall-large-normal.jpg");
+			fileload = normalMap->loadFromFile("../../../bin/resources/images/white-brick-wall-large-normal.jpg");
 		#endif
 		}
 		if (!fileload)
 		{
-		cout << "Error - Texture image failed to load correctly." << endl;
-		close();
-		return (-1);
+			cout << "Error - Texture image failed to load correctly." << endl;
+			close();
+			return (-1);
 		}
 		*/
 		break;
@@ -1844,11 +2063,11 @@ int new_wall(int argc, char **argv)
 	if (!fileload)
 	{
 #if defined(_MSVC)
-		//fileload = texture->loadFromFile("../../../bin/resources/images/stone.jpg");
-		//fileload = texture->loadFromFile("D:/Users/ga87taq/Desktop/Labs/chai3d-3.1.0/modules/OCULUS/examples/SDL/haptics-showroom-V02/resources/images/stone.jpg");
-		fileload = texture->loadFromFile("./../../examples/SDL/haptics-showroom-V02/resources/images/stone.jpg");
-		//fileload = texture->loadFromFile("./stone.jpg");
-		cout << "Loaded from somewhere else" << endl;
+	//fileload = texture->loadFromFile("../../../bin/resources/images/stone.jpg");
+	//fileload = texture->loadFromFile("D:/Users/ga87taq/Desktop/Labs/chai3d-3.1.0/modules/OCULUS/examples/SDL/haptics-showroom-V02/resources/images/stone.jpg");
+	fileload = texture->loadFromFile("./../../examples/SDL/haptics-showroom-V02/resources/images/stone.jpg");
+	//fileload = texture->loadFromFile("./stone.jpg");
+	cout << "Loaded from somewhere else" << endl;
 #endif
 	}
 	if (!fileload)
