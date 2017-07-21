@@ -78,6 +78,7 @@ cMultiMesh* object1;
 cMultiMesh* object2;
 cMultiMesh* object3;
 cMultiMesh* object4;
+cMultiMesh* object5;
 
 // model of earth
 cMesh* earth;
@@ -831,6 +832,77 @@ int main(int argc, char **argv)
 	mat4.setStaticFriction(0.2);
 	mat4.setDynamicFriction(0.1);
 	object4->setMaterial(mat4);
+	//--------------------------------------------------------------------------
+	// CREATE OBJECT car
+	//--------------------------------------------------------------------------
+
+	// read the scale factor between the physical workspace of the haptic
+	// device and the virtual workspace defined for the tool
+	double workspaceScaleFactor5 = tool->getWorkspaceScaleFactor();
+
+	// stiffness properties
+	double maxStiffness5 = hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor5;
+
+	// create a virtual mesh
+	object5 = new cMultiMesh();
+
+	// add object to world
+	world->addChild(object5);
+	// set the position of the object at the center of the world
+	object5->setLocalPos(0.05, 0.07, 0.09);
+
+
+	// rotate the object 90 degrees
+	object5->rotateAboutGlobalAxisDeg(cVector3d(-0.5, -0.5, -1), 100);
+
+	// load an object file
+	bool fileload5;
+	fileload5 = object5->loadFromFile(RESOURCE_PATH("../resources/models/AC Cobra/ShelbyWD.3ds"));
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload5= object5->loadFromFile("../../../bin/resources/models/AC Cobra/ShelbyWD.3ds");
+#endif
+	}
+	if (!fileload5)
+	{
+		cout << "Error - 3D Model failed to load correctly." << endl;
+		close();
+		return (-1);
+	}
+
+	// get dimensions of object
+	object5->computeBoundaryBox(true);
+	double size5 = cSub(object4->getBoundaryMax(), object4->getBoundaryMin()).length();
+
+	// resize object to screen
+	if (size5 > 0.001)
+	{
+		object5->scale(1 / size3);
+	}
+
+	// compute collision detection algorithm
+	object5->createAABBCollisionDetector(.02);
+
+	// disable culling so that faces are rendered on both sides
+	object5->setUseCulling(false);
+
+	// enable display list for faster graphic rendering
+	object5->setUseDisplayList(true);
+
+	// center object in scene
+	object5->setLocalPos(-1.0 * object4->getBoundaryCenter());
+
+	// rotate object in scene
+	object5->rotateExtrinsicEulerAnglesDeg(0, 0, 90, C_EULER_ORDER_XYZ);
+
+	// set haptic properties
+	cMaterial mat5;
+	mat5.setHapticTriangleSides(true, true);
+	mat5.setStiffness(0.2 * maxStiffness2);
+	mat5.setStaticFriction(0.2);
+	mat5.setDynamicFriction(0.1);
+	object5->setMaterial(mat5);
 
 
 	//--------------------------------------------------------------------------
