@@ -75,6 +75,16 @@ cMesh* object;
 cMesh* objectX;
 // a mesh model
 cMultiMesh* object1;
+cMultiMesh* object2;
+cMultiMesh* object3;
+cMultiMesh* object4;
+
+// model of earth
+cMesh* earth;
+
+// model of starts
+cMesh* globe;
+
 
 // indicates if the haptic simulation currently running
 bool simulationRunning = false;
@@ -309,7 +319,7 @@ int main(int argc, char **argv)
 	tool2->setHapticDevice(hapticDevice2);
 
 	// define the radius of the tool (sphere)
-	//double toolRadius = TOOL_RADIUS;
+	double toolRadius = TOOL_RADIUS;
 
 	// define a radius for the tool
 	tool->setRadius(TOOL_RADIUS);
@@ -321,6 +331,7 @@ int main(int argc, char **argv)
 	tool->enableDynamicObjects(true);
 	tool2->enableDynamicObjects(true);
 
+	tool->enableDynamicObjects(true);
 	// map the physical workspace of the haptic device to a larger virtual workspace.
 	tool->setWorkspaceRadius(TOOL_WORKSPACE);
 	tool2->setWorkspaceRadius(TOOL_WORKSPACE);
@@ -354,7 +365,7 @@ int main(int argc, char **argv)
 	world->addChild(object);
 
 	// set the position of the object at the center of the world
-	object->setLocalPos(0.0, 0.0, 0.0);
+	object->setLocalPos(-10.0, 20.0, -20.0);
 
 	// create cube
 	cCreateBox(object, 0.2, 0.2, 0.2);
@@ -434,7 +445,7 @@ int main(int argc, char **argv)
 	object->m_triangles->computeBTN();
 
 	//--------------------------------------------------------------------------
-	// CREATE OBJECT
+	// CREATE OBJECT table
 	//--------------------------------------------------------------------------
 
 	// read the scale factor between the physical workspace of the haptic
@@ -449,9 +460,11 @@ int main(int argc, char **argv)
 
 	// add object to world
 	world->addChild(object1);
+	// set the position of the object at the center of the world
+	object1->setLocalPos(-100.0, -200.0, -100.0);
 
 	// rotate the object 90 degrees
-	object1->rotateAboutGlobalAxisDeg(cVector3d(0.5, 0.5, 1), 90);
+	object1->rotateAboutGlobalAxisDeg(cVector3d(0.5, 0.5, 1), 100);
 
 	// load an object file
 	bool fileload1;
@@ -502,7 +515,322 @@ int main(int argc, char **argv)
 	mat.setDynamicFriction(0.1);
 	object1->setMaterial(mat);
 
+	//--------------------------------------------------------------------------
+	// CREATE OBJECT
+	//--------------------------------------------------------------------------
+//
+//	// read the scale factor between the physical workspace of the haptic
+//	// device and the virtual workspace defined for the tool
+//	double workspaceScaleFactor2 = tool->getWorkspaceScaleFactor();
+//
+//	// stiffness properties
+//	double maxStiffness2 = hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor2;
+//
+//	// create a virtual mesh
+//	object2 = new cMultiMesh();
+//
+//	// add object to world
+//	world->addChild(object2);
+//
+//	// set the position of the object at the center of the world
+//	object2->setLocalPos(5.0, 5.0, 0.0);
+//
+//	//// rotate the object 90 degrees
+//	//object->rotateAboutGlobalAxisDeg(cVector3d(0, 0, 1), 90);
+//	// rotate the object 90 degrees
+//	object2->rotateAboutGlobalAxisDeg(cVector3d(0.5, 0.5, 1), 100);
+//
+//
+//	// load an object file
+//	bool fileload3;
+//	fileload3 = object2->loadFromFile(RESOURCE_PATH("../resources/models/eagle 2/EAGLE_2.3DS"));
+//	if (!fileload)
+//	{
+//#if defined(_MSVC)
+//		fileload3 = object2->loadFromFile("../../../bin/resources/models/eagle 2/EAGLE_2.3DS");
+//#endif
+//	}
+//	if (!fileload3)
+//	{
+//		cout << "Error - 3D Model failed to load correctly." << endl;
+//		close();
+//		return (-1);
+//	}
+//
+//	// compute a boundary box
+//	object2->computeBoundaryBox(true);
+//
+//	// get dimensions of object
+//	double size2 = cSub(object2->getBoundaryMax(), object2->getBoundaryMin()).length();
+//
+//	// resize object to screen
+//	if (size2 > 0)
+//	{
+//		object2->scale(10.0 * tool->getWorkspaceRadius() / size2);
+//	}
+//
+//	// compute collision detection algorithm
+//	object2->createAABBCollisionDetector(toolRadius);
+//
+//	// enable haptic rendering on both sides of triangles
+//	cMaterial mat2;
+//	mat2.setHapticTriangleSides(true, true);
+//	object2->setMaterial(mat2);
+//
+//	// define some environmental texture mapping
+//	cTexture2dPtr texture2 = cTexture2d::create();
+//
+//	// load texture file
+//	fileload3 = texture2->loadFromFile(RESOURCE_PATH("../resources/images/chrome.jpg"));
+//	if (!fileload3)
+//	{
+//#if defined(_MSVC)
+//		fileload3 = texture2->loadFromFile("../../../bin/resources/images/chrome.jpg");
+//#endif
+//	}
+//	if (!fileload3)
+//	{
+//		cout << "Error - Texture2 image failed to load correctly." << endl;
+//		close();
+//		return (-1);
+//	}
+//
+//	// enable spherical mapping
+//	texture2->setSphericalMappingEnabled(true);
+//
+//	// assign texture to object
+//	object2->setTexture(texture, true);
+//
+//	// enable texture mapping
+//	object2->setUseTexture(true, true);
+//
+//	// disable culling
+//	object2->setUseCulling(false, true);
+//
+//	// enable display list for faster graphic rendering
+//	object2->setUseDisplayList(true);
+//
+//	// define a default stiffness for the object
+//	object2->setStiffness(maxStiffness, true);
+//
+//	// define some haptic friction properties
+//	object2->setFriction(0.1, 0.2, true);
+//
+//--------------------------------------------------------------------------
+// CREATE OBJECT bird
+//--------------------------------------------------------------------------
 
+	// read the scale factor between the physical workspace of the haptic
+	// device and the virtual workspace defined for the tool
+	double workspaceScaleFactor2 = tool->getWorkspaceScaleFactor();
+
+	// stiffness properties
+	double maxStiffness2 = hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor2;
+
+	// create a virtual mesh
+	object2 = new cMultiMesh();
+
+	// add object to world
+	world->addChild(object2);
+	// set the position of the object at the center of the world
+	object2->setLocalPos(1000.0, 3000.0, 3000.0);
+
+
+	// rotate the object 90 degrees
+	object2->rotateAboutGlobalAxisDeg(cVector3d(-0.5, -0.5, -1), 100);
+
+	// load an object file
+	bool fileload2;
+	fileload2 = object2->loadFromFile(RESOURCE_PATH("../resources/models/eagle 2/EAGLE_2.3DS"));
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload2 = object2->loadFromFile("../../../bin/resources/models/eagle 2/EAGLE_2.3DS");
+#endif
+	}
+	if (!fileload2)
+	{
+		cout << "Error - 3D Model failed to load correctly." << endl;
+		close();
+		return (-1);
+	}
+
+	// get dimensions of object
+	object2->computeBoundaryBox(true);
+	double size2 = cSub(object2->getBoundaryMax(), object2->getBoundaryMin()).length();
+
+	// resize object to screen
+	if (size2 > 0.001)
+	{
+		object2->scale(1/size2);
+	}
+
+	// compute collision detection algorithm
+	object2->createAABBCollisionDetector(.02);
+
+	// disable culling so that faces are rendered on both sides
+	object2->setUseCulling(false);
+
+	// enable display list for faster graphic rendering
+	object2->setUseDisplayList(true);
+
+	// center object in scene
+	object2->setLocalPos(-1.0 * object2->getBoundaryCenter());
+
+	// rotate object in scene
+	object2->rotateExtrinsicEulerAnglesDeg(0, 0, 90, C_EULER_ORDER_XYZ);
+
+	// set haptic properties
+	cMaterial mat2;
+	mat2.setHapticTriangleSides(true, true);
+	mat2.setStiffness(0.2 * maxStiffness2);
+	mat2.setStaticFriction(0.2);
+	mat2.setDynamicFriction(0.1);
+	object2->setMaterial(mat2);
+
+	//--------------------------------------------------------------------------
+	// CREATE OBJECT boy
+	//--------------------------------------------------------------------------
+
+	// read the scale factor between the physical workspace of the haptic
+	// device and the virtual workspace defined for the tool
+	double workspaceScaleFactor3 = tool->getWorkspaceScaleFactor();
+
+	// stiffness properties
+	double maxStiffness3 = hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor3;
+
+	// create a virtual mesh
+	object3 = new cMultiMesh();
+
+	// add object to world
+	world->addChild(object3);
+	// set the position of the object at the center of the world
+	object3->setLocalPos(-1000.0, -3000.0, -3000.0);
+
+
+	// rotate the object 90 degrees
+	object3->rotateAboutGlobalAxisDeg(cVector3d(-0.5, -0.5, -1), 100);
+
+	// load an object file
+	bool fileload0;
+	fileload0 = object3->loadFromFile(RESOURCE_PATH("../resources/models/Boy/boy.3ds"));
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload0 = object3->loadFromFile("../../../bin/resources/models/Boy/boy.3ds");
+#endif
+	}
+	if (!fileload0)
+	{
+		cout << "Error - 3D Model failed to load correctly." << endl;
+		close();
+		return (-1);
+	}
+
+	// get dimensions of object
+	object3->computeBoundaryBox(true);
+	double size3 = cSub(object3->getBoundaryMax(), object3->getBoundaryMin()).length();
+
+	// resize object to screen
+	if (size3 > 0.001)
+	{
+		object3->scale(1 / size3);
+	}
+
+	// compute collision detection algorithm
+	object3->createAABBCollisionDetector(.02);
+
+	// disable culling so that faces are rendered on both sides
+	object3->setUseCulling(false);
+
+	// enable display list for faster graphic rendering
+	object3->setUseDisplayList(true);
+
+	// center object in scene
+	object3->setLocalPos(-1.0 * object3->getBoundaryCenter());
+
+	// rotate object in scene
+	object3->rotateExtrinsicEulerAnglesDeg(0, 0, 90, C_EULER_ORDER_XYZ);
+
+	// set haptic properties
+	cMaterial mat3;
+	mat3.setHapticTriangleSides(true, true);
+	mat3.setStiffness(0.2 * maxStiffness2);
+	mat3.setStaticFriction(0.2);
+	mat3.setDynamicFriction(0.1);
+	object2->setMaterial(mat3);
+
+	//--------------------------------------------------------------------------
+	// CREATE OBJECT
+	//--------------------------------------------------------------------------
+
+	// read the scale factor between the physical workspace of the haptic
+	// device and the virtual workspace defined for the tool
+	double workspaceScaleFactor4 = tool->getWorkspaceScaleFactor();
+
+	// stiffness properties
+	double maxStiffness4 = hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor4;
+
+	// create a virtual mesh
+	object4 = new cMultiMesh();
+
+	// add object to world
+	world->addChild(object4);
+	// set the position of the object at the center of the world
+	object4->setLocalPos(0.5,0.7,0.9);
+
+
+	// rotate the object 90 degrees
+	object4->rotateAboutGlobalAxisDeg(cVector3d(-0.5, -0.5, -1), 100);
+
+	// load an object file
+	bool fileload4;
+	fileload4 = object4->loadFromFile(RESOURCE_PATH("../resources/models/Old Lantern Iridesum/Old Lantern Model.3ds"));
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload4 = object4->loadFromFile("../../../bin/resources/models/Old Lantern Iridesum/Old Lantern Model.3ds");
+#endif
+	}
+	if (!fileload4)
+	{
+		cout << "Error - 3D Model failed to load correctly." << endl;
+		close();
+		return (-1);
+	}
+
+	// get dimensions of object
+	object4->computeBoundaryBox(true);
+	double size4 = cSub(object4->getBoundaryMax(), object4->getBoundaryMin()).length();
+
+	// resize object to screen
+	if (size4 > 0.001)
+	{
+		object4->scale(1 / size3);
+	}
+
+	// compute collision detection algorithm
+	object4->createAABBCollisionDetector(.02);
+
+	// disable culling so that faces are rendered on both sides
+	object4->setUseCulling(false);
+
+	// enable display list for faster graphic rendering
+	object4->setUseDisplayList(true);
+
+	// center object in scene
+	object4->setLocalPos(-1.0 * object4->getBoundaryCenter());
+
+	// rotate object in scene
+	object4->rotateExtrinsicEulerAnglesDeg(0, 0, 90, C_EULER_ORDER_XYZ);
+
+	// set haptic properties
+	cMaterial mat4;
+	mat4.setHapticTriangleSides(true, true);
+	mat4.setStiffness(0.2 * maxStiffness2);
+	mat4.setStaticFriction(0.2);
+	mat4.setDynamicFriction(0.1);
+	object4->setMaterial(mat4);
 
 
 	//--------------------------------------------------------------------------
@@ -618,14 +946,14 @@ int main(int argc, char **argv)
 		fileload = textureFloor->loadFromFile("./resources/images/sand-wall.png");
 #endif
 	}
-	bool fileload2 = textureWall->loadFromFile("./resources/images/white-wall.png");
+	bool fileload3 = textureWall->loadFromFile("./resources/images/white-wall.png");
 	if (!fileload2)
 	{
 #if defined(_MSVC)
-		fileload2 = textureWall->loadFromFile("./resources/images/white-wall.png");
+		fileload3 = textureWall->loadFromFile("./resources/images/white-wall.png");
 #endif
 	}
-	if (!(fileload && fileload2))
+	if (!(fileload && fileload3))
 	{
 		cout << "Error - Texture image failed to load correctly." << endl;
 		close();
