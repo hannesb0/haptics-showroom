@@ -25,10 +25,13 @@ using namespace std;
 //------------------------------------------------------------------------------
 
 // default filename of image for graphical display 
-string defaultTextureImage = "brick-color.png";
+const string defaultTextureImage = "brick-color.png";
 
 // default filename of normal map for haptics display 
-string defaultNormalImage = "brick-normal.png";
+const string defaultNormalImage = "brick-normal.png";
+
+// default stiffness
+const double defaultStiffness = 0.7f;
 
 
 //------------------------------------------------------------------------------
@@ -37,5 +40,8 @@ string defaultNormalImage = "brick-normal.png";
 
 // convert to resource path
 #define RESOURCE_PATH(p)    (char*)((resourcesPath+string(p)).c_str())
+
+// concatenates string q and p (e.g. q = "abc", p = "xyz" -> STR_ADD(q,p) = "abcxyz")
+#define STR_ADD(q,p)		(char*)((string(q)+string(p)).c_str())
 
 #endif
