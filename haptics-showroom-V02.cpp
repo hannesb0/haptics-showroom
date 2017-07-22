@@ -123,6 +123,19 @@ bool fileload;
 // pointer to properties class
 MyProperties *prop_test[10];
 
+// information about the current haptic device -> retrieved at runtime
+cHapticDeviceInfo hapticDeviceInfoX;
+
+// scale factor between the physical workspace of the haptic device and 
+// the virtual workspace defined for the tool -> retrieved at runtime
+
+double workspaceScaleFactor;
+
+// max stiffness -> retrieved at runtime
+double maxStiffness;
+
+
+
 //------------------------------------------------------------------------------
 // OCULUS RIFT
 //------------------------------------------------------------------------------
@@ -156,7 +169,7 @@ int new_object(cVector3d position, cVector3d size, int property);
 int new_object_with_properties(cVector3d position, cVector3d size, MyProperties *property);
 
 // ############################# TESTING ###################################
-//int new_wall(int argc, char **argv);
+int new_wall(cVector3d position, cVector3d size /* ,Rotation*/);
 void delete_object();
 // ############################# TESTING ###################################
 
@@ -407,6 +420,16 @@ int main(int argc, char **argv)
 		tool2->start();
 	}
 
+	// retrieve information about the current haptic device
+	hapticDeviceInfoX = hapticDevice->getSpecifications();
+
+	// read the scale factor between the physical workspace of the haptic
+	// device and the virtual workspace defined for the tool
+	workspaceScaleFactor = tool->getWorkspaceScaleFactor();
+
+	// retrieve max stiffness
+	maxStiffness = hapticDeviceInfoX.m_maxLinearStiffness / workspaceScaleFactor;
+
 	//--------------------------------------------------------------------------
 	// CREATE OBJECT
 	//--------------------------------------------------------------------------
@@ -617,12 +640,229 @@ int main(int argc, char **argv)
 
 	*/
 
+
+#if 0
+
+	//--------------------------------------------------------------------------
+	// CREATE WALLS			TESTING
+	//--------------------------------------------------------------------------
+
+
+	double maxStiffness = 400;
+
+	// create a mesh
+	cMesh* wall01 = new cMesh();
+
+	// create plane
+	cCreatePlane(wall01, 6.0, 6.0);
+
+	// create collision detector
+	wall01->createAABBCollisionDetector(TOOL_RADIUS);
+
+	// add object to world
+	world->addChild(wall01);
+
+	// set the position of the object
+	wall01->setLocalPos(-3.0, 0.0, 3.0);
+
+	// set graphic properties
+	wall01->m_texture = cTexture2d::create();
+	fileload = wall01->m_texture->loadFromFile(RESOURCE_PATH("../resources/images/whitefoam.jpg"));
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = wall01->m_texture->loadFromFile("../../../bin/resources/images/whitefoam.jpg");
+#endif
+	}
+	if (!fileload)
+	{
+		cout << "Error - Texture image failed to load correctly." << endl;
+		close();
+		return (-1);
+	}
+	//back wall
+	// enable texture mapping
+	wall01->setUseTexture(true);
+	wall01->m_material->setWhite();
+
+	// create normal map from texture data
+	cNormalMapPtr normalMap1 = cNormalMap::create();
+	normalMap1->createMap(wall01->m_texture);
+	wall01->m_normalMap = normalMap1;
+
+	// set haptic properties
+	wall01->m_material->setStiffness(0.1 * maxStiffness);
+	wall01->m_material->setStaticFriction(0.0);
+	wall01->m_material->setDynamicFriction(0.3);
+	wall01->m_material->setTextureLevel(1.5);
+	wall01->m_material->setHapticTriangleSides(true, false);
+
+	double x1 = 0.0;
+	double y1 = 1.0;
+	double z1 = 0.0;
+	wall01->rotateAboutLocalAxisDeg(cVector3d(x1, y1, z1), 90);
+
+	//front wall
+	// create a mesh
+	cMesh* wall02 = new cMesh();
+
+	// create plane
+	cCreatePlane(wall02, 6.0, 6.0);
+
+	// create collision detector
+	wall02->createAABBCollisionDetector(TOOL_RADIUS);
+
+	// add object to world
+	world->addChild(wall02);
+
+	// set the position of the object
+	wall02->setLocalPos(3.0, 0.0, 3.0);
+
+	// set graphic properties
+	wall02->m_texture = cTexture2d::create();
+	fileload = wall02->m_texture->loadFromFile(RESOURCE_PATH("../resources/images/whitefoam.jpg"));
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = wall02->m_texture->loadFromFile("../../../bin/resources/images/whitefoam.jpg");
+#endif
+	}
+	if (!fileload)
+	{
+		cout << "Error - Texture image failed to load correctly." << endl;
+		close();
+		return (-1);
+	}
+
+	// enable texture mapping
+	wall02->setUseTexture(true);
+	wall02->m_material->setWhite();
+
+	// create normal map from texture data
+	cNormalMapPtr normalMap2 = cNormalMap::create();
+	normalMap2->createMap(wall02->m_texture);
+	wall02->m_normalMap = normalMap2;
+
+	// set haptic properties
+	wall02->m_material->setStiffness(0.1 * maxStiffness);
+	wall02->m_material->setStaticFriction(0.0);
+	wall02->m_material->setDynamicFriction(0.3);
+	wall02->m_material->setTextureLevel(1.5);
+	wall02->m_material->setHapticTriangleSides(true, false);
+
+	wall02->rotateAboutLocalAxisDeg(cVector3d(x1, y1, z1), -90);
+
+
+	//right wall
+	// create a mesh
+	cMesh* wall03 = new cMesh();
+
+	// create plane
+	cCreatePlane(wall03, 6.0, 6.0);
+
+	// create collision detector
+	wall03->createAABBCollisionDetector(TOOL_RADIUS);
+
+	// add object to world
+	world->addChild(wall03);
+
+	// set the position of the object
+	wall03->setLocalPos(0.0, 2.9, 3.0);
+
+	// set graphic properties
+	wall03->m_texture = cTexture2d::create();
+	fileload = wall03->m_texture->loadFromFile(RESOURCE_PATH("../resources/images/whitefoam.jpg"));
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = wall03->m_texture->loadFromFile("../../../bin/resources/images/whitefoam.jpg");
+#endif
+	}
+	if (!fileload)
+	{
+		cout << "Error - Texture image failed to load correctly." << endl;
+		close();
+		return (-1);
+	}
+
+	// enable texture mapping
+	wall03->setUseTexture(true);
+	wall03->m_material->setWhite();
+
+	// create normal map from texture data
+	cNormalMapPtr normalMap3 = cNormalMap::create();
+	normalMap3->createMap(wall03->m_texture);
+	wall03->m_normalMap = normalMap3;
+
+	// set haptic properties
+	wall03->m_material->setStiffness(0.1 * maxStiffness);
+	wall03->m_material->setStaticFriction(0.0);
+	wall03->m_material->setDynamicFriction(0.3);
+	wall03->m_material->setTextureLevel(1.5);
+	wall03->m_material->setHapticTriangleSides(true, false);
+
+	double x2 = 1.0;
+	double y2 = 0.0;
+	double z2 = 0.0;
+	wall03->rotateAboutLocalAxisDeg(cVector3d(x2, y2, z2), 90);
+
+
+	//left wall
+	// create a mesh
+	cMesh* wall04 = new cMesh();
+
+	// create plane
+	cCreatePlane(wall04, 6.0, 6.0);
+
+	// create collision detector
+	wall04->createAABBCollisionDetector(TOOL_RADIUS);
+
+	// add object to world
+	world->addChild(wall04);
+
+	// set the position of the object
+	wall04->setLocalPos(0.0, -2.9, 3.0);
+
+	// set graphic properties
+	wall04->m_texture = cTexture2d::create();
+	fileload = wall04->m_texture->loadFromFile(RESOURCE_PATH("../resources/images/whitefoam.jpg"));
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = wall04->m_texture->loadFromFile("../../../bin/resources/images/whitefoam.jpg");
+#endif
+	}
+	if (!fileload)
+	{
+		cout << "Error - Texture image failed to load correctly." << endl;
+		close();
+		return (-1);
+	}
+
+	// enable texture mapping
+	wall04->setUseTexture(true);
+	wall04->m_material->setWhite();
+
+	// create normal map from texture data
+	cNormalMapPtr normalMap4 = cNormalMap::create();
+	normalMap4->createMap(wall04->m_texture);
+	wall04->m_normalMap = normalMap4;
+
+	// set haptic properties
+	wall04->m_material->setStiffness(0.1 * maxStiffness);
+	wall04->m_material->setStaticFriction(0.0);
+	wall04->m_material->setDynamicFriction(0.3);
+	wall04->m_material->setTextureLevel(1.5);
+	wall04->m_material->setHapticTriangleSides(true, false);
+
+
 	
 	//--------------------------------------------------------------------------
 	// CREATE ENVIRONMENT GLOBE
 	//--------------------------------------------------------------------------
 
-#if 1
+// graphic world from original template (Baumarkt)
+#else
 
 	// create a virtual mesh
 	cMesh* floor = new cMesh();
@@ -685,7 +925,12 @@ int main(int argc, char **argv)
 	floor->setUseMaterial(false);
 	wall->setUseMaterial(false);
 
-#else
+
+#endif
+
+
+// Cube world from template "01-cube"
+#if 0
 
 	// create a virtual mesh
 	cMesh* globe = new cMesh();
@@ -1540,16 +1785,6 @@ int new_object(cVector3d position, cVector3d size, int property)
 
 int new_object_with_properties(cVector3d position, cVector3d size, MyProperties *property)
 {
-	// retrieve information about the current haptic device
-	cHapticDeviceInfo hapticDeviceInfoX = hapticDevice->getSpecifications();
-
-	// read the scale factor between the physical workspace of the haptic
-	// device and the virtual workspace defined for the tool
-	double workspaceScaleFactor = tool->getWorkspaceScaleFactor();
-
-	// stiffness properties
-	double maxStiffness = hapticDeviceInfoX.m_maxLinearStiffness / workspaceScaleFactor;
-
 	// create a virtual mesh
 	objectX = new cMesh();
 
@@ -1646,9 +1881,9 @@ int new_object_with_properties(cVector3d position, cVector3d size, MyProperties 
 	fileload = fragmentShader->loadSourceFile("../resources/shaders/bump.frag");
 	if (!fileload)
 	{
-#if defined(_MSVC)
+	#if defined(_MSVC)
 		fileload = fragmentShader->loadSourceFile("../../../bin/resources/shaders/bump.frag");
-#endif
+	#endif
 	}
 
 	// create program shader
@@ -1683,182 +1918,7 @@ void delete_object()
 }
 
 //------------------------------------------------------------------------------
-#if 0
-int new_wall(int argc, char **argv)
-{
-	// retrieve information about the current haptic device
-	cHapticDeviceInfo hapticDeviceInfoX = hapticDevice->getSpecifications();
 
-	// define the radius of the tool (sphere)
-	double toolRadius = 0.02;
+int new_wall(){
 
-	// --------------------------------------------------------
-	// copied from 01-cube.cpp and changed names of variables
-	// --------------------------------------------------------
-
-	// read the scale factor between the physical workspace of the haptic
-	// device and the virtual workspace defined for the tool
-	double workspaceScaleFactor = tool->getWorkspaceScaleFactor();
-
-	// stiffness properties
-	double maxStiffness = hapticDeviceInfoX.m_maxLinearStiffness / workspaceScaleFactor;
-
-	// create a virtual mesh
-	objectX = new cMesh();
-
-	// add object to world
-	world->addChild(objectX);
-
-	// set the position of the object at the center of the world
-	objectX->setLocalPos(-2.9, 0.0, 1.6);
-
-	// create cube
-	cCreateBox(objectX, 0.01, 4.0, 4.0);
-
-	// create a texture
-	cTexture2dPtr texture = cTexture2d::create();
-
-	bool fileload;
-
-
-	fileload = texture->loadFromFile(RESOURCE_PATH("images/stone.jpg"));
-
-	//cout << "resourcesPath = " << resourcesPath << endl;
-
-	//cout << "image to be loaded: " << RESOURCE_PATH("../../examples/SDL/haptics-showroom-V02/resources/images/stone.jpg") << endl;
-
-	if (!fileload)
-	{
-#if defined(_MSVC)
-	//fileload = texture->loadFromFile("../../../bin/resources/images/stone.jpg");
-	//fileload = texture->loadFromFile("D:/Users/ga87taq/Desktop/Labs/chai3d-3.1.0/modules/OCULUS/examples/SDL/haptics-showroom-V02/resources/images/stone.jpg");
-	fileload = texture->loadFromFile("./../../examples/SDL/haptics-showroom-V02/resources/images/stone.jpg");
-	//fileload = texture->loadFromFile("./stone.jpg");
-	cout << "Loaded from somewhere else" << endl;
-#endif
-	}
-	if (!fileload)
-	{
-		cout << "Error - Texture image failed to load correctly. XXX" << endl;
-		close();
-		return (-1);
-	}
-
-	// apply texture to object
-	objectX->setTexture(texture);
-
-	// enable texture rendering 
-	objectX->setUseTexture(true);
-
-	// Since we don't need to see our polygons from both sides, we enable culling.
-	objectX->setUseCulling(true);
-
-	// set material properties to light gray
-	objectX->m_material->setWhite();
-
-	// compute collision detection algorithm
-	objectX->createAABBCollisionDetector(TOOL_RADIUS);
-
-	// define a default stiffness for the object
-	objectX->m_material->setStiffness(0.3 * maxStiffness);
-
-	// define some static friction
-	objectX->m_material->setStaticFriction(0.2);
-
-	// define some dynamic friction
-	objectX->m_material->setDynamicFriction(0.2);
-
-	// define some texture rendering
-	objectX->m_material->setTextureLevel(0.1);
-
-	// render triangles haptically on front side only
-	objectX->m_material->setHapticTriangleSides(true, false);
-
-	// create a normal texture
-	//cNormalMapPtr normalMap = cNormalMap::create();
-
-	// load normal map from file
-#if 0
-	fileload = normalMap->loadFromFile(RESOURCE_PATH("../resources/images/brick-normal.png"));
-	if (!fileload)
-	{
-#if defined(_MSVC)
-		fileload = normalMap->loadFromFile("../../../bin/resources/images/brick-normal.png");
-#endif
-	}
-	if (!fileload)
-	{
-		cout << "Error - Texture image failed to load correctly." << endl;
-		close();
-		return (-1);
-	}
-#else
-	//normalMap->createMap(objectX->m_texture);
-#endif
-
-	// assign normal map to object
-	//objectX->m_normalMap = normalMap;
-
-	// compute surface normals
-	//objectX->computeAllNormals();
-
-	// compute tangent vectors
-	//objectX->m_triangles->computeBTN();
-
-
-
-	//--------------------------------------------------------------------------
-	// CREATE SHADERS
-	//--------------------------------------------------------------------------
-
-	// create vertex shader
-	cShaderPtr vertexShader = cShader::create(C_VERTEX_SHADER);
-
-	// load vertex shader from file
-	fileload = vertexShader->loadSourceFile("../resources/shaders/bump.vert");
-	if (!fileload)
-	{
-#if defined(_MSVC)
-		fileload = vertexShader->loadSourceFile("../../../bin/resources/shaders/bump.vert");
-#endif
-	}
-
-	// create fragment shader
-	cShaderPtr fragmentShader = cShader::create(C_FRAGMENT_SHADER);
-
-	// load fragment shader from file
-	fileload = fragmentShader->loadSourceFile("../resources/shaders/bump.frag");
-	if (!fileload)
-	{
-#if defined(_MSVC)
-		fileload = fragmentShader->loadSourceFile("../../../bin/resources/shaders/bump.frag");
-#endif
-	}
-
-
-
-	// create program shader
-	cShaderProgramPtr programShader = cShaderProgram::create();
-
-	// assign vertex shader to program shader
-	programShader->attachShader(vertexShader);
-
-	// assign fragment shader to program shader
-	programShader->attachShader(fragmentShader);
-
-	// assign program shader to object
-	objectX->setShaderProgram(programShader);
-
-	// link program shader
-	programShader->linkProgram();
-
-	// set uniforms
-	programShader->setUniformi("uColorMap", 0);
-	programShader->setUniformi("uShadowMap", 0);
-	programShader->setUniformi("uNormalMap", 2);
-	programShader->setUniformf("uInvRadius", 0.0f);
-
-	return 0;
 }
-
-#endif
