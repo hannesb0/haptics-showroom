@@ -15,31 +15,22 @@ repository: https://github.com/hannesb0/haptics-showroom
 int MyProperties::id = 0;
 
 // Empty Constructor
-MyProperties::MyProperties(string path)
+MyProperties::MyProperties()
 {
 	// set the resources path
-	resourcesPath = path;
+	//resourcesPath = path;
 
 	// set default filename of image for graphical display 
-	//textureImage = "brick-color.png";
+	textureImage = defaultTextureImage;
 
 	// set default filename of normal map for haptics display 
-	//normalImage = "brick-normal.png";
-
-	// set default normal map (chai3d specific object)
-	(*normalMap)->loadFromFile(RESOURCE_PATH("images/brick-normal.png"));;
-
-	// set default texture (chai3d specific object)
-	(*texture)->loadFromFile(RESOURCE_PATH("images/brick-color.png"));
-
-	// set default size of the object
-	//size = cVector3d(0.2, 0.2, 0.2);
+	normalImage = defaultNormalImage;
 
 	// set default temperature of the object
 	temperature = 3;
 
 	// default stiffness of the object
-	stiffness = 0.3;
+	stiffness = defaultStiffness;
 
 	// default staticFriction of the object
 	staticFriction = 0.2;
@@ -61,22 +52,13 @@ MyProperties::MyProperties(string path)
 }
 
 // Constructor with parameters
-MyProperties::MyProperties(cTexture2dPtr *setTexture, cNormalMapPtr *setNormalMap, int setTemperature, int setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitch)
+MyProperties::MyProperties(string setTexture, string setNormalMap, int setTemperature, double setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitch)
 {
 	// set filename of image for graphical display 
-	//textureImage = setTextureImage;
+	textureImage = setTexture;
 
 	// set filename of normal map for haptics display 
-	//normalImage = setNormalImage;
-
-	// set normal map (chai3d specific object)
-	normalMap = setNormalMap;
-
-	// set texture (chai3d specific object)
-	texture = setTexture;
-
-	// set size of the object
-	//size = cVector3d(0.2, 0.2, 0.2);
+	normalImage = setNormalMap;
 
 	// set temperature of the object
 	temperature = setTemperature;
@@ -109,4 +91,34 @@ MyProperties::~MyProperties()
 	// decrease identifier
 	if (id > 0)
 		id--;
+}
+
+void MyProperties::showID()
+{
+	cout << "Current object ID: " << id << endl;
+}
+
+int MyProperties::getID()
+{
+	return id;
+}
+
+void MyProperties::showNormal()
+{
+	cout << "Current object normal map: " <<  normalImage << endl;
+}
+
+string MyProperties::getNormal()
+{
+	return normalImage;
+}
+
+void MyProperties::showTexture()
+{
+	cout << "Current object Texture: " << textureImage << endl;
+}
+
+string MyProperties::getTexture()
+{
+	return textureImage;
 }
