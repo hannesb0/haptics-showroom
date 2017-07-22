@@ -210,6 +210,7 @@ int main(int argc, char **argv)
 	{
 		ovrSizei hmdResolution = oculusVR.getResolution();
 		ovrSizei windowSize = { hmdResolution.w / 2, hmdResolution.h / 2 };
+		renderContext.init("CHAI3D", 100, 100, windowSize.w, windowSize.h);
 	}
 	else
 	{
