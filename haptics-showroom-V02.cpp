@@ -114,6 +114,15 @@ double currentAngle = 0;
 double speed = 0.006;
 double rotationalSpeed = 0.006;
 
+// size of the room
+const double roomLength = 6.0;	// x-axis
+const double roomWidth  = 4.0;	// y-axis
+const double roomHeight = 2.0;	// z-axis
+
+// distances to walls and floor (& ceiling)
+const double wallDistance = 0.75;
+const double floorDistance = 0.3;
+
 // variable to store state of keys
 unsigned int keyState[255];
 
@@ -169,7 +178,12 @@ int new_object(cVector3d position, cVector3d size, int property);
 int new_object_with_properties(cVector3d position, cVector3d size, MyProperties *property);
 
 // ############################# TESTING ###################################
-int new_wall(cVector3d position, cVector3d size /* ,Rotation*/);
+int new_wall(cVector3d position, cVector3d axis, double rotation, double length, double width, MyProperties *property);
+
+void draw_coordinates(cVector3d position, double length, double width);
+
+void checkBoundaries();
+
 void delete_object();
 // ############################# TESTING ###################################
 
@@ -582,401 +596,59 @@ int main(int argc, char **argv)
 #endif
 
 	// insert 7 fixed cubes
-	if (new_object_with_properties(cVector3d(-1.0, -1.5, 0.0), cVector3d(0.2, 0.2, 0.2), prop_test[0]) == -1)
+	if (new_object_with_properties(cVector3d(-1.0, -1.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[0]) == -1)
 	{
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object_with_properties(cVector3d(-1.0, -1.0, 0.0), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
+	if (new_object_with_properties(cVector3d(-1.0, -1.0, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
 	{
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object_with_properties(cVector3d(-1.0, -0.5, 0.0), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
+	if (new_object_with_properties(cVector3d(-1.0, -0.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
 	{
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object_with_properties(cVector3d(-1.0, 0.0, 0.0), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
+	if (new_object_with_properties(cVector3d(-1.0, 0.0, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
 	{
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object_with_properties(cVector3d(-1.0, 0.5, 0.0), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
+	if (new_object_with_properties(cVector3d(-1.0, 0.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
 	{
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object_with_properties(cVector3d(-1.0, 1.0, 0.0), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
+	if (new_object_with_properties(cVector3d(-1.0, 1.0, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
 	{
 		cout << "Error - New object could not be created." << endl;
 	}
-	if (new_object_with_properties(cVector3d(-1.0, 1.5, 0.0), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
+	if (new_object_with_properties(cVector3d(-1.0, 1.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
 	{
 		cout << "Error - New object could not be created." << endl;
 	}
 
-	/*
-	// insert the walls
-	// back wall
-	if (new_object(argc, argv, cVector3d(-2.9, 0.0, 1.6), cVector3d(0.01, 4.0, 4.0), 7) == -1) {
-		cout << "Error - New object could not be created." << endl;
-	}
-	// left wall
-	if (new_object(argc, argv, cVector3d(0.0, -1.95, 1.6), cVector3d(6.0, 0.01, 4.0), 7) == -1) {
-		cout << "Error - New wall could not be created." << endl;
-	}
-	// right wall
-	if (new_object(argc, argv, cVector3d(0.0, 1.95, 1.6), cVector3d(6.0, 0.01, 4.0), 7) == -1) {
-		cout << "Error - New wall could not be created." << endl;
-	}
-	// cealing
-	if (new_object(argc, argv, cVector3d(0.0, 0.0, 4.0), cVector3d(6.0, 4.0, 0.01), 7) == -1) {
-		cout << "Error - New wall could not be created." << endl;
-	}
+	//--------------------------------------------------------------------------
+	// CREATE ROOM
+	//--------------------------------------------------------------------------
+
+	// draw a coordinate system for easier orientation
+	draw_coordinates(cVector3d(-0.5, -0.5, 0.05), 0.3, 1.0);
+
 	// floor
-	if (new_object(argc, argv, cVector3d(0.0, 0.0, -0.3), cVector3d(6.0, 4.0, 0.01), 7) == -1) {
-		cout << "Error - New wall could not be created." << endl;
-	}
+	new_wall(cVector3d(0.0, 0.0, 0.0), cVector3d(0.0, 0.0, 0.0), 0, roomLength, roomWidth, NULL);
+
+	// ceiling
+	new_wall(cVector3d(0.0, 0.0, roomHeight), cVector3d(0.0, 1.0, 0.0), 180, roomLength, roomWidth, NULL);
+
+	// right wall
+	new_wall(cVector3d(0.0, (roomWidth/2), (roomHeight/2)), cVector3d(1.0, 0.0, 0.0), 90, roomLength, roomHeight, NULL);
+
+	// left wall
+	new_wall(cVector3d(0.0, -(roomWidth/2), (roomHeight/2)), cVector3d(1.0, 0.0, 0.0), -90, roomLength, roomHeight, NULL);
+
+	// back wall
+	new_wall(cVector3d(-(roomLength/2), 0.0, (roomHeight/2)), cVector3d(0.0, 1.0, 0.0), 90, roomHeight, roomWidth, NULL);
+
 	// front wall
-	if (new_object(argc, argv, cVector3d(2.9, 0.0, 1.6), cVector3d(0.01, 4.0, 4.0), 7) == -1) {
-		cout << "Error - New wall could not be created." << endl;
-	}
-
-	*/
-
-
-#if 0
-
-	//--------------------------------------------------------------------------
-	// CREATE WALLS			TESTING
-	//--------------------------------------------------------------------------
-
-
-	double maxStiffness = 400;
-
-	// create a mesh
-	cMesh* wall01 = new cMesh();
-
-	// create plane
-	cCreatePlane(wall01, 6.0, 6.0);
-
-	// create collision detector
-	wall01->createAABBCollisionDetector(TOOL_RADIUS);
-
-	// add object to world
-	world->addChild(wall01);
-
-	// set the position of the object
-	wall01->setLocalPos(-3.0, 0.0, 3.0);
-
-	// set graphic properties
-	wall01->m_texture = cTexture2d::create();
-	fileload = wall01->m_texture->loadFromFile(RESOURCE_PATH("../resources/images/whitefoam.jpg"));
-	if (!fileload)
-	{
-#if defined(_MSVC)
-		fileload = wall01->m_texture->loadFromFile("../../../bin/resources/images/whitefoam.jpg");
-#endif
-	}
-	if (!fileload)
-	{
-		cout << "Error - Texture image failed to load correctly." << endl;
-		close();
-		return (-1);
-	}
-	//back wall
-	// enable texture mapping
-	wall01->setUseTexture(true);
-	wall01->m_material->setWhite();
-
-	// create normal map from texture data
-	cNormalMapPtr normalMap1 = cNormalMap::create();
-	normalMap1->createMap(wall01->m_texture);
-	wall01->m_normalMap = normalMap1;
-
-	// set haptic properties
-	wall01->m_material->setStiffness(0.1 * maxStiffness);
-	wall01->m_material->setStaticFriction(0.0);
-	wall01->m_material->setDynamicFriction(0.3);
-	wall01->m_material->setTextureLevel(1.5);
-	wall01->m_material->setHapticTriangleSides(true, false);
-
-	double x1 = 0.0;
-	double y1 = 1.0;
-	double z1 = 0.0;
-	wall01->rotateAboutLocalAxisDeg(cVector3d(x1, y1, z1), 90);
-
-	//front wall
-	// create a mesh
-	cMesh* wall02 = new cMesh();
-
-	// create plane
-	cCreatePlane(wall02, 6.0, 6.0);
-
-	// create collision detector
-	wall02->createAABBCollisionDetector(TOOL_RADIUS);
-
-	// add object to world
-	world->addChild(wall02);
-
-	// set the position of the object
-	wall02->setLocalPos(3.0, 0.0, 3.0);
-
-	// set graphic properties
-	wall02->m_texture = cTexture2d::create();
-	fileload = wall02->m_texture->loadFromFile(RESOURCE_PATH("../resources/images/whitefoam.jpg"));
-	if (!fileload)
-	{
-#if defined(_MSVC)
-		fileload = wall02->m_texture->loadFromFile("../../../bin/resources/images/whitefoam.jpg");
-#endif
-	}
-	if (!fileload)
-	{
-		cout << "Error - Texture image failed to load correctly." << endl;
-		close();
-		return (-1);
-	}
-
-	// enable texture mapping
-	wall02->setUseTexture(true);
-	wall02->m_material->setWhite();
-
-	// create normal map from texture data
-	cNormalMapPtr normalMap2 = cNormalMap::create();
-	normalMap2->createMap(wall02->m_texture);
-	wall02->m_normalMap = normalMap2;
-
-	// set haptic properties
-	wall02->m_material->setStiffness(0.1 * maxStiffness);
-	wall02->m_material->setStaticFriction(0.0);
-	wall02->m_material->setDynamicFriction(0.3);
-	wall02->m_material->setTextureLevel(1.5);
-	wall02->m_material->setHapticTriangleSides(true, false);
-
-	wall02->rotateAboutLocalAxisDeg(cVector3d(x1, y1, z1), -90);
-
-
-	//right wall
-	// create a mesh
-	cMesh* wall03 = new cMesh();
-
-	// create plane
-	cCreatePlane(wall03, 6.0, 6.0);
-
-	// create collision detector
-	wall03->createAABBCollisionDetector(TOOL_RADIUS);
-
-	// add object to world
-	world->addChild(wall03);
-
-	// set the position of the object
-	wall03->setLocalPos(0.0, 2.9, 3.0);
-
-	// set graphic properties
-	wall03->m_texture = cTexture2d::create();
-	fileload = wall03->m_texture->loadFromFile(RESOURCE_PATH("../resources/images/whitefoam.jpg"));
-	if (!fileload)
-	{
-#if defined(_MSVC)
-		fileload = wall03->m_texture->loadFromFile("../../../bin/resources/images/whitefoam.jpg");
-#endif
-	}
-	if (!fileload)
-	{
-		cout << "Error - Texture image failed to load correctly." << endl;
-		close();
-		return (-1);
-	}
-
-	// enable texture mapping
-	wall03->setUseTexture(true);
-	wall03->m_material->setWhite();
-
-	// create normal map from texture data
-	cNormalMapPtr normalMap3 = cNormalMap::create();
-	normalMap3->createMap(wall03->m_texture);
-	wall03->m_normalMap = normalMap3;
-
-	// set haptic properties
-	wall03->m_material->setStiffness(0.1 * maxStiffness);
-	wall03->m_material->setStaticFriction(0.0);
-	wall03->m_material->setDynamicFriction(0.3);
-	wall03->m_material->setTextureLevel(1.5);
-	wall03->m_material->setHapticTriangleSides(true, false);
-
-	double x2 = 1.0;
-	double y2 = 0.0;
-	double z2 = 0.0;
-	wall03->rotateAboutLocalAxisDeg(cVector3d(x2, y2, z2), 90);
-
-
-	//left wall
-	// create a mesh
-	cMesh* wall04 = new cMesh();
-
-	// create plane
-	cCreatePlane(wall04, 6.0, 6.0);
-
-	// create collision detector
-	wall04->createAABBCollisionDetector(TOOL_RADIUS);
-
-	// add object to world
-	world->addChild(wall04);
-
-	// set the position of the object
-	wall04->setLocalPos(0.0, -2.9, 3.0);
-
-	// set graphic properties
-	wall04->m_texture = cTexture2d::create();
-	fileload = wall04->m_texture->loadFromFile(RESOURCE_PATH("../resources/images/whitefoam.jpg"));
-	if (!fileload)
-	{
-#if defined(_MSVC)
-		fileload = wall04->m_texture->loadFromFile("../../../bin/resources/images/whitefoam.jpg");
-#endif
-	}
-	if (!fileload)
-	{
-		cout << "Error - Texture image failed to load correctly." << endl;
-		close();
-		return (-1);
-	}
-
-	// enable texture mapping
-	wall04->setUseTexture(true);
-	wall04->m_material->setWhite();
-
-	// create normal map from texture data
-	cNormalMapPtr normalMap4 = cNormalMap::create();
-	normalMap4->createMap(wall04->m_texture);
-	wall04->m_normalMap = normalMap4;
-
-	// set haptic properties
-	wall04->m_material->setStiffness(0.1 * maxStiffness);
-	wall04->m_material->setStaticFriction(0.0);
-	wall04->m_material->setDynamicFriction(0.3);
-	wall04->m_material->setTextureLevel(1.5);
-	wall04->m_material->setHapticTriangleSides(true, false);
-
-
-	
-	//--------------------------------------------------------------------------
-	// CREATE ENVIRONMENT GLOBE
-	//--------------------------------------------------------------------------
-
-// graphic world from original template (Baumarkt)
-#else
-
-	// create a virtual mesh
-	cMesh* floor = new cMesh();
-	cMesh* wall = new cMesh();
-
-	// add object to world
-	world->addChild(floor);
-	world->addChild(wall);
-
-	// set the position of the object at the center of the world
-	floor->setLocalPos(0.0, 0.0, -0.3);
-	wall->setLocalPos(0.0, 0.0, 1.6);
-
-	// create room
-	cCreatePlane(floor, 6, 4);
-	floor->setUseDisplayList(true);
-
-	cCreateBox(wall, 6, 4, 4);
-	wall->setUseDisplayList(true);
-
-	// create a texture
-	cTexture2dPtr textureFloor = cTexture2d::create();
-	cTexture2dPtr textureWall = cTexture2d::create();
-
-	fileload = textureFloor->loadFromFile("./resources/images/sand-wall.png");
-	if (!fileload)
-	{
-#if defined(_MSVC)
-		fileload = textureFloor->loadFromFile("./resources/images/sand-wall.png");
-#endif
-	}
-	bool fileload2 = textureWall->loadFromFile("./resources/images/white-wall.png");
-	if (!fileload2)
-	{
-#if defined(_MSVC)
-		fileload2 = textureWall->loadFromFile("./resources/images/white-wall.png");
-#endif
-	}
-	if (!(fileload && fileload2))
-	{
-		cout << "Error - Texture image failed to load correctly." << endl;
-		close();
-		return (-1);
-	}
-
-	// apply texture to object
-	floor->setTexture(textureFloor);
-	wall->setTexture(textureWall);
-
-	// enable texture rendering 
-	floor->setUseTexture(true);
-	wall->setUseTexture(true);
-
-
-	// Since we don't need to see our polygons from both sides, we enable culling.
-	floor->setUseCulling(false);
-	wall->setUseCulling(false);
-
-	// disable material properties and lighting
-	floor->setUseMaterial(false);
-	wall->setUseMaterial(false);
-
-
-#endif
-
-
-// Cube world from template "01-cube"
-#if 0
-
-	// create a virtual mesh
-	cMesh* globe = new cMesh();
-
-	// add object to world
-	world->addChild(globe);
-
-	// set the position of the object at the center of the world
-	globe->setLocalPos(0.0, 0.0, 0.0);
-
-	// create cube
-	cCreateSphere(globe, 6.0, 360, 360);
-	globe->setUseDisplayList(true);
-	globe->deleteCollisionDetector();
-
-	// create a texture
-	cTexture2dPtr textureSpace = cTexture2d::create();
-
-	fileload = textureSpace->loadFromFile(RESOURCE_PATH("images/infinity.jpg"));
-	if (!fileload)
-	{
-	#if defined(_MSVC)
-		fileload = textureSpace->loadFromFile("../../../bin/resources/images/infinity.jpg");
-	#endif
-	}
-	if (!fileload)
-	{
-		cout << "Error - Texture image failed to load correctly." << endl;
-		close();
-		return (-1);
-	}
-
-	// apply texture to object
-	globe->setTexture(textureSpace);
-
-	// enable texture rendering 
-	globe->setUseTexture(true);
-
-	// Since we don't need to see our polygons from both sides, we enable culling.
-	globe->setUseCulling(false);
-
-	// disable material properties and lighting
-	globe->setUseMaterial(false);
-
-#endif
-
+	new_wall(cVector3d((roomLength / 2), 0.0, (roomHeight / 2)), cVector3d(0.0, 1.0, 0.0), -90, roomHeight, roomWidth, NULL);
 
 	//--------------------------------------------------------------------------
 	// START SIMULATION
@@ -989,7 +661,6 @@ int main(int argc, char **argv)
 	// setup callback when application exits
 	atexit(close);
 
-
 	//--------------------------------------------------------------------------
 	// MAIN GRAPHIC LOOP
 	//--------------------------------------------------------------------------
@@ -1001,6 +672,9 @@ int main(int argc, char **argv)
 
 		// react to key input
 		computeMatricesFromInput();
+
+		// avoid walking out of room
+		checkBoundaries();
 
 		// check if Oculus should be used
 		if (useOculus)
@@ -1236,26 +910,6 @@ void computeMatricesFromInput()
 	if (keyState[(unsigned char)'2'] == 1) // special function 2
 	{
 		//delete_object()
-	}
-
-	// make sure that it is not possible to walk out of the room
-	if (currentPosition.x() > 2.15) {
-		currentPosition.x(2.15);
-	}
-	if (currentPosition.x() < -2.15) {
-		currentPosition.x(-2.15);
-	}
-	if (currentPosition.y() > 1.15) {
-		currentPosition.y(1.15);
-	}
-	if (currentPosition.y() < -1.15) {
-		currentPosition.y(-1.15);
-	}
-	if (currentPosition.z() > 3.0) {
-		currentPosition.z(3.0);
-	}
-	if (currentPosition.z() < 0.0) {
-		currentPosition.z(0.0);
 	}
 
 	// recalculate the viewing direction
@@ -1843,7 +1497,7 @@ int new_object_with_properties(cVector3d position, cVector3d size, MyProperties 
 	// load normal map from file
 	if (normalMap->loadFromFile(RESOURCE_PATH(STR_ADD("images/", property->normalImage))) != 1)
 	{
-		cout << "ERROR: Cannot load texture file!" << endl;
+		cout << "ERROR: Cannot load normal map file!" << endl;
 		normalMap->createMap(objectX->m_texture);
 	}
 
@@ -1869,7 +1523,6 @@ int new_object_with_properties(cVector3d position, cVector3d size, MyProperties 
 	if (!fileload)
 	{
 	#if defined(_MSVC)
-		cout << "ASdfasdfasdfasdfasdfasdfasdasdf" << endl;
 		fileload = vertexShader->loadSourceFile("../../../bin/resources/shaders/bump.vert");
 	#endif
 	}
@@ -1919,6 +1572,156 @@ void delete_object()
 
 //------------------------------------------------------------------------------
 
-int new_wall(){
+int new_wall(cVector3d position, cVector3d axis, double rotation, double length, double width, MyProperties *property){
 
+	// create a virtual mesh
+	cMesh* floor = new cMesh();
+
+	// add object to world
+	world->addChild(floor);
+
+	// set the position of the object at the center of the world
+	floor->setLocalPos(position.x(), position.y(), position.z());
+
+	// create shape
+	cCreatePlane(floor, length, width);
+	floor->setUseDisplayList(true);
+
+	// create collision detector
+	floor->createAABBCollisionDetector(TOOL_RADIUS);
+
+	// create a texture
+	cTexture2dPtr textureFloor = cTexture2d::create();
+
+	if (textureFloor->loadFromFile("./resources/images/sand-wall.png") == 0)
+	{
+		cout << "ERROR: Cannot load texture file!" << endl;
+
+		// set plane to plain withe color
+		floor->m_material->setWhite();
+	}
+
+	// apply texture to object
+	floor->setTexture(textureFloor);
+
+	// create normal map from texture data
+	cNormalMapPtr normalMap1 = cNormalMap::create();
+	normalMap1->createMap(floor->m_texture);
+	floor->m_normalMap = normalMap1;
+
+	// enable texture rendering 
+	floor->setUseTexture(true);
+
+	// Since we don't need to see our polygons from both sides, we enable culling.
+	floor->setUseCulling(false);
+
+	// disable material properties and lighting
+	floor->setUseMaterial(false);
+
+	// set haptic properties
+	floor->m_material->setStiffness(0.5 * maxStiffness);
+	floor->m_material->setStaticFriction(0.0);
+	floor->m_material->setDynamicFriction(0.3);
+	floor->m_material->setTextureLevel(1.5);
+	floor->m_material->setHapticTriangleSides(true, false);
+
+	/*
+	double x1 = 0.0;
+	double y1 = 1.0;
+	double z1 = 0.0;
+	floor->rotateAboutLocalAxisDeg(cVector3d(x1, y1, z1), 90);
+	*/
+	floor->rotateAboutLocalAxisDeg(axis, rotation);
+
+	return 0;
+}
+
+//------------------------------------------------------------------------------
+
+void checkBoundaries()
+{
+	// make sure that it is not possible to walk out of the room
+	if (currentPosition.x() > ((roomLength / 2) - wallDistance)) {
+		currentPosition.x(((roomLength / 2) - wallDistance));
+	}
+	if (currentPosition.x() < -((roomLength / 2) - wallDistance)) {
+		currentPosition.x(-((roomLength / 2) - wallDistance));
+	}
+	if (currentPosition.y() > ((roomWidth / 2) - wallDistance)) {
+		currentPosition.y((roomWidth / 2) - wallDistance);
+	}
+	if (currentPosition.y() < -((roomWidth / 2) - wallDistance)) {
+		currentPosition.y(-((roomWidth / 2) - wallDistance));
+	}
+	if (currentPosition.z() > ((roomHeight) - floorDistance)) {
+		currentPosition.z((roomHeight) - floorDistance);
+	}
+	if (currentPosition.z() < floorDistance) {
+		currentPosition.z(floorDistance);
+	}
+}
+
+//------------------------------------------------------------------------------
+
+void draw_coordinates(cVector3d position, double length, double width)
+{
+
+	// ------------------
+	// x-axis 
+	// ------------------
+
+	cVector3d temp(length, 0.0, 0.0);
+		
+	// create small line to illustrate the velocity of the haptic device
+	cShapeLine* x_axis = new cShapeLine(position, cVector3d(position + temp));
+
+	// set line width of axis
+	x_axis->setLineWidth(width);
+
+	// set the color of the axis
+	x_axis->m_colorPointA.setRed();
+	x_axis->m_colorPointB.setRed();
+
+	// insert line inside world
+	world->addChild(x_axis);
+
+	// ------------------
+	// y-axis 
+	// ------------------
+
+	temp.x(0);
+	temp.y(length);
+
+	// create small line to illustrate the velocity of the haptic device
+	cShapeLine* y_axis = new cShapeLine(position, cVector3d(position + temp));
+
+	// set line width of axis
+	y_axis->setLineWidth(width);
+
+	// set the color of the axis
+	y_axis->m_colorPointA.setGreen();
+	y_axis->m_colorPointB.setGreen();
+
+	// insert line inside world
+	world->addChild(y_axis);
+
+	// ------------------
+	// z-axis 
+	// ------------------
+
+	temp.y(0);
+	temp.z(length);
+
+	// create small line to illustrate the velocity of the haptic device
+	cShapeLine* z_axis = new cShapeLine(cVector3d(position), cVector3d(position + temp));
+
+	// set line width of axis
+	z_axis->setLineWidth(width);
+
+	// set the color of the axis
+	z_axis->m_colorPointA.setBlue();
+	z_axis->m_colorPointB.setBlue();
+
+	// insert line inside world
+	world->addChild(z_axis);
 }
