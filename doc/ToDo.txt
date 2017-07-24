@@ -8,15 +8,24 @@ To do list for CHL final project
 To be implemented:
 ==================
 
-- object-class (size, position, shape, property)
-- properties-class (all properties)
+- object-class (size, position, rotation, shape, property)
+
+	- properties-class (all properties)
+	  -> StickSlipForceMax, StickSlipStiffness ???
+
 - sound stuff
+
 - temperature stuff
-- walls and floor
+
+	- walls and floor
+
 - 3ds objects
+
 - objects with different shapes
+
 - moving objects?
-- 
+
+- multidevice ??
 
 
 
@@ -25,6 +34,9 @@ For presentation:
 =================
 
 - record video
+
 - design slides
+
 - discuss who presents which part
 
+- create some representary objects with interesting combination of properties
