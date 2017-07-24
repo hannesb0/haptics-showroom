@@ -1,0 +1,30 @@
+################################
+
+To do list for CHL final project
+
+################################
+
+
+To be implemented:
+==================
+
+- object-class (size, position, shape, property)
+- properties-class (all properties)
+- sound stuff
+- temperature stuff
+- walls and floor
+- 3ds objects
+- objects with different shapes
+- moving objects?
+- 
+
+
+
+
+For presentation:
+=================
+
+- record video
+- design slides
+- discuss who presents which part
+
