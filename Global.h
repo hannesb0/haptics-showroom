@@ -30,9 +30,35 @@ const string defaultTextureImage = "brick-color.png";
 // default filename of normal map for haptics display 
 const string defaultNormalImage = "brick-normal.png";
 
+// default filename of audio file (for voice coil)
+const string defaultAudio = "audio.wav";
+
+// default temperature
+const int defaultTemperature = 3;
+
 // default stiffness
 const double defaultStiffness = 0.7f;
 
+// default staticFriction
+const double defaultStaticFriction = 0.2;
+
+// default dynamicFriction
+const double defaultDynamicFriction = 0.2;
+
+// default texture level
+const double defaultTextureLevel = 0.1;
+
+// set default audio friction gain
+const double defaultAudioGain = 0;
+
+// set default audio pitch
+const double defaultAudioPitch = 0.2;
+
+//------------------------------------------------------------------------------
+// ENUMERATIONS
+//------------------------------------------------------------------------------
+
+enum MyShape { cube, sphere, cylinder, complex3ds };
 
 //------------------------------------------------------------------------------
 // DECLARED MACROS
@@ -43,5 +69,9 @@ const double defaultStiffness = 0.7f;
 
 // concatenates string q and p (e.g. q = "abc", p = "xyz" -> STR_ADD(q,p) = "abcxyz")
 #define STR_ADD(q,p)		(char*)((string(q)+string(p)).c_str())
+
+// initial position
+#define INITIAL_POSITION	cVector3d(2.0, 0.0, 0.4)
+
 
 #endif
