@@ -5,7 +5,7 @@ Project:	Haptics Showroom
 Authors:	Naina Dhingra, Ke Xu, Hannes Bohnengel
 Revision:	0.2
 Remarks:	These files are tracked with git and are available on the github
-repository: https://github.com/hannesb0/haptics-showroom
+			repository: https://github.com/hannesb0/haptics-showroom
 */
 //==============================================================================
 
@@ -18,8 +18,6 @@ repository: https://github.com/hannesb0/haptics-showroom
 #include "Global.h"
 
 using namespace std;
-
-// mStickSlipForceMax, mStickSlipStiffness,
 
 class MyProperties
 {
@@ -38,19 +36,14 @@ public:
 	// Destructor
 	~MyProperties();
 
-	void showID();
-	int getID();
+	//void showID();
+	//int getID();
 
 	void showNormal();
 	string getNormal();
 
 	void showTexture();
 	string getTexture();
-
-
-	//bool setNormalMap();
-
-	//bool setTexture();
 
 	//------------------------------------------------------------------------------
 	// Public variables
@@ -61,6 +54,9 @@ public:
 
 	// filename of normal map for haptics display 
 	string normalImage;
+
+	// filename of audio file (for voice coil usage)
+	string audio;
 
 	// temperature of the object (the temperature is divided into 5 areas: 1 = very cold, 2 = cold, 3 = normal, 4 = hot, 5 = very hot)
 	int temperature;
@@ -90,7 +86,7 @@ private:
 	//------------------------------------------------------------------------------	
 
 	// property identifier
-	static int id;
+	//static int id;
 };
 
 #endif // MYPROPERTIES_H_INCLUDED

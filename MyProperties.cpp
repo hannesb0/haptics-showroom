@@ -5,14 +5,14 @@ Project:	Haptics Showroom
 Authors:	Naina Dhingra, Ke Xu, Hannes Bohnengel
 Revision:	0.2
 Remarks:	These files are tracked with git and are available on the github
-repository: https://github.com/hannesb0/haptics-showroom
+			repository: https://github.com/hannesb0/haptics-showroom
 */
 //==============================================================================
 
 #include "MyProperties.h"
 
 // initialize object identifier
-int MyProperties::id = 0;
+//int MyProperties::id = 0;
 
 // Empty Constructor
 MyProperties::MyProperties()
@@ -26,29 +26,32 @@ MyProperties::MyProperties()
 	// set default filename of normal map for haptics display 
 	normalImage = defaultNormalImage;
 
-	// set default temperature of the object
-	temperature = 3;
+	// set default audio file (for voice coil)
+	audio = defaultAudio;
 
-	// default stiffness of the object
+	// set default temperature of the object
+	temperature = defaultTemperature;
+
+	// set default stiffness of the object
 	stiffness = defaultStiffness;
 
-	// default staticFriction of the object
-	staticFriction = 0.2;
+	// set default staticFriction of the object
+	staticFriction = defaultStaticFriction;
 
-	// default dynamicFriction of the object
-	dynamicFriction = 0.2;
+	// set default dynamicFriction of the object
+	dynamicFriction = defaultDynamicFriction;
 
-	// default texture level
-	textureLevel = 0.1;
+	// set default texture level
+	textureLevel = defaultTextureLevel;
 
-	// default audio friction gain
-	audioGain = 0;
+	// set default audio friction gain
+	audioGain = defaultAudioGain;
 
-	// default audio pitch
-	audioPitch = 0.2;
+	// set default audio pitch
+	audioPitch = defaultAudioPitch;
 
 	// increase identifier
-	id++;
+	//id++;
 }
 
 // Constructor with parameters
@@ -82,30 +85,30 @@ MyProperties::MyProperties(string setTexture, string setNormalMap, int setTemper
 	audioPitch = setAudioPitch;
 
 	// increase identifier
-	id++;
+	//id++;
 }
 
 // Destructor
 MyProperties::~MyProperties()
 {
 	// decrease identifier
-	if (id > 0)
-		id--;
+	//if (id > 0)
+	//	id--;
 }
-
+/*
 void MyProperties::showID()
 {
-	cout << "Current object ID: " << id << endl;
+	cout << "Current property ID: " << id << endl;
 }
 
 int MyProperties::getID()
 {
 	return id;
 }
-
+*/
 void MyProperties::showNormal()
 {
-	cout << "Current object normal map: " <<  normalImage << endl;
+	cout << "Current normal map: " <<  normalImage << endl;
 }
 
 string MyProperties::getNormal()
@@ -115,7 +118,7 @@ string MyProperties::getNormal()
 
 void MyProperties::showTexture()
 {
-	cout << "Current object Texture: " << textureImage << endl;
+	cout << "Current texture: " << textureImage << endl;
 }
 
 string MyProperties::getTexture()
