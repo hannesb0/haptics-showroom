@@ -22,12 +22,14 @@
 #include "OVRRenderContext.h"
 #include "OVRDevice.h"
 //------------------------------------------------------------------------------
-#include "MyProperties.h"
 #include "Global.h"
+#include "MyObjectDatabase.h"
 //------------------------------------------------------------------------------
 using namespace chai3d;
 using namespace std;
 //------------------------------------------------------------------------------
+
+
 
 
 ////////////////////////////////////////
@@ -53,7 +55,7 @@ bool useSecondHapticDevice = false;
 #define WINDOW_SIZE_H		1000
 #define TOOL_RADIUS			0.02
 #define TOOL_WORKSPACE		0.3
-#define INITIAL_POSITION	cVector3d(2.0, 0.0, 0.2)
+//#define INITIAL_POSITION	cVector3d(2.0, 0.0, 0.3)						// -> defined in Global.h
 
 //------------------------------------------------------------------------------
 // CHAI3D
@@ -129,8 +131,11 @@ unsigned int keyState[255];
 // variable to check success of file load
 bool fileload;
 
-// pointer to properties class
-MyProperties *prop_test[10];
+// pointer to MyObject class
+MyObject* obj_test[10];
+
+// pointer to MyProperties class
+MyProperties* prop_test[10];
 
 // information about the current haptic device -> retrieved at runtime
 cHapticDeviceInfo hapticDeviceInfoX;
@@ -142,8 +147,6 @@ double workspaceScaleFactor;
 
 // max stiffness -> retrieved at runtime
 double maxStiffness;
-
-
 
 //------------------------------------------------------------------------------
 // OCULUS RIFT
@@ -171,20 +174,24 @@ void processEvents();
 // function that computes movements through key input
 void computeMatricesFromInput();
 
+// function to check if boundaries of room are violated when walking
+void checkBoundaries();
+
+// function which draws kartesian coordinates at some position
+void draw_coordinates(cVector3d position, double length, double width);
+
+// ############################# TESTING ###################################
+
 // function to create a new object at runtime
-int new_object(cVector3d position, cVector3d size, int property);
+int new_object_OLD(cVector3d position, cVector3d size, int property);
 
 // function to create a new object at runtime with properties
 int new_object_with_properties(cVector3d position, cVector3d size, MyProperties *property);
 
-// ############################# TESTING ###################################
-int new_wall(cVector3d position, cVector3d axis, double rotation, double length, double width, MyProperties *property);
+int new_plane(cVector3d position, cVector3d axis, double rotation, double length, double width, MyProperties *property);
 
-void draw_coordinates(cVector3d position, double length, double width);
+void new_object(cVector3d position, MyObject obj);
 
-void checkBoundaries();
-
-void delete_object();
 // ############################# TESTING ###################################
 
 
@@ -220,7 +227,7 @@ int main(int argc, char **argv)
 
 	// get the location of the executable
 	resourceRoot = string(argv[0]).substr(0, string(argv[0]).find_last_of("/\\") + 1);
-	
+
 	// this is the location of the resources
 	resourcesPath = resourceRoot + string("../../examples/SDL/haptics-showroom-V02/resources/");
 
@@ -230,6 +237,7 @@ int main(int argc, char **argv)
 
 	// ############################# TESTING ###################################
 
+	/*
 
 	prop_test[0] = new MyProperties();
 
@@ -246,6 +254,20 @@ int main(int argc, char **argv)
 	prop_test[1]->showNormal();
 
 	prop_test[1]->showTexture();
+
+
+	obj_test[0] = new MyObject(cVector3d(0.2, 0.2, 0.2), MyShape(cube), *prop_test[0]);
+
+	*/
+
+	MyProperties Aluminium("G1RhombAluminumMesh.JPG", "G1RhombAluminumMeshNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
+	MyProperties Rubber("G5ProfiledRubberPlate.JPG", "XXXNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
+	//MyProperties Steel("G3StainlessSteel.JPG", "XXXNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
+
+	MyObject* Cube_Aluminium = new MyObject(cVector3d(0.2, 0.2, 0.2), MyShape(cube), Aluminium);
+	MyObject* Sphere_Rubber = new MyObject(cVector3d(0.2, 0.2, 0.2), MyShape(sphere), MyProperties(Rubber));
+	//MyObject Cylinder_Steel(cVector3d(0.2, 0.2, 0.2), MyShape(cylinder), MyProperties(Steel));
+
 
 	// ############################# TESTING ###################################
 
@@ -448,6 +470,7 @@ int main(int argc, char **argv)
 	// CREATE OBJECT
 	//--------------------------------------------------------------------------
 
+	// rotating cube from 01-cube.cpp
 #if 0
 
 	// read the scale factor between the physical workspace of the haptic
@@ -595,35 +618,27 @@ int main(int argc, char **argv)
 
 #endif
 
-	// insert 7 fixed cubes
-	if (new_object_with_properties(cVector3d(-1.0, -1.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[0]) == -1)
-	{
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object_with_properties(cVector3d(-1.0, -1.0, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
-	{
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object_with_properties(cVector3d(-1.0, -0.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
-	{
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object_with_properties(cVector3d(-1.0, 0.0, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
-	{
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object_with_properties(cVector3d(-1.0, 0.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
-	{
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object_with_properties(cVector3d(-1.0, 1.0, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
-	{
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object_with_properties(cVector3d(-1.0, 1.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]) == -1)
-	{
-		cout << "Error - New object could not be created." << endl;
-	}
+	/*
+	new_object_with_properties(cVector3d(-1.0, -1.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[0]);
+
+	new_object_with_properties(cVector3d(-1.0, -1.0, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]);
+	
+	new_object_with_properties(cVector3d(-1.0, -0.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]);
+	
+	new_object_with_properties(cVector3d(-1.0, 0.0, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]);
+	
+	new_object_with_properties(cVector3d(-1.0, 0.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]);
+
+	new_object_with_properties(cVector3d(-1.0, 1.0, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]);
+
+	new_object_with_properties(cVector3d(-1.0, 1.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]);
+	*/
+
+	new_object(cVector3d(-1.0, -0.5, 0.1), *Cube_Aluminium);
+
+	//new_object(cVector3d(-1.0, 0.0, 0.1), *Sphere_Rubber);
+
+	//new_object(cVector3d(-1.0, 0.5, 0.1), Cylinder_Steel);
 
 	//--------------------------------------------------------------------------
 	// CREATE ROOM
@@ -633,22 +648,22 @@ int main(int argc, char **argv)
 	draw_coordinates(cVector3d(-0.5, -0.5, 0.05), 0.3, 1.0);
 
 	// floor
-	new_wall(cVector3d(0.0, 0.0, 0.0), cVector3d(0.0, 0.0, 0.0), 0, roomLength, roomWidth, NULL);
+	new_plane(cVector3d(0.0, 0.0, 0.0), cVector3d(0.0, 0.0, 0.0), 0, roomLength, roomWidth, NULL);
 
 	// ceiling
-	new_wall(cVector3d(0.0, 0.0, roomHeight), cVector3d(0.0, 1.0, 0.0), 180, roomLength, roomWidth, NULL);
+	new_plane(cVector3d(0.0, 0.0, roomHeight), cVector3d(0.0, 1.0, 0.0), 180, roomLength, roomWidth, NULL);
 
 	// right wall
-	new_wall(cVector3d(0.0, (roomWidth/2), (roomHeight/2)), cVector3d(1.0, 0.0, 0.0), 90, roomLength, roomHeight, NULL);
+	new_plane(cVector3d(0.0, (roomWidth / 2), (roomHeight / 2)), cVector3d(1.0, 0.0, 0.0), 90, roomLength, roomHeight, NULL);
 
 	// left wall
-	new_wall(cVector3d(0.0, -(roomWidth/2), (roomHeight/2)), cVector3d(1.0, 0.0, 0.0), -90, roomLength, roomHeight, NULL);
+	new_plane(cVector3d(0.0, -(roomWidth / 2), (roomHeight / 2)), cVector3d(1.0, 0.0, 0.0), -90, roomLength, roomHeight, NULL);
 
 	// back wall
-	new_wall(cVector3d(-(roomLength/2), 0.0, (roomHeight/2)), cVector3d(0.0, 1.0, 0.0), 90, roomHeight, roomWidth, NULL);
+	new_plane(cVector3d(-(roomLength / 2), 0.0, (roomHeight / 2)), cVector3d(0.0, 1.0, 0.0), 90, roomHeight, roomWidth, NULL);
 
 	// front wall
-	new_wall(cVector3d((roomLength / 2), 0.0, (roomHeight / 2)), cVector3d(0.0, 1.0, 0.0), -90, roomHeight, roomWidth, NULL);
+	new_plane(cVector3d((roomLength / 2), 0.0, (roomHeight / 2)), cVector3d(0.0, 1.0, 0.0), -90, roomHeight, roomWidth, NULL);
 
 	//--------------------------------------------------------------------------
 	// START SIMULATION
@@ -905,7 +920,7 @@ void computeMatricesFromInput()
 	}
 	if (keyState[(unsigned char)'1'] == 1) // special function 1
 	{
-		delete_object();
+		//delete_object();
 	}
 	if (keyState[(unsigned char)'2'] == 1) // special function 2
 	{
@@ -1093,7 +1108,99 @@ void updateHaptics(void)
 
 //------------------------------------------------------------------------------
 
-int new_object(cVector3d position, cVector3d size, int property)
+void checkBoundaries()
+{
+	// make sure that it is not possible to walk out of the room
+	if (currentPosition.x() > ((roomLength / 2) - wallDistance)) {
+		currentPosition.x(((roomLength / 2) - wallDistance));
+	}
+	if (currentPosition.x() < -((roomLength / 2) - wallDistance)) {
+		currentPosition.x(-((roomLength / 2) - wallDistance));
+	}
+	if (currentPosition.y() > ((roomWidth / 2) - wallDistance)) {
+		currentPosition.y((roomWidth / 2) - wallDistance);
+	}
+	if (currentPosition.y() < -((roomWidth / 2) - wallDistance)) {
+		currentPosition.y(-((roomWidth / 2) - wallDistance));
+	}
+	if (currentPosition.z() > ((roomHeight)-floorDistance)) {
+		currentPosition.z((roomHeight)-floorDistance);
+	}
+	if (currentPosition.z() < floorDistance) {
+		currentPosition.z(floorDistance);
+	}
+}
+
+//------------------------------------------------------------------------------
+
+void draw_coordinates(cVector3d position, double length, double width)
+{
+
+	// ------------------
+	// x-axis 
+	// ------------------
+
+	cVector3d temp(length, 0.0, 0.0);
+
+	// create small line to illustrate the velocity of the haptic device
+	cShapeLine* x_axis = new cShapeLine(position, cVector3d(position + temp));
+
+	// set line width of axis
+	x_axis->setLineWidth(width);
+
+	// set the color of the axis
+	x_axis->m_colorPointA.setRed();
+	x_axis->m_colorPointB.setRed();
+
+	// insert line inside world
+	world->addChild(x_axis);
+
+	// ------------------
+	// y-axis 
+	// ------------------
+
+	temp.x(0);
+	temp.y(length);
+
+	// create small line to illustrate the velocity of the haptic device
+	cShapeLine* y_axis = new cShapeLine(position, cVector3d(position + temp));
+
+	// set line width of axis
+	y_axis->setLineWidth(width);
+
+	// set the color of the axis
+	y_axis->m_colorPointA.setGreen();
+	y_axis->m_colorPointB.setGreen();
+
+	// insert line inside world
+	world->addChild(y_axis);
+
+	// ------------------
+	// z-axis 
+	// ------------------
+
+	temp.y(0);
+	temp.z(length);
+
+	// create small line to illustrate the velocity of the haptic device
+	cShapeLine* z_axis = new cShapeLine(cVector3d(position), cVector3d(position + temp));
+
+	// set line width of axis
+	z_axis->setLineWidth(width);
+
+	// set the color of the axis
+	z_axis->m_colorPointA.setBlue();
+	z_axis->m_colorPointB.setBlue();
+
+	// insert line inside world
+	world->addChild(z_axis);
+}
+
+//------------------------------------------------------------------------------
+
+
+#if 0
+int new_object_OLD(cVector3d position, cVector3d size, int property)
 {
 	// retrieve information about the current haptic device
 	cHapticDeviceInfo hapticDeviceInfoX = hapticDevice->getSpecifications();
@@ -1434,8 +1541,11 @@ int new_object(cVector3d position, cVector3d size, int property)
 
 	return 0;
 }
+#endif
 
 //------------------------------------------------------------------------------
+
+/*
 
 int new_object_with_properties(cVector3d position, cVector3d size, MyProperties *property)
 {
@@ -1563,32 +1673,172 @@ int new_object_with_properties(cVector3d position, cVector3d size, MyProperties 
 	return 0;
 }
 
+*/
+
 //------------------------------------------------------------------------------
 
-void delete_object()
+#if 1
+
+void new_object(cVector3d position, MyObject obj)
 {
-	world->removeChild(objectX);
-}
-
-//------------------------------------------------------------------------------
-
-int new_wall(cVector3d position, cVector3d axis, double rotation, double length, double width, MyProperties *property){
-
 	// create a virtual mesh
-	cMesh* floor = new cMesh();
+	objectX = new cMesh();
 
 	// add object to world
-	world->addChild(floor);
+	world->addChild(objectX);
 
 	// set the position of the object at the center of the world
-	floor->setLocalPos(position.x(), position.y(), position.z());
+	objectX->setLocalPos(position);
+
+	switch (obj.shape)
+	{
+	case(cube) :
+		// create cube
+		chai3d::cCreateBox(objectX, obj.size.x(), obj.size.y(), obj.size.z());
+		break;
+	case (sphere) :
+		// create sphere
+		chai3d::cCreateSphere(objectX, (const double)obj.size.length()/2);
+		break;
+	case(cylinder) :
+		chai3d::cCreateCylinder(objectX, (const double)obj.size.z(), cVector3d(obj.size.x(), obj.size.y(), 0.0).length() / 2);
+		break;
+
+/*	case(complex3ds) :
+		break;
+*/
+	}
+
+	// create a texture
+	cTexture2dPtr texture = cTexture2d::create();
+
+	// load texture image from file
+	if (texture->loadFromFile(RESOURCE_PATH(STR_ADD("images/", obj.properties.textureImage))) != 1)
+	{
+		cout << "ERROR: Cannot load texture file!" << endl;
+	}
+
+	// apply texture to object
+	objectX->setTexture(texture);
+
+	// enable texture rendering 
+	objectX->setUseTexture(true);
+
+	// Since we don't need to see our polygons from both sides, we enable culling.
+	objectX->setUseCulling(true);
+
+	// set material properties to light gray
+	objectX->m_material->setWhite();
+
+	// compute collision detection algorithm
+	objectX->createAABBCollisionDetector(TOOL_RADIUS);
+
+	// define a default stiffness for the object
+	objectX->m_material->setStiffness(obj.properties.stiffness * maxStiffness);
+
+	// define some static friction
+	objectX->m_material->setStaticFriction(obj.properties.staticFriction);
+
+	// define some dynamic friction
+	objectX->m_material->setDynamicFriction(obj.properties.dynamicFriction);
+
+	// define some texture rendering
+	objectX->m_material->setTextureLevel(obj.properties.textureLevel);
+
+	// render triangles haptically on front side only
+	objectX->m_material->setHapticTriangleSides(true, false);
+
+	// create a normal texture
+	cNormalMapPtr normalMap = cNormalMap::create();
+
+	// load normal map from file
+	if (normalMap->loadFromFile(RESOURCE_PATH(STR_ADD("images/", obj.properties.normalImage))) != 1)
+	{
+		cout << "ERROR: Cannot load normal map file!" << endl;
+		normalMap->createMap(objectX->m_texture);
+	}
+
+	// assign normal map to object
+	objectX->m_normalMap = normalMap;
+
+	// compute surface normals
+	objectX->computeAllNormals();
+
+	// compute tangent vectors
+	objectX->m_triangles->computeBTN();
+
+
+	//--------------------------------------------------------------------------
+	// CREATE SHADERS
+	//--------------------------------------------------------------------------
+
+	// create vertex shader
+	cShaderPtr vertexShader = cShader::create(C_VERTEX_SHADER);
+
+	// load vertex shader from file
+	fileload = vertexShader->loadSourceFile("../resources/shaders/bump.vert");
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = vertexShader->loadSourceFile("../../../bin/resources/shaders/bump.vert");
+#endif
+	}
+
+	// create fragment shader
+	cShaderPtr fragmentShader = cShader::create(C_FRAGMENT_SHADER);
+
+	// load fragment shader from file
+	fileload = fragmentShader->loadSourceFile("../resources/shaders/bump.frag");
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = fragmentShader->loadSourceFile("../../../bin/resources/shaders/bump.frag");
+#endif
+	}
+
+	// create program shader
+	cShaderProgramPtr programShader = cShaderProgram::create();
+
+	// assign vertex shader to program shader
+	programShader->attachShader(vertexShader);
+
+	// assign fragment shader to program shader
+	programShader->attachShader(fragmentShader);
+
+	// assign program shader to object
+	objectX->setShaderProgram(programShader);
+
+	// link program shader
+	programShader->linkProgram();
+
+	// set uniforms
+	programShader->setUniformi("uColorMap", 0);
+	programShader->setUniformi("uShadowMap", 0);
+	programShader->setUniformi("uNormalMap", 2);
+	programShader->setUniformf("uInvRadius", 0.0f);
+}
+
+#endif
+
+//------------------------------------------------------------------------------
+
+int new_plane(cVector3d position, cVector3d axis, double rotation, double length, double width, MyProperties *property){
+
+	// create a virtual mesh
+	cMesh* plane = new cMesh();
+
+	// add object to world
+	world->addChild(plane);
+
+	// set the position of the object at the center of the world
+	plane->setLocalPos(position.x(), position.y(), position.z());
 
 	// create shape
-	cCreatePlane(floor, length, width);
-	floor->setUseDisplayList(true);
+	cCreatePlane(plane, length, width);
+	plane->setUseDisplayList(true);
 
 	// create collision detector
-	floor->createAABBCollisionDetector(TOOL_RADIUS);
+	plane->createAABBCollisionDetector(TOOL_RADIUS);
 
 	// create a texture
 	cTexture2dPtr textureFloor = cTexture2d::create();
@@ -1597,131 +1847,42 @@ int new_wall(cVector3d position, cVector3d axis, double rotation, double length,
 	{
 		cout << "ERROR: Cannot load texture file!" << endl;
 
-		// set plane to plain withe color
-		floor->m_material->setWhite();
+		// set plane to plain withe color ### does not work
+		//plane->m_material->setWhite();
 	}
 
 	// apply texture to object
-	floor->setTexture(textureFloor);
+	plane->setTexture(textureFloor);
 
 	// create normal map from texture data
 	cNormalMapPtr normalMap1 = cNormalMap::create();
-	normalMap1->createMap(floor->m_texture);
-	floor->m_normalMap = normalMap1;
+	normalMap1->createMap(plane->m_texture);
+	plane->m_normalMap = normalMap1;
 
 	// enable texture rendering 
-	floor->setUseTexture(true);
+	plane->setUseTexture(true);
 
 	// Since we don't need to see our polygons from both sides, we enable culling.
-	floor->setUseCulling(false);
+	plane->setUseCulling(false);
 
 	// disable material properties and lighting
-	floor->setUseMaterial(false);
+	plane->setUseMaterial(false);
 
 	// set haptic properties
-	floor->m_material->setStiffness(0.5 * maxStiffness);
-	floor->m_material->setStaticFriction(0.0);
-	floor->m_material->setDynamicFriction(0.3);
-	floor->m_material->setTextureLevel(1.5);
-	floor->m_material->setHapticTriangleSides(true, false);
+	plane->m_material->setStiffness(0.5 * maxStiffness);
+	plane->m_material->setStaticFriction(0.0);
+	plane->m_material->setDynamicFriction(0.3);
+	plane->m_material->setTextureLevel(1.5);
+	plane->m_material->setHapticTriangleSides(true, false);
 
 	/*
 	double x1 = 0.0;
 	double y1 = 1.0;
 	double z1 = 0.0;
-	floor->rotateAboutLocalAxisDeg(cVector3d(x1, y1, z1), 90);
+	plane->rotateAboutLocalAxisDeg(cVector3d(x1, y1, z1), 90);
 	*/
-	floor->rotateAboutLocalAxisDeg(axis, rotation);
+	plane->rotateAboutLocalAxisDeg(axis, rotation);
 
 	return 0;
 }
 
-//------------------------------------------------------------------------------
-
-void checkBoundaries()
-{
-	// make sure that it is not possible to walk out of the room
-	if (currentPosition.x() > ((roomLength / 2) - wallDistance)) {
-		currentPosition.x(((roomLength / 2) - wallDistance));
-	}
-	if (currentPosition.x() < -((roomLength / 2) - wallDistance)) {
-		currentPosition.x(-((roomLength / 2) - wallDistance));
-	}
-	if (currentPosition.y() > ((roomWidth / 2) - wallDistance)) {
-		currentPosition.y((roomWidth / 2) - wallDistance);
-	}
-	if (currentPosition.y() < -((roomWidth / 2) - wallDistance)) {
-		currentPosition.y(-((roomWidth / 2) - wallDistance));
-	}
-	if (currentPosition.z() > ((roomHeight) - floorDistance)) {
-		currentPosition.z((roomHeight) - floorDistance);
-	}
-	if (currentPosition.z() < floorDistance) {
-		currentPosition.z(floorDistance);
-	}
-}
-
-//------------------------------------------------------------------------------
-
-void draw_coordinates(cVector3d position, double length, double width)
-{
-
-	// ------------------
-	// x-axis 
-	// ------------------
-
-	cVector3d temp(length, 0.0, 0.0);
-		
-	// create small line to illustrate the velocity of the haptic device
-	cShapeLine* x_axis = new cShapeLine(position, cVector3d(position + temp));
-
-	// set line width of axis
-	x_axis->setLineWidth(width);
-
-	// set the color of the axis
-	x_axis->m_colorPointA.setRed();
-	x_axis->m_colorPointB.setRed();
-
-	// insert line inside world
-	world->addChild(x_axis);
-
-	// ------------------
-	// y-axis 
-	// ------------------
-
-	temp.x(0);
-	temp.y(length);
-
-	// create small line to illustrate the velocity of the haptic device
-	cShapeLine* y_axis = new cShapeLine(position, cVector3d(position + temp));
-
-	// set line width of axis
-	y_axis->setLineWidth(width);
-
-	// set the color of the axis
-	y_axis->m_colorPointA.setGreen();
-	y_axis->m_colorPointB.setGreen();
-
-	// insert line inside world
-	world->addChild(y_axis);
-
-	// ------------------
-	// z-axis 
-	// ------------------
-
-	temp.y(0);
-	temp.z(length);
-
-	// create small line to illustrate the velocity of the haptic device
-	cShapeLine* z_axis = new cShapeLine(cVector3d(position), cVector3d(position + temp));
-
-	// set line width of axis
-	z_axis->setLineWidth(width);
-
-	// set the color of the axis
-	z_axis->m_colorPointA.setBlue();
-	z_axis->m_colorPointB.setBlue();
-
-	// insert line inside world
-	world->addChild(z_axis);
-}
