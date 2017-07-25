@@ -17,9 +17,6 @@ int MyProperties::id = 0;
 // Empty Constructor
 MyProperties::MyProperties()
 {
-	// set the resources path
-	//resourcesPath = path;
-
 	// set default filename of image for graphical display 
 	textureImage = defaultTextureImage;
 
@@ -57,21 +54,27 @@ MyProperties::MyProperties()
 	audioGain = defaultAudioGain;
 
 	// set default audio pitch
-	audioPitch = defaultAudioPitch;
+	audioPitchGain = defaultAudioPitchGain;
+
+	// set default audio pitch offset
+	audioPitchOffset = defaultAudioPitchOffset;
 
 	// increase identifier
 	id++;
 }
 
 // Constructor with parameters
-MyProperties::MyProperties(string setTexture, string setNormalMap, cVector3d setSize, MyOrientation setOrientation, enum MyShape setShape, 
-	int setTemperature, double setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitch)
+MyProperties::MyProperties(string setTexture, string setNormalMap, string setAudio, cVector3d setSize, MyOrientation setOrientation, enum MyShape setShape, int setTemperature,
+	double setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitchGain, double setAudioPitchOffset)
 {
-	// set filename of image for graphical display 
+	// set filename for image for graphical display 
 	textureImage = setTexture;
 
-	// set filename of normal map for haptics display 
+	// set filename for normal map for haptics display 
 	normalImage = setNormalMap;
+
+	// set filename for audio file
+	audio = setAudio;
 
 	// set default size
 	size = setSize;
@@ -101,7 +104,10 @@ MyProperties::MyProperties(string setTexture, string setNormalMap, cVector3d set
 	audioGain = setAudioGain;
 
 	// set audio pitch
-	audioPitch = setAudioPitch;
+	audioPitchGain = setAudioPitchGain;
+
+	// set audio pitch offset
+	audioPitchOffset = setAudioPitchOffset;
 
 	// increase identifier
 	id++;

@@ -8,24 +8,29 @@ To do list for CHL final project
 To be implemented:
 ==================
 
-- object-class (size, position, rotation, shape, property)
 
-	- properties-class (all properties)
-	  -> StickSlipForceMax, StickSlipStiffness ???
+- properties-class (all properties)
+  -> also size and rotation ???
+  -> StickSlipForceMax, StickSlipStiffness ???
+  -> audio files !!!
 
-- sound stuff
+- normal maps for voice coil images
 
-- temperature stuff
+==== sound stuff
 
-	- walls and floor
+==== temperature stuff
 
-- 3ds objects
+==== walls and floor (better looking)
 
-- objects with different shapes
+==== 3ds objects
+
+- objects with different shapes (-> Ring ???)
 
 - moving objects?
 
 - multidevice ??
+
+- add something in the if clause if *.exe is executed directly
 
 - extract current folder name (replace this with "haptics-showroom-V02")
 

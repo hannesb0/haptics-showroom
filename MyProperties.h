@@ -31,8 +31,8 @@ public:
 	MyProperties();
 
 	// Constructor with parameters
-	MyProperties(string setTexture, string setNormalMap, cVector3d setSize, MyOrientation setOrientation, enum MyShape setShape, 
-		int setTemperature, double setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitch);
+	MyProperties(string setTexture, string setNormalMap, string setAudio, cVector3d setSize, MyOrientation setOrientation, enum MyShape setShape, int setTemperature,
+		double setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitchGain, double setAudioPitchOffset);
 
 	// Destructor
 	~MyProperties();
@@ -69,7 +69,7 @@ public:
 	MyOrientation orientation;
 
 	// shape (see Global.h)
-	enum MyShape	shape;
+	enum MyShape shape;
 
 	// temperature of the object (the temperature is divided into 5 areas: 1 = very cold, 2 = cold, 3 = normal, 4 = hot, 5 = very hot)
 	int temperature;
@@ -90,7 +90,10 @@ public:
 	double audioGain;
 
 	// audio pitch
-	double audioPitch;
+	double audioPitchGain;
+
+	// audio pitch offset
+	double audioPitchOffset;
 
 private:
 

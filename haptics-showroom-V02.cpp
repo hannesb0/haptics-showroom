@@ -86,6 +86,15 @@ cToolCursor* tool2;
 cMesh* object;
 cMesh* objectX;
 
+// audio device to play sound
+cAudioDevice* audioDevice;
+
+// audio buffers to store sound files
+cAudioBuffer* audioBuffer1;
+
+// audio source of an object
+cAudioSource* audioSourceObject;
+
 // indicates if the haptic simulation currently running
 bool simulationRunning = false;
 
@@ -131,11 +140,15 @@ unsigned int keyState[255];
 // variable to check success of file load
 bool fileload;
 
+
+// ############# TESTING ############
 // pointer to MyObject class
-MyObject* obj_test[10];
+//MyObject* obj_test[10];
 
 // pointer to MyProperties class
-MyProperties* prop_test[10];
+//MyProperties* prop_test[10];
+// ############# TESTING ############
+
 
 // information about the current haptic device -> retrieved at runtime
 cHapticDeviceInfo hapticDeviceInfoX;
@@ -230,46 +243,6 @@ int main(int argc, char **argv)
 
 	// this is the location of the resources
 	resourcesPath = resourceRoot + string("../../examples/SDL/haptics-showroom-V02/resources/");
-
-	//--------------------------------------------------------------------------
-	// SETUP OBJECT PROPERTIES
-	//--------------------------------------------------------------------------
-
-	// ############################# TESTING ###################################
-
-	/*
-
-	prop_test[0] = new MyProperties();
-
-	prop_test[0]->showID();
-
-	prop_test[0]->showNormal();
-
-	prop_test[0]->showTexture();
-
-	prop_test[1] = new MyProperties("G1RhombAluminumMesh.JPG", "G1RhombAluminumMeshNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
-
-	prop_test[1]->showID();
-
-	prop_test[1]->showNormal();
-
-	prop_test[1]->showTexture();
-
-
-	obj_test[0] = new MyObject(cVector3d(0.2, 0.2, 0.2), MyShape(cube), *prop_test[0]);
-
-	*/
-
-	//MyProperties Aluminium("G1RhombAluminumMesh.JPG", "G1RhombAluminumMeshNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
-	//MyProperties Rubber("G5ProfiledRubberPlate.JPG", "XXXNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
-	//MyProperties Steel("G3StainlessSteel.JPG", "XXXNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
-
-	//MyObject* Cube_Aluminium = new MyObject(cVector3d(0.2, 0.2, 0.2), MyShape(cube), Aluminium);
-	//MyObject* Sphere_Rubber = new MyObject(cVector3d(0.2, 0.2, 0.2), MyShape(sphere), MyProperties(Rubber));
-	//MyObject Cylinder_Steel(cVector3d(0.2, 0.2, 0.2), MyShape(cylinder), MyProperties(Steel));
-
-
-	// ############################# TESTING ###################################
 
 	//--------------------------------------------------------------------------
 	// SETUP DISPLAY CONTEXT
@@ -618,43 +591,11 @@ int main(int argc, char **argv)
 
 #endif
 
-	/*
-	new_object_with_properties(cVector3d(-1.0, -1.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[0]);
+	new_object(cVector3d(-1.0, -0.5, 0.15), Cube_Aluminium);
 
-	new_object_with_properties(cVector3d(-1.0, -1.0, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]);
-	
-	new_object_with_properties(cVector3d(-1.0, -0.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]);
-	
-	new_object_with_properties(cVector3d(-1.0, 0.0, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]);
-	
-	new_object_with_properties(cVector3d(-1.0, 0.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]);
+	new_object(cVector3d(-1.0, 0.5, 0.2), Sphere_Steel);
 
-	new_object_with_properties(cVector3d(-1.0, 1.0, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]);
-
-	new_object_with_properties(cVector3d(-1.0, 1.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]);
-	*/
-
-//	MyProperties(string setTexture, string setNormalMap, cVector3d setSize, MyOrientation setOrientation, enum MyShape setShape,
-//		int setTemperature, double setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitch);
-
-
-	// set some orientation
-	struct MyOrientation orientation1 {
-		cVector3d(0.0, 0.0, 0.0), 0.0
-	};
-
-	MyProperties Cube_Aluminium("G1RhombAluminumMesh.JPG", "G1RhombAluminumMeshNormal.png", cVector3d(0.3, 0.3, 0.3), orientation1, MyShape(cube), 
-		3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
-
-
-	//MyProperties Aluminium("G1RhombAluminumMesh.JPG", "G1RhombAluminumMeshNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
-	//MyProperties Rubber("G5ProfiledRubberPlate.JPG", "XXXNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
-
-	new_object(cVector3d(-1.0, -0.5, 0.1), Cube_Aluminium);
-
-	//new_object(cVector3d(-1.0, 0.0, 0.1), *Sphere_Rubber);
-
-	//new_object(cVector3d(-1.0, 0.5, 0.1), Cylinder_Steel);
+	new_object(cVector3d(-1.0, 1.5, 0.0), Cylinder_Granite);
 
 	//--------------------------------------------------------------------------
 	// CREATE ROOM
@@ -1697,6 +1638,8 @@ int new_object_with_properties(cVector3d position, cVector3d size, MyProperties 
 
 void new_object(cVector3d position, MyProperties properties)
 {
+	cout << "creating new object " << endl;
+
 	// create a virtual mesh
 	objectX = new cMesh();
 
@@ -1714,7 +1657,7 @@ void new_object(cVector3d position, MyProperties properties)
 		break;
 	case (sphere) :
 		// create sphere
-		chai3d::cCreateSphere(objectX, (const double)properties.size.length() / 2);
+		chai3d::cCreateSphere(objectX, (const double)properties.size.length() / 2.5);
 		break;
 	case(cylinder) :
 		chai3d::cCreateCylinder(objectX, (const double)properties.size.z(), cVector3d(properties.size.x(), properties.size.y(), 0.0).length() / 2);
@@ -1764,6 +1707,7 @@ void new_object(cVector3d position, MyProperties properties)
 	// render triangles haptically on front side only
 	objectX->m_material->setHapticTriangleSides(true, false);
 
+#if 1
 	// create a normal texture
 	cNormalMapPtr normalMap = cNormalMap::create();
 
@@ -1780,9 +1724,18 @@ void new_object(cVector3d position, MyProperties properties)
 	// compute surface normals
 	objectX->computeAllNormals();
 
-	// compute tangent vectors
-	objectX->m_triangles->computeBTN();
 
+	// #################################################################
+	// THIS RISES PROBLEMS FOR SHPERES !!!
+
+	// compute tangent vectors
+	
+	if (properties.shape != sphere)
+		objectX->m_triangles->computeBTN();
+
+	// #################################################################
+
+#endif
 
 	//--------------------------------------------------------------------------
 	// CREATE SHADERS
@@ -1832,6 +1785,68 @@ void new_object(cVector3d position, MyProperties properties)
 	programShader->setUniformi("uShadowMap", 0);
 	programShader->setUniformi("uNormalMap", 2);
 	programShader->setUniformf("uInvRadius", 0.0f);
+
+
+	//--------------------------------------------------------------------------
+	// SETUP AUDIO MATERIAL
+	//--------------------------------------------------------------------------
+
+	if (properties.shape == cube)
+	{
+		// create an audio device to play sounds
+		audioDevice = new cAudioDevice();
+
+		// attach audio device to camera
+		camera->attachAudioDevice(audioDevice);
+
+		// create an audio buffer and load audio wave file
+		audioBuffer1 = audioDevice->newAudioBuffer();
+		//"../resources/sounds/wood-impact.wav"
+		//STR_ADD("sounds/", properties.audio)
+
+		cout << "Loading file from: " << RESOURCE_PATH(STR_ADD("sounds/", properties.audio)) << endl;
+
+		if (audioBuffer1->loadFromFile(RESOURCE_PATH("sounds/compressedWood.wav")) != 1)
+		{
+			cout << "ERROR: Cannot load audio file!" << endl;
+		}
+
+		// here we convert all files to mono. this allows for 3D sound support. if this code
+		// is commented files are kept in stereo format and 3D sound is disabled. Compare both!
+		audioBuffer1->convertToMono();
+
+		// create an audio source for this tool.
+		tool->createAudioSource(audioDevice);
+
+		// assign auio buffer to audio source
+		//audioSourceObject->setAudioBuffer(audioBuffer1);
+
+		// loop playing of sound
+		//audioSourceObject->setLoop(true);
+
+		// turn off sound for now
+		//audioSourceObject->setGain(0.0);
+
+		// set pitch
+		//audioSourceObject->setPitch(0.2);
+
+		// play sound
+		//audioSourceObject->play();
+
+
+		cout << "audioGain: " << properties.audioGain << endl;
+
+		cout << "audioPitchGain: " << properties.audioPitchGain << endl;
+
+		cout << "audioPitchOffset: " << properties.audioPitchOffset << endl;
+		
+		// set audio properties
+		objectX->m_material->setAudioImpactBuffer(audioBuffer1);
+		objectX->m_material->setAudioFrictionBuffer(audioBuffer1);
+		objectX->m_material->setAudioFrictionGain((const double)properties.audioGain);
+		objectX->m_material->setAudioFrictionPitchGain((const double)properties.audioPitchGain);
+		objectX->m_material->setAudioFrictionPitchOffset((const double)properties.audioPitchOffset);
+	}
 }
 
 #endif

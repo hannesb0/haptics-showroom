@@ -9,7 +9,7 @@ repository: https://github.com/hannesb0/haptics-showroom
 */
 //==============================================================================
 
-#include "MyObject.h"
+#include "MyProperties.h"
 
 /* ##################################################
  => audio file !!!!!!!!!
@@ -19,12 +19,29 @@ repository: https://github.com/hannesb0/haptics-showroom
   ################################################*/
 
 //------------------------------------------------------------------------------
-// Material properties
+// Properties
 //------------------------------------------------------------------------------	
 
 /*
-Texture, NormalMap, Temperature, Stiffness, StaticFriction, DynamicFriction, TextureLevel, AudioGain, AudioPitch);
+Texture, NormalMap, Audio, Size, Orientation, Shape, Temperature, Stiffness, StaticFriction, DynamicFriction, TextureLevel, AudioGain, AudioPitch, AudioPitchOffset);
+
+
+
 */
+
+// set some orientation
+struct MyOrientation orientation1 {
+	cVector3d(0.0, 0.0, 0.0), 0.0
+};
+
+MyProperties Cube_Aluminium("G1RhombAluminumMesh.JPG", "G1RhombAluminumMeshNormal.png", "compressedWood.wav", cVector3d(0.3, 0.3, 0.3), orientation1, MyShape(cube),
+	3, 0.6, 0.1, 0.1, 0.1, 3.5, 0.8, 0.8);
+
+MyProperties Sphere_Steel("G3StainlessSteel.JPG", "XXXNormal.png", "compressedWood.wav", cVector3d(0.3, 0.3, 0.3), orientation1, MyShape(sphere),
+	3, 0.7, 0.1, 0.1, 0.3, 0.8, 0.2, 0.8);
+
+MyProperties Cylinder_Granite("G2GraniteTypeVeneziano.JPG", "XXXNormal.png", "compressedWood.wav", cVector3d(0.2, 0.2, 0.5), orientation1, MyShape(cylinder),
+	3, 0.9, 0.8, 0.8, 0.3, 0.8, 0.2, 0.8);
 
 /*
 MyProperties Aluminium("G1RhombAluminumMesh.JPG", "G1RhombAluminumMeshNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
@@ -45,17 +62,3 @@ MyProperties WoodOak("G4WoodTypeSilverOak.JPG", "XXXNormal.png", 3, 0.5, 0.2, 0.
 
 MyProperties Foam("G7CoarseFoam.JPG", "XXXNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
 */
-
-//------------------------------------------------------------------------------
-// Objects
-//------------------------------------------------------------------------------	
-
-/*
-Size, Shape, Properties
-*/
-
-//MyObject Cube_Aluminium(cVector3d(0.2, 0.2, 0.2), MyShape(cube), MyProperties(Aluminium));
-
-//MyObject Sphere_Rubber(cVector3d(0.2, 0.2, 0.2), MyShape(sphere), MyProperties(Rubber));
-
-//MyObject Cylinder_Steel(cVector3d(0.2, 0.2, 0.2), MyShape(cylinder), MyProperties(Steel));

@@ -75,10 +75,13 @@ const double defaultDynamicFriction = 0.2;
 const double defaultTextureLevel = 0.1;
 
 // set default audio friction gain
-const double defaultAudioGain = 0;
+const double defaultAudioGain = 0.8;
 
 // set default audio pitch
-const double defaultAudioPitch = 0.2;
+const double defaultAudioPitchGain = 0.2;
+
+// set default audio pitch offset
+const double defaultAudioPitchOffset = 0.8;
 
 //------------------------------------------------------------------------------
 // DECLARED MACROS
