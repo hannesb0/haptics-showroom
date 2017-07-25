@@ -125,11 +125,6 @@ double currentAngle = 0;
 double speed = 0.006;
 double rotationalSpeed = 0.006;
 
-// size of the room
-const double roomLength = 6.0;	// x-axis
-const double roomWidth  = 4.0;	// y-axis
-const double roomHeight = 2.0;	// z-axis
-
 // distances to walls and floor (& ceiling)
 const double wallDistance = 0.75;
 const double floorDistance = 0.3;
@@ -599,7 +594,7 @@ int main(int argc, char **argv)
 
 	new_object(cVector3d(-1.0, 1.5, 0.0), Cylinder_Granite);
 
-	new_object(cVector3d(1.0, 1.0, 0.0), Cube_WoodProfiled);
+	new_object(cVector3d(1.0, 1.0, 0.2), Cube_WoodProfiled);
 
 	//--------------------------------------------------------------------------
 	// CREATE ROOM
@@ -607,29 +602,24 @@ int main(int argc, char **argv)
 
 	// draw a coordinate system for easier orientation
 	draw_coordinates(cVector3d(-0.5, -0.5, 0.05), 0.3, 1.0);
-
-	MyProperties floor("sand-wall.png", "", "", cVector3d(roomLength, roomWidth, 0.0), MyOrientation{cVector3d(0.0, 0.0, 0.0), 0.0}, MyShape(plane),
-		3, 0.8, 0.1, 0.1, 0.1, 0.0, 0.0, 0.0);
 	
 	// floor
-	new_plane(cVector3d(0.0, 0.0, 0.0), floor);
-	/*
+	new_plane(cVector3d(0.0, 0.0, 0.0), myFloor);
+	
 	// ceiling
-	new_plane(cVector3d(0.0, 0.0, roomHeight), cVector3d(0.0, 1.0, 0.0), 180, roomLength, roomWidth, NULL);
+	new_plane(cVector3d(0.0, 0.0, roomHeight), myCeiling);
 
 	// right wall
-	new_plane(cVector3d(0.0, (roomWidth / 2), (roomHeight / 2)), cVector3d(1.0, 0.0, 0.0), 90, roomLength, roomHeight, NULL);
+	new_plane(cVector3d(0.0, (roomWidth / 2), (roomHeight / 2)), myRightWall);
 
 	// left wall
-	new_plane(cVector3d(0.0, -(roomWidth / 2), (roomHeight / 2)), cVector3d(1.0, 0.0, 0.0), -90, roomLength, roomHeight, NULL);
-
+	new_plane(cVector3d(0.0, -(roomWidth / 2), (roomHeight / 2)), myLeftWall);
+	
 	// back wall
-	new_plane(cVector3d(-(roomLength / 2), 0.0, (roomHeight / 2)), cVector3d(0.0, 1.0, 0.0), 90, roomHeight, roomWidth, NULL);
+	new_plane(cVector3d(-(roomLength / 2), 0.0, (roomHeight / 2)), myBackWall);
 
 	// front wall
-	new_plane(cVector3d((roomLength / 2), 0.0, (roomHeight / 2)), cVector3d(0.0, 1.0, 0.0), -90, roomHeight, roomWidth, NULL);
-	*/
-
+	new_plane(cVector3d((roomLength / 2), 0.0, (roomHeight / 2)), myFrontWall);
 
 	//--------------------------------------------------------------------------
 	// START SIMULATION
