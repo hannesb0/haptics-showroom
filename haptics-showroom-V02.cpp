@@ -200,16 +200,6 @@ void draw_coordinates(cVector3d position, double length, double width);
 // ############################# TESTING ###################################
 
 // function to create a new object at runtime
-<<<<<<< HEAD
-<<<<<<< HEAD
-int new_object(int argc, char **argv, cVector3d position, cVector3d size, int property, int sound);
-=======
-int new_object(cVector3d position, cVector3d size, int property);
-
-// function to create a new object at runtime with properties
-int new_object_with_properties(cVector3d position, cVector3d size, MyProperties property);
->>>>>>> 8375c7605cdedda21c6368ca4da52a356e710aa7
-=======
 int new_object_OLD(cVector3d position, cVector3d size, int property);
 
 // function to create a new object at runtime with properties
@@ -218,7 +208,6 @@ int new_object_with_properties(cVector3d position, cVector3d size, MyProperties 
 int new_plane(cVector3d position, MyProperties properties);
 
 void new_object(cVector3d position, MyProperties properties);
->>>>>>> 8b6c8bbc1fe81262b7fd4bf6a096410e8fa253cc
 
 // ############################# TESTING ###################################
 
@@ -604,125 +593,6 @@ int main(int argc, char **argv)
 	programShader->setUniformi("uNormalMap", 2);
 	programShader->setUniformf("uInvRadius", 0.0f);
 
-<<<<<<< HEAD
-	// insert 7 fixed cubes
-<<<<<<< HEAD
-	if (new_object(argc, argv, cVector3d(-1.5, -1.5, 0.0), cVector3d(0.2, 0.2, 0.2), 0, 0) == -1) {
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object(argc, argv, cVector3d(-1.5, -1.0, 0.0), cVector3d(0.2, 0.2, 0.2), 1, 1) == -1) {
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object(argc, argv, cVector3d(-1.5, -0.5, 0.0), cVector3d(0.2, 0.2, 0.2), 2, 2) == -1) {
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object(argc, argv, cVector3d(-1.5, 0.0, 0.0), cVector3d(0.2, 0.2, 0.2), 3, 3) == -1) {
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object(argc, argv, cVector3d(-1.5, 0.5, 0.0), cVector3d(0.2, 0.2, 0.2), 4, 4) == -1) {
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object(argc, argv, cVector3d(-1.5, 1.0, 0.0), cVector3d(0.2, 0.2, 0.2), 5, 5) == -1) {
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object(argc, argv, cVector3d(-1.5, 1.5, 0.0), cVector3d(0.2, 0.2, 0.2), 6, 6) == -1) {
-=======
-	if (new_object(cVector3d(-1.5, -1.5, 0.0), cVector3d(0.2, 0.2, 0.2), 0) == -1) {
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object(cVector3d(-1.5, -1.0, 0.0), cVector3d(0.2, 0.2, 0.2), 1) == -1) {
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object(cVector3d(-1.5, -0.5, 0.0), cVector3d(0.2, 0.2, 0.2), 2) == -1) {
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object(cVector3d(-1.5, 0.0, 0.0), cVector3d(0.2, 0.2, 0.2), 3) == -1) {
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object(cVector3d(-1.5, 0.5, 0.0), cVector3d(0.2, 0.2, 0.2), 4) == -1) {
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object(cVector3d(-1.5, 1.0, 0.0), cVector3d(0.2, 0.2, 0.2), 5) == -1) {
-		cout << "Error - New object could not be created." << endl;
-	}
-	if (new_object(cVector3d(-1.5, 1.5, 0.0), cVector3d(0.2, 0.2, 0.2), 6) == -1) {
->>>>>>> 8375c7605cdedda21c6368ca4da52a356e710aa7
-		cout << "Error - New object could not be created." << endl;
-	}
-
-	/*
-	// insert the walls
-	// back wall
-	if (new_object(argc, argv, cVector3d(-2.9, 0.0, 1.6), cVector3d(0.01, 4.0, 4.0), 7,7) == -1) {
-	cout << "Error - New object could not be created." << endl;
-	}
-	// left wall
-	if (new_object(argc, argv, cVector3d(0.0, -1.95, 1.6), cVector3d(6.0, 0.01, 4.0), 7,7) == -1) {
-	cout << "Error - New wall could not be created." << endl;
-	}
-	// right wall
-	if (new_object(argc, argv, cVector3d(0.0, 1.95, 1.6), cVector3d(6.0, 0.01, 4.0), 7,7) == -1) {
-	cout << "Error - New wall could not be created." << endl;
-	}
-	// ceiling
-	if (new_object(argc, argv, cVector3d(0.0, 0.0, 3.6), cVector3d(6.0, 4.0, 0.01), 7,7) == -1) {
-	cout << "Error - New wall could not be created." << endl;
-	}
-	// floor
-	if (new_object(argc, argv, cVector3d(0.0, 0.0, -0.3), cVector3d(6.0, 4.0, 0.01), 7,7) == -1) {
-	cout << "Error - New wall could not be created." << endl;
-	}
-	// front wall
-	if (new_object(argc, argv, cVector3d(2.9, 0.0, 1.6), cVector3d(0.01, 4.0, 4.0), 7,7) == -1) {
-	cout << "Error - New wall could not be created." << endl;
-	}
-
-	*/
-
-
-	//--------------------------------------------------------------------------
-	// CREATE ENVIRONMENT GLOBE
-	//--------------------------------------------------------------------------
-
-#if 1
-
-	// create a virtual mesh
-	cMesh* floor = new cMesh();
-	cMesh* wall = new cMesh();
-
-	// add object to world
-	world->addChild(floor);
-	world->addChild(wall);
-
-	// set the position of the object at the center of the world
-	floor->setLocalPos(0.0, 0.0, -0.3);
-	wall->setLocalPos(0.0, 0.0, 1.6);
-
-	// create room
-	cCreatePlane(floor, 6, 4);
-	floor->setUseDisplayList(true);
-
-	cCreateBox(wall, 6, 4, 4);
-	wall->setUseDisplayList(true);
-
-	// create a texture
-	cTexture2dPtr textureFloor = cTexture2d::create();
-	cTexture2dPtr textureWall = cTexture2d::create();
-
-	fileload = textureFloor->loadFromFile("./resources/images/sand-wall.png");
-	if (!fileload)
-	{
-#if defined(_MSVC)
-		fileload = textureFloor->loadFromFile("./resources/images/sand-wall.png");
-#endif
-	}
-	bool fileload2 = textureWall->loadFromFile("./resources/images/white-wall.png");
-	if (!fileload2)
-	{
-#if defined(_MSVC)
-		fileload2 = textureWall->loadFromFile("./resources/images/white-wall.png");
-=======
->>>>>>> 8b6c8bbc1fe81262b7fd4bf6a096410e8fa253cc
 #endif
 
 	new_object(cVector3d(-1.0, -0.5, 0.15), Cube_Aluminium);
@@ -1205,15 +1075,7 @@ void updateHaptics(void)
 
 //------------------------------------------------------------------------------
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-int new_object(int argc, char **argv, cVector3d position, cVector3d size, int property, int sound)
-=======
-int new_object(cVector3d position, cVector3d size, int property)
->>>>>>> 8375c7605cdedda21c6368ca4da52a356e710aa7
-=======
 void checkBoundaries()
->>>>>>> 8b6c8bbc1fe81262b7fd4bf6a096410e8fa253cc
 {
 	// make sure that it is not possible to walk out of the room
 	if (currentPosition.x() > ((roomLength / 2) - wallDistance)) {
