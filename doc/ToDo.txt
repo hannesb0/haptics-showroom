@@ -16,7 +16,7 @@ To be implemented:
 
 - normal maps for voice coil images
 
-==== sound stuff
+== sound stuff
 
 ==== temperature stuff
 

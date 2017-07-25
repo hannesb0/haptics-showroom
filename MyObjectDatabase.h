@@ -25,6 +25,8 @@ repository: https://github.com/hannesb0/haptics-showroom
 /*
 Texture, NormalMap, Audio, Size, Orientation, Shape, Temperature, Stiffness, StaticFriction, DynamicFriction, TextureLevel, AudioGain, AudioPitch, AudioPitchOffset);
 
+MyProperties(string setTexture, string setNormalMap, string setAudio, cVector3d setSize, MyOrientation setOrientation, enum MyShape setShape, int setTemperature,
+double setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitchGain, double setAudioPitchOffset);
 
 
 */
@@ -35,13 +37,17 @@ struct MyOrientation orientation1 {
 };
 
 MyProperties Cube_Aluminium("G1RhombAluminumMesh.JPG", "G1RhombAluminumMeshNormal.png", "compressedWood.wav", cVector3d(0.3, 0.3, 0.3), orientation1, MyShape(cube),
-	3, 0.6, 0.1, 0.1, 0.1, 3.5, 0.8, 0.8);
+	3, 0.6, 0.1, 0.1, 0.1, 1.0, 0.8, 0.8);
 
 MyProperties Sphere_Steel("G3StainlessSteel.JPG", "XXXNormal.png", "compressedWood.wav", cVector3d(0.3, 0.3, 0.3), orientation1, MyShape(sphere),
-	3, 0.7, 0.1, 0.1, 0.3, 0.8, 0.2, 0.8);
+	3, 0.7, 0.1, 0.1, 0.2, 0.0, 0.2, 0.8);
 
 MyProperties Cylinder_Granite("G2GraniteTypeVeneziano.JPG", "XXXNormal.png", "compressedWood.wav", cVector3d(0.2, 0.2, 0.5), orientation1, MyShape(cylinder),
-	3, 0.9, 0.8, 0.8, 0.3, 0.8, 0.2, 0.8);
+	3, 0.9, 0.8, 0.8, 0.2, 0.0, 0.2, 0.8);
+
+MyProperties Cube_WoodProfiled("G4ProfiledWoodPlate.JPG", "G4ProfiledWoodPlateNormal.JPG", "compressedWood.wav", cVector3d(0.2, 0.2, 0.5), orientation1, MyShape(cube),
+	3, 0.6, 0.4, 0.4, 0.2, 0.8, 0.2, 0.8);
+
 
 /*
 MyProperties Aluminium("G1RhombAluminumMesh.JPG", "G1RhombAluminumMeshNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);

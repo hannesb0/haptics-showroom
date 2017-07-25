@@ -24,7 +24,7 @@ using namespace std;
 // ENUMERATIONS
 //------------------------------------------------------------------------------
 
-enum MyShape { cube, sphere, cylinder, complex3ds };
+enum MyShape { plane, cube, sphere, cylinder, complex3ds };
 
 //------------------------------------------------------------------------------
 // STRUCTS
@@ -59,7 +59,7 @@ const struct MyOrientation defaultOrientation {
 // default shape
 const enum MyShape defaultShape = cube;
 
-// default temperature
+// default temperature (the temperature is divided into 5 areas: 1 = very cold, 2 = cold, 3 = normal, 4 = hot, 5 = very hot)
 const int defaultTemperature = 3;
 
 // default stiffness
