@@ -86,6 +86,15 @@ cToolCursor* tool2;
 cMesh* object;
 cMesh* objectX;
 
+
+
+
+// TESTING
+vector<cMesh*> objectY(10);
+
+
+
+
 // audio device to play sound
 cAudioDevice* audioDevice;
 
@@ -214,12 +223,12 @@ int main(int argc, char **argv)
 	//--------------------------------------------------------------------------
 
 	cout << endl;
-	cout << "-----------------------------------" << endl;
+	cout << "--------------------------------------------------" << endl;
 	cout << "CHAI3D" << endl;
 	cout << "Project: Haptics Showroom" << endl;
 	cout << "Team:    Naina Dhingra, Ke Xu, Hannes Bohnengel" << endl;
 	cout << "Rev.:    0.2" << endl;
-	cout << "-----------------------------------" << endl << endl << endl;
+	cout << "--------------------------------------------------" << endl << endl << endl;
 	cout << "Keyboard Options:" << endl << endl;
 	cout << "Space  - Recenter view point" << endl;
 	cout << "Escape - Exit application" << endl;
@@ -595,6 +604,8 @@ int main(int argc, char **argv)
 	new_object(cVector3d(-1.0, 1.5, 0.0), Cylinder_Granite);
 
 	new_object(cVector3d(1.0, 1.0, 0.2), Cube_WoodProfiled);
+
+//	new_object_new(objectY, cVector3d(1.0, 1.0, 0.2), Cube_WoodProfiled);
 
 	//--------------------------------------------------------------------------
 	// CREATE ROOM
@@ -1154,11 +1165,9 @@ void draw_coordinates(cVector3d position, double length, double width)
 
 //------------------------------------------------------------------------------
 
-#if 1
-
 void new_object(cVector3d position, MyProperties properties)
 {
-	cout << "creating new object " << endl;
+	cout << "Creating new object " << endl;
 
 	// create a virtual mesh
 	objectX = new cMesh();
@@ -1227,7 +1236,6 @@ void new_object(cVector3d position, MyProperties properties)
 	// render triangles haptically on front side only
 	objectX->m_material->setHapticTriangleSides(true, false);
 
-#if 1
 	// create a normal texture
 	cNormalMapPtr normalMap = cNormalMap::create();
 
@@ -1254,8 +1262,6 @@ void new_object(cVector3d position, MyProperties properties)
 		objectX->m_triangles->computeBTN();
 
 	// #################################################################
-
-#endif
 
 	//--------------------------------------------------------------------------
 	// CREATE SHADERS
@@ -1314,8 +1320,6 @@ void new_object(cVector3d position, MyProperties properties)
 	// check if audio gain is bigger than zero
 	if (properties.audioGain > 0.0f)
 	{
-		cout << "Setting up audio stuff!" << endl;
-
 		// create an audio device to play sounds
 		audioDevice = new cAudioDevice();
 
@@ -1325,9 +1329,7 @@ void new_object(cVector3d position, MyProperties properties)
 		// create an audio buffer and load audio wave file
 		audioBuffer1 = audioDevice->newAudioBuffer();
 
-		cout << "Loading file from: " << RESOURCE_PATH(STR_ADD("sounds/", properties.audio)) << endl;
-
-		if (audioBuffer1->loadFromFile(RESOURCE_PATH("sounds/compressedWood.wav")) != 1)
+		if (audioBuffer1->loadFromFile(RESOURCE_PATH((STR_ADD("sounds/", properties.audio)))) != 1)
 		{
 			cout << "ERROR: Cannot load audio file!" << endl;
 		}
@@ -1362,8 +1364,6 @@ void new_object(cVector3d position, MyProperties properties)
 		objectX->m_material->setAudioFrictionPitchOffset((const double)properties.audioPitchOffset);
 	}
 }
-
-#endif
 
 //------------------------------------------------------------------------------
 

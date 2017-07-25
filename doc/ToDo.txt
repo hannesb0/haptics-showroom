@@ -9,28 +9,36 @@ To be implemented:
 ==================
 
 
-- properties-class (all properties)
-  -> also size and rotation ???
-  -> StickSlipForceMax, StickSlipStiffness ???
-  -> audio files !!!
 
-- normal maps for voice coil images
 
 == sound stuff
 
-==== temperature stuff
-
 ==== walls and floor (better looking)
 
-==== 3ds objects
+- moving objects? -> rotating
 
 - objects with different shapes (-> Ring ???)
 
-- moving objects?
+- get sound files
+
+- try voice
+
+
+
+
+- properties-class (all properties)
+  -> also size and rotation ???
+  -> StickSlipForceMax, StickSlipStiffness ???
+
+==== temperature stuff
+
+==== 3ds objects
 
 - multidevice ??
 
 - add something in the if clause if *.exe is executed directly
+
+- vector<cMesh*> object(10)
 
 - extract current folder name (replace this with "haptics-showroom-V02")
 
