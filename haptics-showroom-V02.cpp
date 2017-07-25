@@ -86,6 +86,17 @@ bool simulationFinished = false;
 // frequency counter to measure the simulation haptic rate
 cFrequencyCounter frequencyCounter;
 
+// audio device to play sound
+cAudioDevice* audioDevice;
+
+// audio buffers to store sound files
+cAudioBuffer* audioBuffer1;
+
+
+// audio source of an object
+cAudioSource* audioSourceObject;
+
+
 //------------------------------------------------------------------------------
 // Custum variables
 //------------------------------------------------------------------------------
@@ -416,6 +427,61 @@ int main(int argc, char **argv)
 	// render triangles haptically on front side only
 	object->m_material->setHapticTriangleSides(true, false);
 
+
+	//--------------------------------------------------------------------------
+	// SETUP AUDIO MATERIAL
+	//--------------------------------------------------------------------------
+
+	// create an audio device to play sounds
+	audioDevice = new cAudioDevice();
+
+	// attach audio device to camera
+	camera->attachAudioDevice(audioDevice);
+
+	// create an audio buffer and load audio wave file
+	audioBuffer1 = audioDevice->newAudioBuffer();
+	bool fileload1 = audioBuffer1->loadFromFile(RESOURCE_PATH("../resources/sounds/wood-impact.wav"));
+	if (!fileload1)
+	{
+#if defined(_MSVC)
+		fileload1 = audioBuffer1->loadFromFile("../../../bin/resources/sounds/wood-impact.wav");
+#endif
+	}
+
+	// here we convert all files to mono. this allows for 3D sound support. if this code
+	// is commented files are kept in stereo format and 3D sound is disabled. Compare both!
+	audioBuffer1->convertToMono();
+
+	// create an audio source for this tool.
+	tool->createAudioSource(audioDevice);
+
+	// assign auio buffer to audio source
+	//audioSourceObject->setAudioBuffer(audioBuffer1);
+
+	// loop playing of sound
+	//audioSourceObject->setLoop(true);
+
+	// turn off sound for now
+	//audioSourceObject->setGain(0.0);
+
+	// set pitch
+	//audioSourceObject->setPitch(0.2);
+
+	// play sound
+	//audioSourceObject->play();
+
+
+	// set audio properties
+	object->m_material->setAudioImpactBuffer(audioBuffer1);
+	object->m_material->setAudioFrictionBuffer(audioBuffer1);
+	object->m_material->setAudioFrictionGain(0.8);
+	object->m_material->setAudioFrictionPitchGain(0.2);
+	object->m_material->setAudioFrictionPitchOffset(0.8);
+
+	// create collision detector
+	object->createAABBCollisionDetector(TOOL_RADIUS);
+
+
 	// create a normal texture
 	cNormalMapPtr normalMap = cNormalMap::create();
 
@@ -545,7 +611,8 @@ int main(int argc, char **argv)
 
 	*/
 
-	
+
+
 	//--------------------------------------------------------------------------
 	// CREATE WALLS			TESTING
 	//--------------------------------------------------------------------------
@@ -591,7 +658,7 @@ int main(int argc, char **argv)
 	wall01->m_normalMap = normalMap1;
 
 	// set haptic properties
-	wall01->m_material->setStiffness(0.1 * maxStiffness);
+	wall01->m_material->setStiffness(0.7 * maxStiffness);
 	wall01->m_material->setStaticFriction(0.0);
 	wall01->m_material->setDynamicFriction(0.3);
 	wall01->m_material->setTextureLevel(1.5);
@@ -644,7 +711,7 @@ int main(int argc, char **argv)
 	wall02->m_normalMap = normalMap2;
 
 	// set haptic properties
-	wall02->m_material->setStiffness(0.1 * maxStiffness);
+	wall02->m_material->setStiffness(0.7 * maxStiffness);
 	wall02->m_material->setStaticFriction(0.0);
 	wall02->m_material->setDynamicFriction(0.3);
 	wall02->m_material->setTextureLevel(1.5);
@@ -695,7 +762,7 @@ int main(int argc, char **argv)
 	wall03->m_normalMap = normalMap3;
 
 	// set haptic properties
-	wall03->m_material->setStiffness(0.1 * maxStiffness);
+	wall03->m_material->setStiffness(0.7 * maxStiffness);
 	wall03->m_material->setStaticFriction(0.0);
 	wall03->m_material->setDynamicFriction(0.3);
 	wall03->m_material->setTextureLevel(1.5);
@@ -749,17 +816,14 @@ int main(int argc, char **argv)
 	wall04->m_normalMap = normalMap4;
 
 	// set haptic properties
-	wall04->m_material->setStiffness(0.1 * maxStiffness);
+	wall04->m_material->setStiffness(0.7* maxStiffness);
 	wall04->m_material->setStaticFriction(0.0);
 	wall04->m_material->setDynamicFriction(0.3);
 	wall04->m_material->setTextureLevel(1.5);
 	wall04->m_material->setHapticTriangleSides(true, false);
 
 	
-	wall04->rotateAboutLocalAxisDeg(cVector3d(x2, y2, z2), 90);
-	// size
-
-	// position
+	wall04->rotateAboutLocalAxisDeg(cVector3d(x2, y2, z2), -90);
 
 	//--------------------------------------------------------------------------
 	// CREATE ENVIRONMENT GLOBE
@@ -1141,17 +1205,17 @@ void computeMatricesFromInput()
 	}
 
 	// make sure that it is not possible to walk out of the room
-	if (currentPosition.x() > 2.15) {
-		currentPosition.x(2.15);
+	if (currentPosition.x() > 2.9) {
+		currentPosition.x(2.9);
 	}
-	if (currentPosition.x() < -2.15) {
-		currentPosition.x(-2.15);
+	if (currentPosition.x() < -2.9) {
+		currentPosition.x(-2.9);
 	}
-	if (currentPosition.y() > 1.15) {
-		currentPosition.y(1.15);
+	if (currentPosition.y() > 2.9) {
+		currentPosition.y(2.9);
 	}
-	if (currentPosition.y() < -1.15) {
-		currentPosition.y(-1.15);
+	if (currentPosition.y() < -2.9) {
+		currentPosition.y(-2.9);
 	}
 	if (currentPosition.z() > 3.0) {
 		currentPosition.z(3.0);
