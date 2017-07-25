@@ -21,6 +21,21 @@ using namespace chai3d;
 using namespace std;
 
 //------------------------------------------------------------------------------
+// ENUMERATIONS
+//------------------------------------------------------------------------------
+
+enum MyShape { cube, sphere, cylinder, complex3ds };
+
+//------------------------------------------------------------------------------
+// STRUCTS
+//------------------------------------------------------------------------------
+
+struct MyOrientation{
+	cVector3d	axis;
+	double		rotation;
+};
+
+//------------------------------------------------------------------------------
 // GLOBAL CONSTANTS
 //------------------------------------------------------------------------------
 
@@ -32,6 +47,17 @@ const string defaultNormalImage = "brick-normal.png";
 
 // default filename of audio file (for voice coil)
 const string defaultAudio = "audio.wav";
+
+// default size
+const cVector3d defaultSize = cVector3d(0.2, 0.2, 0.2);
+
+// default orientation
+const struct MyOrientation defaultOrientation {
+	cVector3d(0.0, 0.0, 0.0), 0.0
+};
+
+// default shape
+const enum MyShape defaultShape = cube;
 
 // default temperature
 const int defaultTemperature = 3;
@@ -53,12 +79,6 @@ const double defaultAudioGain = 0;
 
 // set default audio pitch
 const double defaultAudioPitch = 0.2;
-
-//------------------------------------------------------------------------------
-// ENUMERATIONS
-//------------------------------------------------------------------------------
-
-enum MyShape { cube, sphere, cylinder, complex3ds };
 
 //------------------------------------------------------------------------------
 // DECLARED MACROS

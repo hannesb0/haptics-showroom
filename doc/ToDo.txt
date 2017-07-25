@@ -27,7 +27,7 @@ To be implemented:
 
 - multidevice ??
 
-
+- extract current folder name (replace this with "haptics-showroom-V02")
 
 
 For presentation:

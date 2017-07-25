@@ -190,7 +190,7 @@ int new_object_with_properties(cVector3d position, cVector3d size, MyProperties 
 
 int new_plane(cVector3d position, cVector3d axis, double rotation, double length, double width, MyProperties *property);
 
-void new_object(cVector3d position, MyObject obj);
+void new_object(cVector3d position, MyProperties properties);
 
 // ############################# TESTING ###################################
 
@@ -260,12 +260,12 @@ int main(int argc, char **argv)
 
 	*/
 
-	MyProperties Aluminium("G1RhombAluminumMesh.JPG", "G1RhombAluminumMeshNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
-	MyProperties Rubber("G5ProfiledRubberPlate.JPG", "XXXNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
+	//MyProperties Aluminium("G1RhombAluminumMesh.JPG", "G1RhombAluminumMeshNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
+	//MyProperties Rubber("G5ProfiledRubberPlate.JPG", "XXXNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
 	//MyProperties Steel("G3StainlessSteel.JPG", "XXXNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
 
-	MyObject* Cube_Aluminium = new MyObject(cVector3d(0.2, 0.2, 0.2), MyShape(cube), Aluminium);
-	MyObject* Sphere_Rubber = new MyObject(cVector3d(0.2, 0.2, 0.2), MyShape(sphere), MyProperties(Rubber));
+	//MyObject* Cube_Aluminium = new MyObject(cVector3d(0.2, 0.2, 0.2), MyShape(cube), Aluminium);
+	//MyObject* Sphere_Rubber = new MyObject(cVector3d(0.2, 0.2, 0.2), MyShape(sphere), MyProperties(Rubber));
 	//MyObject Cylinder_Steel(cVector3d(0.2, 0.2, 0.2), MyShape(cylinder), MyProperties(Steel));
 
 
@@ -634,7 +634,23 @@ int main(int argc, char **argv)
 	new_object_with_properties(cVector3d(-1.0, 1.5, 0.1), cVector3d(0.2, 0.2, 0.2), prop_test[1]);
 	*/
 
-	new_object(cVector3d(-1.0, -0.5, 0.1), *Cube_Aluminium);
+//	MyProperties(string setTexture, string setNormalMap, cVector3d setSize, MyOrientation setOrientation, enum MyShape setShape,
+//		int setTemperature, double setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitch);
+
+
+	// set some orientation
+	struct MyOrientation orientation1 {
+		cVector3d(0.0, 0.0, 0.0), 0.0
+	};
+
+	MyProperties Cube_Aluminium("G1RhombAluminumMesh.JPG", "G1RhombAluminumMeshNormal.png", cVector3d(0.3, 0.3, 0.3), orientation1, MyShape(cube), 
+		3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
+
+
+	//MyProperties Aluminium("G1RhombAluminumMesh.JPG", "G1RhombAluminumMeshNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
+	//MyProperties Rubber("G5ProfiledRubberPlate.JPG", "XXXNormal.png", 3, 0.5, 0.2, 0.2, 0.2, 0, 0.2);
+
+	new_object(cVector3d(-1.0, -0.5, 0.1), Cube_Aluminium);
 
 	//new_object(cVector3d(-1.0, 0.0, 0.1), *Sphere_Rubber);
 
@@ -1679,7 +1695,7 @@ int new_object_with_properties(cVector3d position, cVector3d size, MyProperties 
 
 #if 1
 
-void new_object(cVector3d position, MyObject obj)
+void new_object(cVector3d position, MyProperties properties)
 {
 	// create a virtual mesh
 	objectX = new cMesh();
@@ -1690,18 +1706,18 @@ void new_object(cVector3d position, MyObject obj)
 	// set the position of the object at the center of the world
 	objectX->setLocalPos(position);
 
-	switch (obj.shape)
+	switch (properties.shape)
 	{
 	case(cube) :
 		// create cube
-		chai3d::cCreateBox(objectX, obj.size.x(), obj.size.y(), obj.size.z());
+		chai3d::cCreateBox(objectX, properties.size.x(), properties.size.y(), properties.size.z());
 		break;
 	case (sphere) :
 		// create sphere
-		chai3d::cCreateSphere(objectX, (const double)obj.size.length()/2);
+		chai3d::cCreateSphere(objectX, (const double)properties.size.length() / 2);
 		break;
 	case(cylinder) :
-		chai3d::cCreateCylinder(objectX, (const double)obj.size.z(), cVector3d(obj.size.x(), obj.size.y(), 0.0).length() / 2);
+		chai3d::cCreateCylinder(objectX, (const double)properties.size.z(), cVector3d(properties.size.x(), properties.size.y(), 0.0).length() / 2);
 		break;
 
 /*	case(complex3ds) :
@@ -1713,7 +1729,7 @@ void new_object(cVector3d position, MyObject obj)
 	cTexture2dPtr texture = cTexture2d::create();
 
 	// load texture image from file
-	if (texture->loadFromFile(RESOURCE_PATH(STR_ADD("images/", obj.properties.textureImage))) != 1)
+	if (texture->loadFromFile(RESOURCE_PATH(STR_ADD("images/", properties.textureImage))) != 1)
 	{
 		cout << "ERROR: Cannot load texture file!" << endl;
 	}
@@ -1734,16 +1750,16 @@ void new_object(cVector3d position, MyObject obj)
 	objectX->createAABBCollisionDetector(TOOL_RADIUS);
 
 	// define a default stiffness for the object
-	objectX->m_material->setStiffness(obj.properties.stiffness * maxStiffness);
+	objectX->m_material->setStiffness(properties.stiffness * maxStiffness);
 
 	// define some static friction
-	objectX->m_material->setStaticFriction(obj.properties.staticFriction);
+	objectX->m_material->setStaticFriction(properties.staticFriction);
 
 	// define some dynamic friction
-	objectX->m_material->setDynamicFriction(obj.properties.dynamicFriction);
+	objectX->m_material->setDynamicFriction(properties.dynamicFriction);
 
 	// define some texture rendering
-	objectX->m_material->setTextureLevel(obj.properties.textureLevel);
+	objectX->m_material->setTextureLevel(properties.textureLevel);
 
 	// render triangles haptically on front side only
 	objectX->m_material->setHapticTriangleSides(true, false);
@@ -1752,7 +1768,7 @@ void new_object(cVector3d position, MyObject obj)
 	cNormalMapPtr normalMap = cNormalMap::create();
 
 	// load normal map from file
-	if (normalMap->loadFromFile(RESOURCE_PATH(STR_ADD("images/", obj.properties.normalImage))) != 1)
+	if (normalMap->loadFromFile(RESOURCE_PATH(STR_ADD("images/", properties.normalImage))) != 1)
 	{
 		cout << "ERROR: Cannot load normal map file!" << endl;
 		normalMap->createMap(objectX->m_texture);

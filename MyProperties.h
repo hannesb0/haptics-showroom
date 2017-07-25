@@ -31,17 +31,21 @@ public:
 	MyProperties();
 
 	// Constructor with parameters
-	MyProperties(string setTexture, string setNormalMap, int setTemperature, double setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitch);
+	MyProperties(string setTexture, string setNormalMap, cVector3d setSize, MyOrientation setOrientation, enum MyShape setShape, 
+		int setTemperature, double setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitch);
 
 	// Destructor
 	~MyProperties();
 
-	//void showID();
-	//int getID();
+	// show / get ID
+	void showID();
+	int getID();
 
+	// show / get normal map
 	void showNormal();
 	string getNormal();
 
+	// show / get texture
 	void showTexture();
 	string getTexture();
 
@@ -57,6 +61,15 @@ public:
 
 	// filename of audio file (for voice coil usage)
 	string audio;
+
+	// size
+	cVector3d size;
+
+	// orientation (see Global.h)
+	MyOrientation orientation;
+
+	// shape (see Global.h)
+	enum MyShape	shape;
 
 	// temperature of the object (the temperature is divided into 5 areas: 1 = very cold, 2 = cold, 3 = normal, 4 = hot, 5 = very hot)
 	int temperature;
@@ -86,7 +99,7 @@ private:
 	//------------------------------------------------------------------------------	
 
 	// property identifier
-	//static int id;
+	static int id;
 };
 
 #endif // MYPROPERTIES_H_INCLUDED

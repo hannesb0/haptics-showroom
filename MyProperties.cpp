@@ -12,7 +12,7 @@ Remarks:	These files are tracked with git and are available on the github
 #include "MyProperties.h"
 
 // initialize object identifier
-//int MyProperties::id = 0;
+int MyProperties::id = 0;
 
 // Empty Constructor
 MyProperties::MyProperties()
@@ -28,6 +28,15 @@ MyProperties::MyProperties()
 
 	// set default audio file (for voice coil)
 	audio = defaultAudio;
+
+	// set default size
+	size = defaultSize;
+
+	// set default orientation
+	orientation = defaultOrientation;
+
+	// set default shape
+	shape = defaultShape;
 
 	// set default temperature of the object
 	temperature = defaultTemperature;
@@ -51,17 +60,27 @@ MyProperties::MyProperties()
 	audioPitch = defaultAudioPitch;
 
 	// increase identifier
-	//id++;
+	id++;
 }
 
 // Constructor with parameters
-MyProperties::MyProperties(string setTexture, string setNormalMap, int setTemperature, double setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitch)
+MyProperties::MyProperties(string setTexture, string setNormalMap, cVector3d setSize, MyOrientation setOrientation, enum MyShape setShape, 
+	int setTemperature, double setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitch)
 {
 	// set filename of image for graphical display 
 	textureImage = setTexture;
 
 	// set filename of normal map for haptics display 
 	normalImage = setNormalMap;
+
+	// set default size
+	size = setSize;
+
+	// set default orientation
+	orientation = setOrientation;
+
+	// set default shape
+	shape = setShape;
 
 	// set temperature of the object
 	temperature = setTemperature;
@@ -85,17 +104,17 @@ MyProperties::MyProperties(string setTexture, string setNormalMap, int setTemper
 	audioPitch = setAudioPitch;
 
 	// increase identifier
-	//id++;
+	id++;
 }
 
 // Destructor
 MyProperties::~MyProperties()
 {
 	// decrease identifier
-	//if (id > 0)
-	//	id--;
+	if (id > 0)
+		id--;
 }
-/*
+
 void MyProperties::showID()
 {
 	cout << "Current property ID: " << id << endl;
@@ -105,7 +124,7 @@ int MyProperties::getID()
 {
 	return id;
 }
-*/
+
 void MyProperties::showNormal()
 {
 	cout << "Current normal map: " <<  normalImage << endl;
