@@ -5,7 +5,7 @@ Project:	Haptics Showroom
 Authors:	Naina Dhingra, Ke Xu, Hannes Bohnengel
 Revision:	0.2
 Remarks:	These files are tracked with git and are available on the github
-repository: https://github.com/hannesb0/haptics-showroom
+			repository: https://github.com/hannesb0/haptics-showroom
 */
 //==============================================================================
 
@@ -15,68 +15,75 @@ repository: https://github.com/hannesb0/haptics-showroom
 int MyProperties::id = 0;
 
 // Empty Constructor
-MyProperties::MyProperties(string path)
+MyProperties::MyProperties()
 {
-	// set the resources path
-	resourcesPath = path;
-
 	// set default filename of image for graphical display 
-	//textureImage = "brick-color.png";
+	textureImage = defaultTextureImage;
 
 	// set default filename of normal map for haptics display 
-	//normalImage = "brick-normal.png";
+	normalImage = defaultNormalImage;
 
-	// set default normal map (chai3d specific object)
-	(*normalMap)->loadFromFile(RESOURCE_PATH("images/brick-normal.png"));;
+	// set default audio file (for voice coil)
+	audio = defaultAudio;
 
-	// set default texture (chai3d specific object)
-	(*texture)->loadFromFile(RESOURCE_PATH("images/brick-color.png"));
+	// set default size
+	size = defaultSize;
 
-	// set default size of the object
-	//size = cVector3d(0.2, 0.2, 0.2);
+	// set default orientation
+	orientation = defaultOrientation;
+
+	// set default shape
+	shape = defaultShape;
 
 	// set default temperature of the object
-	temperature = 3;
+	temperature = defaultTemperature;
 
-	// default stiffness of the object
-	stiffness = 0.3;
+	// set default stiffness of the object
+	stiffness = defaultStiffness;
 
-	// default staticFriction of the object
-	staticFriction = 0.2;
+	// set default staticFriction of the object
+	staticFriction = defaultStaticFriction;
 
-	// default dynamicFriction of the object
-	dynamicFriction = 0.2;
+	// set default dynamicFriction of the object
+	dynamicFriction = defaultDynamicFriction;
 
-	// default texture level
-	textureLevel = 0.1;
+	// set default texture level
+	textureLevel = defaultTextureLevel;
 
-	// default audio friction gain
-	audioGain = 0;
+	// set default audio friction gain
+	audioGain = defaultAudioGain;
 
-	// default audio pitch
-	audioPitch = 0.2;
+	// set default audio pitch
+	audioPitchGain = defaultAudioPitchGain;
+
+	// set default audio pitch offset
+	audioPitchOffset = defaultAudioPitchOffset;
 
 	// increase identifier
 	id++;
 }
 
 // Constructor with parameters
-MyProperties::MyProperties(cTexture2dPtr *setTexture, cNormalMapPtr *setNormalMap, int setTemperature, int setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitch)
+MyProperties::MyProperties(string setTexture, string setNormalMap, string setAudio, cVector3d setSize, MyOrientation setOrientation, enum MyShape setShape, int setTemperature,
+	double setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitchGain, double setAudioPitchOffset)
 {
-	// set filename of image for graphical display 
-	//textureImage = setTextureImage;
+	// set filename for image for graphical display 
+	textureImage = setTexture;
 
-	// set filename of normal map for haptics display 
-	//normalImage = setNormalImage;
+	// set filename for normal map for haptics display 
+	normalImage = setNormalMap;
 
-	// set normal map (chai3d specific object)
-	normalMap = setNormalMap;
+	// set filename for audio file
+	audio = setAudio;
 
-	// set texture (chai3d specific object)
-	texture = setTexture;
+	// set default size
+	size = setSize;
 
-	// set size of the object
-	//size = cVector3d(0.2, 0.2, 0.2);
+	// set default orientation
+	orientation = setOrientation;
+
+	// set default shape
+	shape = setShape;
 
 	// set temperature of the object
 	temperature = setTemperature;
@@ -97,7 +104,10 @@ MyProperties::MyProperties(cTexture2dPtr *setTexture, cNormalMapPtr *setNormalMa
 	audioGain = setAudioGain;
 
 	// set audio pitch
-	audioPitch = setAudioPitch;
+	audioPitchGain = setAudioPitchGain;
+
+	// set audio pitch offset
+	audioPitchOffset = setAudioPitchOffset;
 
 	// increase identifier
 	id++;
@@ -109,4 +119,34 @@ MyProperties::~MyProperties()
 	// decrease identifier
 	if (id > 0)
 		id--;
+}
+
+void MyProperties::showID()
+{
+	cout << "Current property ID: " << id << endl;
+}
+
+int MyProperties::getID()
+{
+	return id;
+}
+
+void MyProperties::showNormal()
+{
+	cout << "Current normal map: " <<  normalImage << endl;
+}
+
+string MyProperties::getNormal()
+{
+	return normalImage;
+}
+
+void MyProperties::showTexture()
+{
+	cout << "Current texture: " << textureImage << endl;
+}
+
+string MyProperties::getTexture()
+{
+	return textureImage;
 }
