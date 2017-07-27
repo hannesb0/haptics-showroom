@@ -24,6 +24,7 @@
 //------------------------------------------------------------------------------
 #include "Global.h"
 #include "MyObjectDatabase.h"
+#include "MySerial2Arduino.h"
 //------------------------------------------------------------------------------
 using namespace chai3d;
 using namespace std;
@@ -83,15 +84,25 @@ cToolCursor* tool;
 cToolCursor* tool2;
 
 // a virtual mesh like object
-cMesh* object;
+//cMesh* object;
 cMesh* objectX;
 
 
 
 
-// TESTING
-vector<cMesh*> objectY(10);
+// ####### TESTING ##########
+vector<cMesh*> objectY(MAX_OBJECT_COUNT);
 
+vector<cAudioDevice*> audioDeviceY(MAX_OBJECT_COUNT);
+
+
+
+
+vector<cAudioBuffer*> audioBufferY(MAX_OBJECT_COUNT);
+
+vector<cAudioSource*> audioSourceObjectY(MAX_OBJECT_COUNT);
+
+// ####### TESTING ##########
 
 
 
@@ -144,6 +155,12 @@ unsigned int keyState[255];
 // variable to check success of file load
 bool fileload;
 
+// this variable stores the current temperature status
+enum MyTempStatus myTemp = standby;
+
+// input buffer to receive data over serial
+const int sizeInputBuffer = 50;
+char inputBuffer[sizeInputBuffer] = { 0 };
 
 // ############# TESTING ############
 // pointer to MyObject class
@@ -209,6 +226,8 @@ int new_plane(cVector3d position, MyProperties properties);
 
 void new_object(cVector3d position, MyProperties properties);
 
+void new_object_cMesh(cMesh* objectZ, cAudioDevice* audioDeviceZ, cVector3d position, MyProperties properties);
+
 // ############################# TESTING ###################################
 
 
@@ -228,7 +247,7 @@ int main(int argc, char **argv)
 	cout << "Project: Haptics Showroom" << endl;
 	cout << "Team:    Naina Dhingra, Ke Xu, Hannes Bohnengel" << endl;
 	cout << "Rev.:    0.2" << endl;
-	cout << "--------------------------------------------------" << endl << endl << endl;
+	cout << "--------------------------------------------------" << endl << endl;
 	cout << "Keyboard Options:" << endl << endl;
 	cout << "Space  - Recenter view point" << endl;
 	cout << "Escape - Exit application" << endl;
@@ -240,13 +259,19 @@ int main(int argc, char **argv)
 	cout << "[2]    - Cold test" << endl;
 	cout << "[q]    - Raise" << endl;
 	cout << "[e]    - Lower" << endl;
-	cout << endl << endl;
+	cout << "--------------------------------------------------" << endl << endl;
 
 	// get the location of the executable
 	resourceRoot = string(argv[0]).substr(0, string(argv[0]).find_last_of("/\\") + 1);
 
 	// this is the location of the resources
 	resourcesPath = resourceRoot + string("../../examples/SDL/haptics-showroom-V02/resources/");
+
+	//--------------------------------------------------------------------------
+	// INIT ARDUINO
+	//--------------------------------------------------------------------------
+
+	InitSerial2Arduino();
 
 	//--------------------------------------------------------------------------
 	// SETUP DISPLAY CONTEXT
@@ -307,7 +332,6 @@ int main(int argc, char **argv)
 			return 1;
 		}
 	}
-
 
 	//--------------------------------------------------------------------------
 	// WORLD - CAMERA - LIGHTING
@@ -444,6 +468,37 @@ int main(int argc, char **argv)
 	maxStiffness = hapticDeviceInfoX.m_maxLinearStiffness / workspaceScaleFactor;
 
 	//--------------------------------------------------------------------------
+	// CREATE ROOM
+	//--------------------------------------------------------------------------
+
+#if 1
+
+	cout << "Creating the room." << endl;
+
+	// draw a coordinate system for easier orientation
+	draw_coordinates(cVector3d(-0.5, -0.5, 0.05), 0.3, 1.0);
+
+	// floor
+	new_plane(cVector3d(0.0, 0.0, 0.0), myFloor);
+
+	// ceiling
+	new_plane(cVector3d(0.0, 0.0, roomHeight), myCeiling);
+
+	// right wall
+	new_plane(cVector3d(0.0, (roomWidth / 2), (roomHeight / 2)), myRightWall);
+
+	// left wall
+	new_plane(cVector3d(0.0, -(roomWidth / 2), (roomHeight / 2)), myLeftWall);
+
+	// back wall
+	new_plane(cVector3d(-(roomLength / 2), 0.0, (roomHeight / 2)), myBackWall);
+
+	// front wall
+	new_plane(cVector3d((roomLength / 2), 0.0, (roomHeight / 2)), myFrontWall);
+
+#endif
+
+	//--------------------------------------------------------------------------
 	// CREATE OBJECT
 	//--------------------------------------------------------------------------
 
@@ -523,9 +578,9 @@ int main(int argc, char **argv)
 	fileload = normalMap->loadFromFile(RESOURCE_PATH("images/brick-normal.png"));
 	if (!fileload)
 	{
-	#if defined(_MSVC)
+#if defined(_MSVC)
 		fileload = normalMap->loadFromFile("../../../bin/resources/images/brick-normal.png");
-	#endif
+#endif
 	}
 	if (!fileload)
 	{
@@ -595,6 +650,7 @@ int main(int argc, char **argv)
 
 #endif
 
+#if 0
 	new_object(cVector3d(-1.0, -0.5, 0.15), Cube_Aluminium);
 
 	new_object(cVector3d(0.0, -0.5, 0.15), Cube_Aluminium);
@@ -605,32 +661,21 @@ int main(int argc, char **argv)
 
 	new_object(cVector3d(1.0, 1.0, 0.2), Cube_WoodProfiled);
 
-//	new_object_new(objectY, cVector3d(1.0, 1.0, 0.2), Cube_WoodProfiled);
+#else
 
-	//--------------------------------------------------------------------------
-	// CREATE ROOM
-	//--------------------------------------------------------------------------
+	new_object_cMesh(objectY[0], audioDeviceY[0], cVector3d(-1.0, -0.5, 0.15), Cube_Aluminium);
 
-	// draw a coordinate system for easier orientation
-	draw_coordinates(cVector3d(-0.5, -0.5, 0.05), 0.3, 1.0);
-	
-	// floor
-	new_plane(cVector3d(0.0, 0.0, 0.0), myFloor);
-	
-	// ceiling
-	new_plane(cVector3d(0.0, 0.0, roomHeight), myCeiling);
+	new_object_cMesh(objectY[1], audioDeviceY[1], cVector3d(0.0, -0.5, 0.15), Cube_Aluminium);
 
-	// right wall
-	new_plane(cVector3d(0.0, (roomWidth / 2), (roomHeight / 2)), myRightWall);
+//	new_object_cMesh(objectY[2], cVector3d(-1.0, 0.5, 0.2), Sphere_Steel);
 
-	// left wall
-	new_plane(cVector3d(0.0, -(roomWidth / 2), (roomHeight / 2)), myLeftWall);
-	
-	// back wall
-	new_plane(cVector3d(-(roomLength / 2), 0.0, (roomHeight / 2)), myBackWall);
+//	new_object_cMesh(objectY[3], cVector3d(-1.0, 1.5, 0.0), Cylinder_Granite);
 
-	// front wall
-	new_plane(cVector3d((roomLength / 2), 0.0, (roomHeight / 2)), myFrontWall);
+//	new_object_cMesh(objectY[4], cVector3d(1.0, 1.0, 0.2), Cube_WoodProfiled);
+
+#endif
+
+
 
 	//--------------------------------------------------------------------------
 	// START SIMULATION
@@ -737,6 +782,12 @@ int main(int argc, char **argv)
 	return (0);
 }
 
+//==============================================================================
+// END OF MAIN FUNCTION
+//==============================================================================
+
+//------------------------------------------------------------------------------
+// IMPLEMENTATIONS OF FUNCTIONS
 //------------------------------------------------------------------------------
 
 void processEvents()
@@ -772,6 +823,14 @@ void processEvents()
 			if (event.key.keysym.sym == SDLK_2)
 			{
 				keyState[(unsigned char)'2'] = 1;
+			}
+			if (event.key.keysym.sym == SDLK_3)
+			{
+				keyState[(unsigned char)'3'] = 1;
+			}
+			if (event.key.keysym.sym == SDLK_4)
+			{
+				keyState[(unsigned char)'4'] = 1;
 			}
 			if (event.key.keysym.sym == SDLK_w)
 			{
@@ -813,6 +872,14 @@ void processEvents()
 			if (event.key.keysym.sym == SDLK_2)
 			{
 				keyState[(unsigned char)'2'] = 0;
+			}
+			if (event.key.keysym.sym == SDLK_3)
+			{
+				keyState[(unsigned char)'3'] = 0;
+			}
+			if (event.key.keysym.sym == SDLK_4)
+			{
+				keyState[(unsigned char)'4'] = 0;
 			}
 			if (event.key.keysym.sym == SDLK_w)
 			{
@@ -887,11 +954,39 @@ void computeMatricesFromInput()
 	}
 	if (keyState[(unsigned char)'1'] == 1) // special function 1
 	{
-		//delete_object();
+		if (myTemp != heating)
+		{
+			sendHot(1);
+			cout << "Enabling Heating!" << endl;
+			myTemp = heating;
+		}
 	}
 	if (keyState[(unsigned char)'2'] == 1) // special function 2
 	{
-		//delete_object()
+		if (myTemp != standby)
+		{
+			sendHot(0);
+			cout << "Disabling Heating!" << endl;
+			myTemp = standby;
+		}
+	}
+	if (keyState[(unsigned char)'3'] == 1) // special function 3
+	{
+		if (myTemp != cooling)
+		{
+			sendCold(1);
+			cout << "Enabling Cooling!" << endl;
+			myTemp = cooling;
+		}
+	}
+	if (keyState[(unsigned char)'4'] == 1) // special function 4
+	{
+		if (myTemp != standby)
+		{
+			sendCold(0);
+			cout << "Disabling Cooling!" << endl;
+			myTemp = standby;
+		}
 	}
 
 	// recalculate the viewing direction
@@ -900,6 +995,7 @@ void computeMatricesFromInput()
 	// recalculate the direction of the "up" vector
 	camera->set(currentPosition, currentPosition + currentDirection, cVector3d(0, 0, 1));   
 }
+
 //------------------------------------------------------------------------------
 
 void close(void)
@@ -909,6 +1005,18 @@ void close(void)
 
 	// wait for graphics and haptics loops to terminate
 	while (!simulationFinished) { cSleepMs(100); }
+
+	// close/stop streaming objects
+	delete audioDeviceY[0];
+	delete audioDeviceY[1];
+
+	//delete objectX;
+	delete objectY[0];
+	delete objectY[1];
+	//delete objectY[2];
+	//delete objectY[3];
+	//delete objectY[4];
+	//delete object;
 
 	// close haptic device
 	tool->stop();
@@ -1362,6 +1470,208 @@ void new_object(cVector3d position, MyProperties properties)
 		objectX->m_material->setAudioFrictionGain((const double)properties.audioGain);
 		objectX->m_material->setAudioFrictionPitchGain((const double)properties.audioPitchGain);
 		objectX->m_material->setAudioFrictionPitchOffset((const double)properties.audioPitchOffset);
+	}
+}
+
+//------------------------------------------------------------------------------
+
+void new_object_cMesh(cMesh* objectZ, cAudioDevice* audioDeviceZ, cVector3d position, MyProperties properties)
+{
+	cout << "Creating new object " << endl;
+
+	// create a virtual mesh
+	objectZ = new cMesh();
+
+	// add object to world
+	world->addChild(objectZ);
+
+	// set the position of the object at the center of the world
+	objectZ->setLocalPos(position);
+
+	switch (properties.shape)
+	{
+	case(cube) :
+		// create cube
+		chai3d::cCreateBox(objectZ, properties.size.x(), properties.size.y(), properties.size.z());
+		break;
+	case (sphere) :
+		// create sphere
+		chai3d::cCreateSphere(objectZ, (const double)properties.size.length() / 2.5);
+		break;
+	case(cylinder) :
+		chai3d::cCreateCylinder(objectZ, (const double)properties.size.z(), cVector3d(properties.size.x(), properties.size.y(), 0.0).length() / 2);
+		break;
+
+		/*	case(complex3ds) :
+		break;
+		*/
+	}
+
+	// create a texture
+	cTexture2dPtr texture = cTexture2d::create();
+
+	// load texture image from file
+	if (texture->loadFromFile(RESOURCE_PATH(STR_ADD("images/", properties.textureImage))) != 1)
+	{
+		cout << "ERROR: Cannot load texture file!" << endl;
+	}
+
+	// apply texture to object
+	objectZ->setTexture(texture);
+
+	// enable texture rendering 
+	objectZ->setUseTexture(true);
+
+	// Since we don't need to see our polygons from both sides, we enable culling.
+	objectZ->setUseCulling(true);
+
+	// set material properties to light gray
+	objectZ->m_material->setWhite();
+
+	// compute collision detection algorithm
+	objectZ->createAABBCollisionDetector(TOOL_RADIUS);
+
+	// define a default stiffness for the object
+	objectZ->m_material->setStiffness(properties.stiffness * maxStiffness);
+
+	// define some static friction
+	objectZ->m_material->setStaticFriction(properties.staticFriction);
+
+	// define some dynamic friction
+	objectZ->m_material->setDynamicFriction(properties.dynamicFriction);
+
+	// define some texture rendering
+	objectZ->m_material->setTextureLevel(properties.textureLevel);
+
+	// render triangles haptically on front side only
+	objectZ->m_material->setHapticTriangleSides(true, false);
+
+	// create a normal texture
+	cNormalMapPtr normalMap = cNormalMap::create();
+
+	// load normal map from file
+	if (normalMap->loadFromFile(RESOURCE_PATH(STR_ADD("images/", properties.normalImage))) != 1)
+	{
+		cout << "ERROR: Cannot load normal map file!" << endl;
+		normalMap->createMap(objectZ->m_texture);
+	}
+
+	// assign normal map to object
+	objectZ->m_normalMap = normalMap;
+
+	// compute surface normals
+	objectZ->computeAllNormals();
+
+
+	// #################################################################
+	// THIS RISES PROBLEMS FOR SHPERES !!!
+
+	// compute tangent vectors
+
+	if (properties.shape != sphere)
+		objectZ->m_triangles->computeBTN();
+
+	// #################################################################
+
+	//--------------------------------------------------------------------------
+	// CREATE SHADERS
+	//--------------------------------------------------------------------------
+
+	// create vertex shader
+	cShaderPtr vertexShader = cShader::create(C_VERTEX_SHADER);
+
+	// load vertex shader from file
+	fileload = vertexShader->loadSourceFile("../resources/shaders/bump.vert");
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = vertexShader->loadSourceFile("../../../bin/resources/shaders/bump.vert");
+#endif
+	}
+
+	// create fragment shader
+	cShaderPtr fragmentShader = cShader::create(C_FRAGMENT_SHADER);
+
+	// load fragment shader from file
+	fileload = fragmentShader->loadSourceFile("../resources/shaders/bump.frag");
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = fragmentShader->loadSourceFile("../../../bin/resources/shaders/bump.frag");
+#endif
+	}
+
+	// create program shader
+	cShaderProgramPtr programShader = cShaderProgram::create();
+
+	// assign vertex shader to program shader
+	programShader->attachShader(vertexShader);
+
+	// assign fragment shader to program shader
+	programShader->attachShader(fragmentShader);
+
+	// assign program shader to object
+	objectZ->setShaderProgram(programShader);
+
+	// link program shader
+	programShader->linkProgram();
+
+	// set uniforms
+	programShader->setUniformi("uColorMap", 0);
+	programShader->setUniformi("uShadowMap", 0);
+	programShader->setUniformi("uNormalMap", 2);
+	programShader->setUniformf("uInvRadius", 0.0f);
+
+
+	//--------------------------------------------------------------------------
+	// SETUP AUDIO MATERIAL
+	//--------------------------------------------------------------------------
+
+	// check if audio gain is bigger than zero
+	if (properties.audioGain > 0.0f)
+	{
+		// create an audio device to play sounds
+		audioDeviceZ = new cAudioDevice();
+
+		// attach audio device to camera
+		camera->attachAudioDevice(audioDeviceZ);
+
+		// create an audio buffer and load audio wave file
+		audioBuffer1 = audioDeviceZ->newAudioBuffer();
+
+		if (audioBuffer1->loadFromFile(RESOURCE_PATH((STR_ADD("sounds/", properties.audio)))) != 1)
+		{
+			cout << "ERROR: Cannot load audio file!" << endl;
+		}
+
+		// here we convert all files to mono. this allows for 3D sound support. if this code
+		// is commented files are kept in stereo format and 3D sound is disabled. Compare both!
+		audioBuffer1->convertToMono();
+
+		// create an audio source for this tool.
+		tool->createAudioSource(audioDeviceZ);
+
+		// assign auio buffer to audio source
+		//audioSourceObject->setAudioBuffer(audioBuffer1);
+
+		// loop playing of sound
+		//audioSourceObject->setLoop(true);
+
+		// turn off sound for now
+		//audioSourceObject->setGain(0.0);
+
+		// set pitch
+		//audioSourceObject->setPitch(0.2);
+
+		// play sound
+		//audioSourceObject->play();
+
+		// set audio properties
+		objectZ->m_material->setAudioImpactBuffer(audioBuffer1);
+		objectZ->m_material->setAudioFrictionBuffer(audioBuffer1);
+		objectZ->m_material->setAudioFrictionGain((const double)properties.audioGain);
+		objectZ->m_material->setAudioFrictionPitchGain((const double)properties.audioPitchGain);
+		objectZ->m_material->setAudioFrictionPitchOffset((const double)properties.audioPitchOffset);
 	}
 }
 
