@@ -25,6 +25,7 @@ using namespace std;
 //------------------------------------------------------------------------------
 
 enum MyShape { plane, cube, sphere, cylinder, complex3ds };
+enum MyTempStatus { heating, cooling, standby };
 
 //------------------------------------------------------------------------------
 // STRUCTS
@@ -101,5 +102,7 @@ const double defaultAudioPitchOffset = 0.8;
 // initial position
 #define INITIAL_POSITION	cVector3d(2.0, 0.0, 0.4)
 
+// maximal number of objects
+#define MAX_OBJECT_COUNT	10
 
 #endif
