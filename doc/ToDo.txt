@@ -21,7 +21,7 @@ To be implemented:
 
 - get sound files
 
-- try voice
+- try voice coil
 
 
 
@@ -31,7 +31,8 @@ To be implemented:
   -> StickSlipForceMax, StickSlipStiffness ???
 
 ==== temperature stuff
-
+  -> glue Peltier element to haptic device
+  
 ==== 3ds objects
 
 - multidevice ??
@@ -41,6 +42,8 @@ To be implemented:
 - vector<cMesh*> object(10)
 
 - extract current folder name (replace this with "haptics-showroom-V02")
+
+- rotating cube ???
 
 
 For presentation:
