@@ -38,7 +38,7 @@ int val_old                     = 0;
 bool tmp[]                      = {0, 0};
 int x;
 bool inc = false;
-const int Tcold = 560, Thot = 660;
+const int Tcold = 560, Thot = 650;
 const int Thys = 5;
 int T;
 
@@ -174,7 +174,6 @@ void loop()
     recPeltierIntensity = x;
     digitalWrite(peltierDirectionPin, HIGH);
     peltierDirection = HIGH;
-
   }
   else if(str == "COLD")
   {
@@ -182,7 +181,6 @@ void loop()
     recPeltierIntensity = x;
     digitalWrite(peltierDirectionPin, LOW);
     peltierDirection = LOW;
-
   }     
   else if(str == "RESET")
   {
@@ -226,6 +224,8 @@ void loop()
 
   if (recPeltierIntensity == 1) 
   {
+      peltierOnOff = HIGH;
+      
       tmp[1] = 0;
       if (tmp[0] == 0){
         Serial.println("Peltier on");
@@ -255,6 +255,8 @@ void loop()
  
   else if (recPeltierIntensity == 0) 
   {
+      peltierOnOff = LOW;
+      
       tmp[0] = 0;
       if (tmp[1] == 0){
         Serial.println("Peltier off");
