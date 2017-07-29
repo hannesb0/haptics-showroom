@@ -42,6 +42,7 @@ To be implemented:
 - vector<cMesh*> object(10)
   -> delete function
   -> global counter
+  -> use also for new_plane
 
 - extract current folder name (replace this with "haptics-showroom-V02")
 
