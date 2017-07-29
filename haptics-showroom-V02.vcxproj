@@ -24,6 +24,7 @@
     <ClCompile Include="haptics-showroom-V02.cpp" />
     <ClCompile Include="MyObject.cpp" />
     <ClCompile Include="MyProperties.cpp" />
+    <ClCompile Include="MyRegions.cpp" />
     <ClCompile Include="MySerial.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -33,6 +34,7 @@
     <ClInclude Include="MyObject.h" />
     <ClInclude Include="MyObjectDatabase.h" />
     <ClInclude Include="MyProperties.h" />
+    <ClInclude Include="MyRegions.h" />
     <ClInclude Include="MySerial.h" />
     <ClInclude Include="MySerial2Arduino.h" />
   </ItemGroup>
