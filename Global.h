@@ -103,6 +103,8 @@ const double defaultAudioPitchOffset = 0.8;
 #define INITIAL_POSITION	cVector3d(2.0, 0.0, 0.4)
 
 // maximal number of objects
-#define MAX_OBJECT_COUNT	10
+#define MAX_OBJECT_COUNT		10
+#define MAX_AUDIOBUFFER_COUNT	MAX_OBJECT_COUNT
+#define MAX_REGIONS_COUNT		MAX_OBJECT_COUNT
 
 #endif
