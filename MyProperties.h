@@ -17,8 +17,6 @@ Remarks:	These files are tracked with git and are available on the github
 #include <string>
 #include "Global.h"
 
-using namespace std;
-
 class MyProperties
 {
 public:
