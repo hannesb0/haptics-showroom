@@ -27,11 +27,11 @@ To be implemented:
 
 
 - properties-class (all properties)
-  -> also size and rotation ???
+  -> put orientation out of class !!!
   -> StickSlipForceMax, StickSlipStiffness ???
 
 ==== temperature stuff
-  -> glue Peltier element to haptic device
+  -> glue temp sensor to haptic device
   
 ==== 3ds objects
 
@@ -40,6 +40,8 @@ To be implemented:
 - add something in the if clause if *.exe is executed directly
 
 - vector<cMesh*> object(10)
+  -> delete function
+  -> global counter
 
 - extract current folder name (replace this with "haptics-showroom-V02")
 
