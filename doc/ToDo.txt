@@ -46,6 +46,8 @@ To be implemented:
 
 - extract current folder name (replace this with "haptics-showroom-V02")
 
+- rename function names (without "_")
+
 - rotating cube ???
 
 
