@@ -241,7 +241,6 @@ int main(int argc, char **argv)
 	//--------------------------------------------------------------------------
 	// INITIALIZATION
 	//--------------------------------------------------------------------------
-
 	cout << endl;
 	cout << "--------------------------------------------------" << endl;
 	cout << "CHAI3D" << endl;
@@ -713,10 +712,8 @@ int main(int argc, char **argv)
 		// avoid walking out of room
 		checkBoundaries();
 
-		if (checkTempRegions())
-		{
-			cout << "Temperature detected" << endl;
-		}
+		// check if inside a temperature region
+		checkTempRegions();
 
 		// check if Oculus should be used
 		if (useOculus)
@@ -845,6 +842,10 @@ void processEvents()
 			{
 				keyState[(unsigned char)'4'] = 1;
 			}
+			if (event.key.keysym.sym == SDLK_5)
+			{
+				keyState[(unsigned char)'5'] = 1;
+			}
 			if (event.key.keysym.sym == SDLK_w)
 			{
 				keyState[(unsigned char)'w'] = 1;
@@ -893,6 +894,10 @@ void processEvents()
 			if (event.key.keysym.sym == SDLK_4)
 			{
 				keyState[(unsigned char)'4'] = 0;
+			}
+			if (event.key.keysym.sym == SDLK_5)
+			{
+				keyState[(unsigned char)'5'] = 0;
 			}
 			if (event.key.keysym.sym == SDLK_w)
 			{
@@ -1000,6 +1005,11 @@ void computeMatricesFromInput()
 			cout << "Disabling Cooling!" << endl;
 			myTemp = standby;
 		}
+	}
+	if (keyState[(unsigned char)'5'] == 1) // special function 5
+	{
+		cVector3d devPosition = /*tool->getDeviceLocalPos() +*/ tool->getDeviceGlobalPos();
+		cout << "tool->getDevGlobPos = (" << devPosition.x() << "/" << devPosition.y() << "/" << devPosition.z() << ")" << endl;
 	}
 
 	// recalculate the viewing direction
@@ -1797,38 +1807,45 @@ int checkTempRegions()
 {
 	int result = 0;
 
-
 	// update position and orientation of tool
 	tool->updateFromDevice();
-	/*
-	cMatrix3d RotForce = cMatrix3d(cos(currentAngle), sin(currentAngle), 0.0, -sin(currentAngle), cos(currentAngle), 0.0, 0.0, 0.0, 1.0);
-	cMatrix3d Rot = cMatrix3d(cos(currentAngle), -sin(currentAngle), 0.0, sin(currentAngle), cos(currentAngle), 0.0, 0.0, 0.0, 1.0);
-	tool->setDeviceGlobalRot(Rot);
-	cVector3d tmp = tool->getDeviceLocalPos();
-	tool->setDeviceGlobalPos(Rot*tmp + currentPosition + currentDirection);
 
-	cVector3d devPosition = Rot*tmp + currentPosition + currentDirection;
-	*/
+	// assign tools position
+	cVector3d devPosition = tool->getDeviceGlobalPos();
 
-	cVector3d devPosition = /*tool->getDeviceLocalPos()*/ + tool->getDeviceGlobalPos();
+	cVector3d distance = cVector3d(0, 0, 0);
 
-	//cout << "(" << devPosition.x() << "/" << devPosition.y() << "/" << devPosition.z() << ")" << endl;
-
+	// check each temperature region
 	for (int i = 0; i < tempRegionCounter; i++)
 	{
-		if (abs(devPosition.x() - tempRegion[i]->position.x()) < 0.2 && abs(devPosition.y() - tempRegion[i]->position.y()) < 0.2 && abs(devPosition.z() - tempRegion[i]->position.z()) < 0.2)
+		// calculate distance between center of temperature region and 
+		distance = devPosition - tempRegion[i]->position;
+
+		// check if inside region
+		if (distance.length() < 0.5)
 		{
-			cout << "(" << devPosition.x() << "/" << devPosition.y() << "/" << devPosition.z() << ")" << endl;
-			cout << "(" << tempRegion[i]->position.x() << "/" << tempRegion[i]->position.y() << "/" << tempRegion[i]->position.z() << ")" << endl;
+			cout << "Inside region [" << i << "] Distance = ";
+			printf("%.3f\n", distance.length());
+
+			// check the if haptics device is in contact with any surface
+			double force = cVector3d(tool->getDeviceGlobalForce()).length();
+
+			if (force > 0.1)
+			{
+				cout << "IN CONTACT!" << endl;
+			}
+			else
+			{
+				cout << "NOT IN CONTACT!" << endl;
+			}
+
+			result = 1;
 		}
-		if (0 && cVector3d(devPosition - tempRegion[i]->position).length() < tempRegion[i]->size.length())
+		else
 		{
-			result = tempRegion[i]->temperature;
-			//cout << "Inside region! Position = " << tempRegion[i]->temperature << endl;
-			//cout << "(" << devPosition.x() << "/" << devPosition.y() << "/" << devPosition.z() << ")" << endl;
-			break;
+			// set return value to zero
+			result = 0;
 		}
 	}
-
 	return result;
 }

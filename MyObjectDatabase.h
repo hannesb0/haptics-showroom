@@ -42,14 +42,14 @@ struct MyOrientation orientation2 {
 MyProperties Cube_Aluminium("G1RhombAluminumMesh.JPG", "G1RhombAluminumMeshNormal.JPG", "metal-scraping.wav", cVector3d(0.3, 0.3, 0.3), orientation2, MyShape(cube),
 	3, 0.6, 0.1, 0.1, 0.1, 1.0, 0.8, 0.8);
 
-MyProperties Sphere_Steel("G3StainlessSteel.JPG", "G3StainlessSteelNormal.JPG", "metal-impact.wav", cVector3d(0.3, 0.3, 0.3), orientation1, MyShape(sphere),
+MyProperties Sphere_Steel("G3StainlessSteel.JPG", "G3StainlessSteelNormal.JPG", "metal-scraping.wav", cVector3d(0.3, 0.3, 0.3), orientation1, MyShape(sphere),
 	4, 0.7, 0.1, 0.1, 0.2, 1.0, 0.2, 0.8);
 
-MyProperties Cylinder_Granite("G2GraniteTypeVeneziano.JPG", "G2GraniteTypeVenezianoNormal.JPG", "stone-impact.wav", cVector3d(0.2, 0.2, 0.5), orientation1, MyShape(cylinder),
+MyProperties Cylinder_Granite("G2GraniteTypeVeneziano.JPG", "G2GraniteTypeVenezianoNormal.JPG", "wood-scraping.wav", cVector3d(0.2, 0.2, 0.5), orientation1, MyShape(cylinder),
 	3, 0.9, 0.8, 0.8, 0.2, 1.0, 0.2, 0.8);
 
 MyProperties Cube_WoodProfiled("G4ProfiledWoodPlate.JPG", "G4ProfiledWoodPlateNormal.JPG", "compressedWood.wav", cVector3d(0.2, 0.2, 0.4), orientation1, MyShape(cube),
-	3, 0.6, 0.4, 0.4, 0.2, 1.0, 0.2, 0.8);
+	2, 0.6, 0.4, 0.4, 0.2, 1.0, 0.2, 0.8);
 
 
 

@@ -33,6 +33,12 @@ MyRegions::MyRegions(cVector3d setPosition, cVector3d setSize, int setTemperatur
 
 	// asigning a temperature
 	temperature = setTemperature;
+
+	// set active to false
+	//active = false;
+
+	// increase counter
+	id++;
 }
 
 // Destructor

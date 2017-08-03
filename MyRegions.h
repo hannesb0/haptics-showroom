@@ -53,6 +53,9 @@ public:
 	// assigned temperature of the region
 	int temperature;
 
+	// active flag
+	//bool active;
+
 private:
 
 	//------------------------------------------------------------------------------

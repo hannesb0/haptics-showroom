@@ -31,7 +31,6 @@ To be implemented:
   -> StickSlipForceMax, StickSlipStiffness ???
 
 ==== temperature stuff
-  -> glue temp sensor to haptic device
   
 ==== 3ds objects
 
