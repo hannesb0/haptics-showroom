@@ -84,6 +84,26 @@ cGenericHapticDevicePtr hapticDevice2;
 cToolCursor* tool;
 cToolCursor* tool2;
 
+
+
+
+// ####### NEW HAPTICS DEVICE ###########
+
+
+// a small sphere (cursor) representing the haptic device 
+cShapeSphere* cursor;
+
+// a global variable to store the position [m] of the haptic device
+//cVector3d hapticDevicePosition;
+
+// a global variable to store the velocity [m/s] of the haptic device
+//cVector3d hapticDeviceVelocity;
+
+// ####### NEW HAPTICS DEVICE ###########
+
+
+
+
 // a virtual mesh like object
 //cMesh* object;
 cMesh* objectX;
@@ -203,6 +223,7 @@ cOVRDevice oculusVR;
 void close(void);
 
 // main haptics simulation loop
+void updateHapticsOLD(void);
 void updateHaptics(void);
 
 // process keyboard events
@@ -385,6 +406,46 @@ int main(int argc, char **argv)
 	// HAPTIC DEVICES / TOOLS
 	//--------------------------------------------------------------------------
 
+#if 0
+
+	// create a sphere (cursor) to represent the haptic device
+	cursor = new cShapeSphere(0.01);
+
+	// insert cursor inside world
+	world->addChild(cursor);
+
+
+
+	// create a haptic device handler
+	handler = new cHapticDeviceHandler();
+
+	// get a handle to the first haptic device
+	handler->getDevice(hapticDevice, 0);
+
+	// open a connection with the haptic device
+	hapticDevice->open();
+
+	// retrieve information about the current haptic device
+	cHapticDeviceInfo info = hapticDevice->getSpecifications();
+
+	// if the haptic device provides orientation sensing (stylus), 
+	// a reference frame is displayed
+	if (info.m_sensedRotation == true)
+	{
+		// display a reference frame
+		cursor->setShowFrame(true);
+
+		// set the size of the reference frame
+		cursor->setFrameSize(0.05);
+	}
+
+	// if the device has a gripper, enable the gripper to behave like a user switch
+	hapticDevice->setEnableGripperUserSwitch(true);
+
+
+
+#else
+
 	// create a haptic device handler
 	handler = new cHapticDeviceHandler();
 
@@ -475,6 +536,8 @@ int main(int argc, char **argv)
 
 	// retrieve max stiffness
 	maxStiffness = hapticDeviceInfoX.m_maxLinearStiffness / workspaceScaleFactor;
+
+#endif
 
 	//--------------------------------------------------------------------------
 	// CREATE ROOM
@@ -1054,6 +1117,9 @@ void close(void)
 
 	// close haptic device
 	tool->stop();
+
+	// close haptic device
+	//hapticDevice->close();
 }
 
 //------------------------------------------------------------------------------
@@ -1096,6 +1162,7 @@ void updateHaptics(void)
 		// HAPTIC FORCE COMPUTATION
 		/////////////////////////////////////////////////////////////////////
 
+
 		// compute global reference frames for each object
 		world->computeGlobalPositions(true);
 
@@ -1122,9 +1189,7 @@ void updateHaptics(void)
 
 
 
-
 			// => Insert haptics stuff for second device
-
 
 
 
@@ -1209,6 +1274,157 @@ void updateHaptics(void)
 		// END DYNAMIC SIMULATION
 
 #endif
+	}
+
+	// exit haptics thread
+	simulationFinished = true;
+}
+
+
+void updateHapticsALTERNATIVE(void)
+{
+	// initialize frequency counter
+	frequencyCounter.reset();
+
+	// simulation in now running
+	simulationRunning = true;
+	simulationFinished = false;
+
+	// main haptic simulation loop
+	while (simulationRunning)
+	{
+		/////////////////////////////////////////////////////////////////////
+		// READ HAPTIC DEVICE
+		/////////////////////////////////////////////////////////////////////
+
+		// read position 
+		cVector3d position;
+		hapticDevice->getPosition(position);
+
+		// read orientation 
+		cMatrix3d rotation;
+		hapticDevice->getRotation(rotation);
+
+		// read gripper position
+		double gripperAngle;
+		hapticDevice->getGripperAngleRad(gripperAngle);
+
+		// read linear velocity 
+		cVector3d linearVelocity;
+		hapticDevice->getLinearVelocity(linearVelocity);
+
+		// read angular velocity
+		cVector3d angularVelocity;
+		hapticDevice->getAngularVelocity(angularVelocity);
+
+		// read gripper angular velocity
+		double gripperAngularVelocity;
+		hapticDevice->getGripperAngularVelocity(gripperAngularVelocity);
+
+		// read user-switch status (button 0)
+		bool button0, button1, button2, button3;
+		button0 = false;
+		button1 = false;
+		button2 = false;
+		button3 = false;
+
+		hapticDevice->getUserSwitch(0, button0);
+		hapticDevice->getUserSwitch(1, button1);
+		hapticDevice->getUserSwitch(2, button2);
+		hapticDevice->getUserSwitch(3, button3);
+
+
+		/////////////////////////////////////////////////////////////////////
+		// UPDATE 3D CURSOR MODEL
+		/////////////////////////////////////////////////////////////////////
+
+		// update arrow
+		//velocity->m_pointA = position;
+		//velocity->m_pointB = cAdd(position, linearVelocity);
+
+		// update position and orientation of cursor
+		cursor->setLocalPos(position);
+		cursor->setLocalRot(rotation);
+
+		// adjust the  color of the cursor according to the status of
+		// the user-switch (ON = TRUE / OFF = FALSE)
+		if (button0)
+		{
+			cursor->m_material->setGreenMediumAquamarine();
+		}
+		else if (button1)
+		{
+			cursor->m_material->setYellowGold();
+		}
+		else if (button2)
+		{
+			cursor->m_material->setOrangeCoral();
+		}
+		else if (button3)
+		{
+			cursor->m_material->setPurpleLavender();
+		}
+		else
+		{
+			cursor->m_material->setBlueRoyal();
+		}
+
+		// update global variable for graphic display update
+		//hapticDevicePosition = position;
+		//hapticDeviceVelocity = linearVelocity;
+
+
+		/////////////////////////////////////////////////////////////////////
+		// COMPUTE AND APPLY FORCES
+		/////////////////////////////////////////////////////////////////////
+
+		cVector3d force(0, 0, 0);
+		cVector3d torque(0, 0, 0);
+		double gripperForce = 0.0;
+
+		// apply force field
+		//if (useForceField)
+		if (0)
+		{
+			// compute linear force
+			double Kp = 25; // [N/m]
+			cVector3d forceField = -Kp * position;
+			force.add(forceField);
+
+			// compute angular torque
+			double Kr = 0.05; // [N/m.rad]
+			cVector3d axis;
+			double angle;
+			rotation.toAxisAngle(axis, angle);
+			torque = (-Kr * angle) * axis;
+		}
+
+		// apply damping term
+		//if (useDamping)
+		if (0)
+		{
+			cHapticDeviceInfo info = hapticDevice->getSpecifications();
+
+			// compute linear damping force
+			double Kv = 1.0 * info.m_maxLinearDamping;
+			cVector3d forceDamping = -Kv * linearVelocity;
+			force.add(forceDamping);
+
+			// compute angular damping force
+			double Kvr = 1.0 * info.m_maxAngularDamping;
+			cVector3d torqueDamping = -Kvr * angularVelocity;
+			torque.add(torqueDamping);
+
+			// compute gripper angular damping force
+			double Kvg = 1.0 * info.m_maxGripperAngularDamping;
+			gripperForce = gripperForce - Kvg * gripperAngularVelocity;
+		}
+
+		// send computed force, torque, and gripper force to haptic device	
+		hapticDevice->setForceAndTorqueAndGripperForce(force, torque, gripperForce);
+
+		// update frequency counter
+		frequencyCounter.signal(1);
 	}
 
 	// exit haptics thread
@@ -1808,10 +2024,14 @@ int checkTempRegions()
 	int result = 0;
 
 	// update position and orientation of tool
-	tool->updateFromDevice();
+	//tool->updateFromDevice();
 
 	// assign tools position
-	cVector3d devPosition = tool->getDeviceGlobalPos();
+	//cVector3d devPosition = tool->getDeviceGlobalPos();
+	
+	// read position 
+	cVector3d devPosition;
+	hapticDevice->getPosition(devPosition);
 
 	cVector3d distance = cVector3d(0, 0, 0);
 
