@@ -1125,11 +1125,12 @@ void close(void)
 	}
 	*/
 
-	// close haptic device
-	tool->stop();
+	// Disable heating and cooling
+	sendHot(0);
+	sendCold(0);
 
 	// close haptic device
-	//hapticDevice->close();
+	tool->stop();
 }
 
 //------------------------------------------------------------------------------
