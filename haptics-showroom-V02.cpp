@@ -116,6 +116,11 @@ vector<cMesh*> objectY(MAX_OBJECT_COUNT);
 
 int objectCounter = 0;
 
+// for 3ds objects
+vector<cMultiMesh*> objectW(MAX_OBJECT_COUNT);
+
+int objectWCounter = 0;
+
 
 //vector<cAudioDevice*> audioDeviceY(MAX_OBJECT_COUNT);
 
@@ -249,6 +254,8 @@ int new_plane(cVector3d position, MyProperties properties);
 void new_object(cVector3d position, MyProperties properties);
 
 int new_object_cMesh(cVector3d position, MyProperties properties);
+
+int new_object_cMultiMesh(cVector3d position, MyProperties properties);
 
 // ############################# TESTING ###################################
 
@@ -744,6 +751,9 @@ int main(int argc, char **argv)
 	new_object_cMesh(cVector3d(-1.0, 1.5, 0.0), Cylinder_Granite);
 
 	new_object_cMesh(cVector3d(1.0, 1.0, 0.2), Cube_WoodProfiled);
+
+	new_object_cMultiMesh(cVector3d(0.0, 0.0, 1.0), Cube_WoodProfiled);
+
 
 #endif
 
@@ -1762,9 +1772,9 @@ int new_object_cMesh(cVector3d position, MyProperties properties)
 		chai3d::cCreateCylinder(objectY[objectCounter], (const double)properties.size.z(), cVector3d(properties.size.x(), properties.size.y(), 0.0).length() / 2);
 		break;
 
-		/*	case(complex3ds) :
+	case(complex3ds) :
+		
 		break;
-		*/
 	}
 
 	// create a texture
@@ -1951,6 +1961,273 @@ int new_object_cMesh(cVector3d position, MyProperties properties)
 #endif
 	// incrementing counter
 	objectCounter++;
+
+	return 0;
+}
+
+//------------------------------------------------------------------------------
+
+int new_object_cMultiMesh(cVector3d position, MyProperties properties)
+{
+	if (objectWCounter < MAX_OBJECT_COUNT)
+	{
+		cout << "Creating new object Nr. " << objectWCounter + 1 << endl;
+	}
+	else
+	{
+		cout << "Error: Could not create new object. Maximal number of objects reached!" << endl;
+		return -1;
+	}
+
+	// create a virtual mesh
+	objectW[objectWCounter] = new cMultiMesh();
+
+	// add object to world
+	world->addChild(objectW[objectWCounter]);
+
+	// set the position of the object at the center of the world
+	objectW[objectWCounter]->setLocalPos(position);
+
+	// load normal map from file
+	if (objectW[objectWCounter]->loadFromFile(RESOURCE_PATH(STR_ADD("3ds/", "eagle.3ds"))) != 1)
+	{
+		cout << "ERROR: Cannot load 3ds file!" << endl;
+	}
+
+	// get dimensions of object
+	objectW[objectWCounter]->computeBoundaryBox(true);
+	double size = cSub(objectW[objectWCounter]->getBoundaryMax(), objectW[objectWCounter]->getBoundaryMin()).length();
+
+	// resize object to screen
+	if (size > 0.001)
+	{
+		objectW[objectWCounter]->scale(1 / size);
+	}
+
+
+	// create a texture
+	cTexture2dPtr texture = cTexture2d::create();
+
+	// load texture image from file
+	//if (texture->loadFromFile(RESOURCE_PATH(STR_ADD("images/", properties.textureImage))) != 1)
+	//{
+	//	cout << "ERROR: Cannot load texture file!" << endl;
+	//	}
+
+	// apply texture to object
+	//objectW[objectWCounter]->setTexture(texture);
+
+	// enable texture rendering 
+	//objectW[objectWCounter]->setUseTexture(true);
+
+	// set material properties to light gray
+	objectW[objectWCounter]->m_material->setBlack();
+	
+	// compute collision detection algorithm
+	objectW[objectWCounter]->createAABBCollisionDetector(.02);
+
+	// disable culling so that faces are rendered on both sides
+	objectW[objectWCounter]->setUseCulling(false);
+
+	// enable display list for faster graphic rendering
+	objectW[objectWCounter]->setUseDisplayList(true);
+
+	// center object in scene
+	//objectW[objectWCounter]->setLocalPos(-1.0 * objectW[objectWCounter]->getBoundaryCenter());
+
+	// rotate object in scene
+	objectW[objectWCounter]->rotateExtrinsicEulerAnglesDeg(0, 0, 90, C_EULER_ORDER_XYZ);
+
+#if 1
+
+	// set haptic properties
+	cMaterial mat;
+	mat.setHapticTriangleSides(true, true);
+	mat.setStiffness(properties.stiffness * maxStiffness);
+	mat.setStaticFriction(properties.staticFriction);
+	mat.setDynamicFriction(properties.dynamicFriction);
+
+	mat.setBrownCornsilk();
+
+	objectW[objectWCounter]->setMaterial(mat);
+
+
+
+
+
+
+#else
+
+	// Since we don't need to see our polygons from both sides, we enable culling.
+	objectW[objectWCounter]->setUseCulling(true);
+
+	// set material properties to light gray
+	objectW[objectWCounter]->m_material->setWhite();
+
+	// compute collision detection algorithm
+	objectW[objectWCounter]->createAABBCollisionDetector(TOOL_RADIUS);
+
+	// define a default stiffness for the object
+	objectW[objectWCounter]->m_material->setStiffness(properties.stiffness * maxStiffness);
+
+	// define some static friction
+	objectW[objectWCounter]->m_material->setStaticFriction(properties.staticFriction);
+
+	// define some dynamic friction
+	objectW[objectWCounter]->m_material->setDynamicFriction(properties.dynamicFriction);
+
+	// define some texture rendering
+	objectW[objectWCounter]->m_material->setTextureLevel(properties.textureLevel);
+
+	// render triangles haptically on front side only
+	objectW[objectWCounter]->m_material->setHapticTriangleSides(true, false);
+
+	// create a normal texture
+	cNormalMapPtr normalMap = cNormalMap::create();
+
+	// load normal map from file
+	if (normalMap->loadFromFile(RESOURCE_PATH(STR_ADD("images/", properties.normalImage))) != 1)
+	{
+		cout << "ERROR: Cannot load normal map file!" << endl;
+		normalMap->createMap(objectW[objectWCounter]->m_texture);
+	}
+
+	// assign normal map to object
+	objectW[objectWCounter]->m_normalMap = normalMap;
+
+	// compute surface normals
+	objectW[objectWCounter]->computeAllNormals();
+
+#endif
+
+	// #################################################################
+	// THIS RISES PROBLEMS FOR SHPERES !!!
+
+	// compute tangent vectors
+
+	//if (properties.shape != sphere)
+		//objectW[objectWCounter]->m_triangles->computeBTN();
+
+	// #################################################################
+
+	//--------------------------------------------------------------------------
+	// CREATE SHADERS
+	//--------------------------------------------------------------------------
+
+	// create vertex shader
+	cShaderPtr vertexShader = cShader::create(C_VERTEX_SHADER);
+
+	// load vertex shader from file
+	fileload = vertexShader->loadSourceFile("../resources/shaders/bump.vert");
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = vertexShader->loadSourceFile("../../../bin/resources/shaders/bump.vert");
+#endif
+	}
+
+	// create fragment shader
+	cShaderPtr fragmentShader = cShader::create(C_FRAGMENT_SHADER);
+
+	// load fragment shader from file
+	fileload = fragmentShader->loadSourceFile("../resources/shaders/bump.frag");
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = fragmentShader->loadSourceFile("../../../bin/resources/shaders/bump.frag");
+#endif
+	}
+
+	// create program shader
+	cShaderProgramPtr programShader = cShaderProgram::create();
+
+	// assign vertex shader to program shader
+	programShader->attachShader(vertexShader);
+
+	// assign fragment shader to program shader
+	programShader->attachShader(fragmentShader);
+
+	// assign program shader to object
+	objectW[objectWCounter]->setShaderProgram(programShader);
+
+	// link program shader
+	programShader->linkProgram();
+
+	// set uniforms
+	programShader->setUniformi("uColorMap", 0);
+	programShader->setUniformi("uShadowMap", 0);
+	programShader->setUniformi("uNormalMap", 2);
+	programShader->setUniformf("uInvRadius", 0.0f);
+
+	// set the orientation
+	objectW[objectWCounter]->rotateAboutLocalAxisDeg(properties.orientation.axis, properties.orientation.rotation);
+
+	//--------------------------------------------------------------------------
+	// SETUP AUDIO MATERIAL
+	//--------------------------------------------------------------------------
+#if 1
+	// check if audio gain is bigger than zero
+	if (properties.audioGain > 0.0f)
+	{
+		if (audioBufferCounter < MAX_AUDIOBUFFER_COUNT)
+		{
+			// create an audio buffer and load audio wave file
+			audioBufferY[audioBufferCounter] = audioDevice->newAudioBuffer();
+
+			// load audio from file
+			if (audioBufferY[audioBufferCounter]->loadFromFile(RESOURCE_PATH((STR_ADD("sounds/", properties.audio)))) != 1)
+			{
+				cout << "ERROR: Cannot load audio file!" << endl;
+			}
+
+			// here we convert all files to mono. this allows for 3D sound support. if this code
+			// is commented files are kept in stereo format and 3D sound is disabled. Compare both!
+			audioBufferY[audioBufferCounter]->convertToMono();
+
+			// set audio properties
+			objectW[objectWCounter]->m_material->setAudioImpactBuffer(audioBufferY[audioBufferCounter]);
+			objectW[objectWCounter]->m_material->setAudioFrictionBuffer(audioBufferY[audioBufferCounter]);
+			objectW[objectWCounter]->m_material->setAudioFrictionGain((const double)properties.audioGain);
+			objectW[objectWCounter]->m_material->setAudioFrictionPitchGain((const double)properties.audioPitchGain);
+			objectW[objectWCounter]->m_material->setAudioFrictionPitchOffset((const double)properties.audioPitchOffset);
+
+			// increment counter
+			audioBufferCounter++;
+		}
+		else
+		{
+			cout << "ERROR: Cannot create an audio buffer for this object. Maximal audio buffer count reached!" << endl;
+		}
+	}
+#endif
+
+	//--------------------------------------------------------------------------
+	// SETUP TEMPERATURE REGIONS
+	//--------------------------------------------------------------------------
+#if 1	
+	// if temperature is not normal (cold or hot) assign heat region
+	if (properties.temperature != 3)
+	{
+		if (tempRegionCounter < MAX_REGIONS_COUNT)
+		{
+			// create a region where a temperature needs to be checked
+			tempRegion[tempRegionCounter] = new MyRegions(cVector3d(position), properties.size, properties.temperature);
+
+			cout << "New temp region created Nr." << tempRegionCounter + 1 << endl;
+
+			//cout << "size (x/y/z): (" << properties.size.x() << "/" << properties.size.y() << "/" << properties.size.z() << ")" << endl;
+
+			// increment counter
+			tempRegionCounter++;
+		}
+		else
+		{
+			cout << "ERROR: No region for detecting temperature can be assigned to this object!" << endl;
+		}
+	}
+#endif
+	// incrementing counter
+	objectWCounter++;
 
 	return 0;
 }
