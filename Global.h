@@ -42,7 +42,7 @@ struct MyOrientation{
 
 // size of the room
 const double roomLength = 6.0;	// x-axis
-const double roomWidth = 4.0;	// y-axis
+const double roomWidth = 6.0;	// y-axis
 const double roomHeight = 2.5;	// z-axis
 
 // default filename of image for graphical display 
