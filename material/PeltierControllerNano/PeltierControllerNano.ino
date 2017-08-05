@@ -1,24 +1,13 @@
-#include <Servo.h>
-
-/* -------------------------------------------------------------------------------
- * 
- * 
- * 
- * 
- * 
- * To Do:
- * 
- * - Change name of peltierDirection
- * - Remove Servo.h
- * - Set up intensity ?!
- * - Implement 2-point control mechanism
- * 
- * 
- * -------------------------------------------------------------------------------*/
-
-
-
-
+//==============================================================================
+/*
+  Filename: PeltierControllerNano.ino
+  Project:  Haptics Showroom
+  Authors:  Naina Dhingra, Ke Xu, Hannes Bohnengel 
+  Revision: 0.2
+  Remarks:  These files are tracked with git and are available on the github
+            repository: https://github.com/hannesb0/haptics-showroom
+*/
+//==============================================================================
 
 // -------------------------------------------------------------------------------
 // some global variables and defines
@@ -38,7 +27,7 @@ int val_old                     = 0;
 bool tmp[]                      = {0, 0};
 int x;
 bool inc = false;
-const int Tcold = 560, Thot = 650;
+const int Tcold = 560, Thot = 640;
 const int Thys = 5;
 int T;
 
