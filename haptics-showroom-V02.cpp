@@ -84,64 +84,33 @@ cGenericHapticDevicePtr hapticDevice2;
 cToolCursor* tool;
 cToolCursor* tool2;
 
-
-
-
-// ####### NEW HAPTICS DEVICE ###########
-
-
-// a small sphere (cursor) representing the haptic device 
-cShapeSphere* cursor;
-
-// a global variable to store the position [m] of the haptic device
-//cVector3d hapticDevicePosition;
-
-// a global variable to store the velocity [m/s] of the haptic device
-//cVector3d hapticDeviceVelocity;
-
-// ####### NEW HAPTICS DEVICE ###########
-
-
-
-
 // a virtual mesh like object
 //cMesh* object;
-cMesh* objectX;
+//cMesh* objectX;
 
+// a vector containing the virtual object pointers
+vector<cMesh*> object(MAX_OBJECT_COUNT);
 
-
-
-// ####### TESTING ##########
-vector<cMesh*> objectY(MAX_OBJECT_COUNT);
-
+// a counter for virtual objects
 int objectCounter = 0;
 
 // for 3ds objects
 vector<cMultiMesh*> objectW(MAX_OBJECT_COUNT);
 
+// a counter for virtual objects which use 3ds files
 int objectWCounter = 0;
 
-
-//vector<cAudioDevice*> audioDeviceY(MAX_OBJECT_COUNT);
-
-
+// a vector with objects containing information about the temperature regions
 vector<MyRegions*> tempRegion(MAX_OBJECT_COUNT);
 
+// a counter for the temperature regions
 int tempRegionCounter = 0;
 
+// a vector for audio buffer pointers
+vector<cAudioBuffer*> audioBuffer(MAX_OBJECT_COUNT);
 
-
-vector<cAudioBuffer*> audioBufferY(MAX_OBJECT_COUNT);
-
+// a counter for the audio buffers
 int audioBufferCounter = 0;
-
-
-
-//vector<cAudioSource*> audioSourceObjectY(MAX_OBJECT_COUNT);
-
-// ####### TESTING ##########
-
-
 
 // audio device to play sound
 cAudioDevice* audioDevice;
@@ -179,8 +148,8 @@ cVector3d deviceOffset2 = cVector3d(0.2, 0.1, 0.0);
 
 // variable for changing the perspective and for walking
 double currentAngle = 0;
-double speed = 0.006;
-double rotationalSpeed = 0.006;
+double speed = 0.012;
+double rotationalSpeed = 0.012;
 
 // distances to walls and floor (& ceiling)
 const double wallDistance = 0.75;
@@ -245,6 +214,7 @@ void drawCoordinates(cVector3d position, double length, double width);
 
 // ############################# TESTING ###################################
 
+// function to check wether near a hot or cold object
 int checkTempRegions();
 
 // function to create planes with enabled force feedback (walls, floor)
@@ -255,7 +225,7 @@ void new_object(cVector3d position, MyProperties properties);
 
 int new_object_cMesh(cVector3d position, MyProperties properties);
 
-int new_object_cMultiMesh(cVector3d position, MyProperties properties);
+int new_object_cMultiMesh(cVector3d position, MyProperties properties, string objectFile);
 
 // ############################# TESTING ###################################
 
@@ -270,24 +240,29 @@ int main(int argc, char **argv)
 	// INITIALIZATION
 	//--------------------------------------------------------------------------
 	cout << endl;
-	cout << "--------------------------------------------------" << endl;
-	cout << "CHAI3D" << endl;
+	cout << "==========================================================" << endl;
 	cout << "Project: Haptics Showroom" << endl;
 	cout << "Team:    Naina Dhingra, Ke Xu, Hannes Bohnengel" << endl;
 	cout << "Rev.:    0.2" << endl;
-	cout << "--------------------------------------------------" << endl << endl;
-	cout << "Keyboard Options:" << endl << endl;
+	cout << "----------------------------------------------------------" << endl;
+	cout << "General Commands:" << endl << endl;
 	cout << "Space  - Recenter view point" << endl;
 	cout << "Escape - Exit application" << endl;
-	cout << "[a]    - Turn left" << endl;
-	cout << "[d]    - Turn right" << endl;
-	cout << "[w]    - Move forward" << endl;
-	cout << "[s]    - Move backwards" << endl;
-	cout << "[1]    - Hot test" << endl;
-	cout << "[2]    - Cold test" << endl;
-	cout << "[q]    - Raise" << endl;
-	cout << "[e]    - Lower" << endl;
-	cout << "--------------------------------------------------" << endl << endl;
+	cout << "[4]    - Print haptic device position" << endl;
+	cout << "----------------------------------------------------------" << endl;
+	cout << "Moving Commands:           |     Temperature Commands:" << endl;
+	cout << "                           |" << endl;
+	cout << "[a]    - Turn left         |     [1] - Heating on" << endl;
+	cout << "[d]    - Turn right        |     [2] - Cooling on" << endl;
+	cout << "[w]    - Move forward      |     [3] - Peltier disable" << endl;
+	cout << "[s]    - Move backwards    |" << endl;
+	cout << "[q]    - Raise             |" << endl;
+	cout << "[e]    - Lower             |" << endl;
+	cout << "==========================================================" << endl << endl;
+
+	//--------------------------------------------------------------------------
+	// EXTRACT CURRENT PATH
+	//--------------------------------------------------------------------------
 
 	// get the location of the executable
 	resourceRoot = string(argv[0]).substr(0, string(argv[0]).find_last_of("/\\") + 1);
@@ -413,46 +388,6 @@ int main(int argc, char **argv)
 	// HAPTIC DEVICES / TOOLS
 	//--------------------------------------------------------------------------
 
-#if 0
-
-	// create a sphere (cursor) to represent the haptic device
-	cursor = new cShapeSphere(0.01);
-
-	// insert cursor inside world
-	world->addChild(cursor);
-
-
-
-	// create a haptic device handler
-	handler = new cHapticDeviceHandler();
-
-	// get a handle to the first haptic device
-	handler->getDevice(hapticDevice, 0);
-
-	// open a connection with the haptic device
-	hapticDevice->open();
-
-	// retrieve information about the current haptic device
-	cHapticDeviceInfo info = hapticDevice->getSpecifications();
-
-	// if the haptic device provides orientation sensing (stylus), 
-	// a reference frame is displayed
-	if (info.m_sensedRotation == true)
-	{
-		// display a reference frame
-		cursor->setShowFrame(true);
-
-		// set the size of the reference frame
-		cursor->setFrameSize(0.05);
-	}
-
-	// if the device has a gripper, enable the gripper to behave like a user switch
-	hapticDevice->setEnableGripperUserSwitch(true);
-
-
-
-#else
-
 	// create a haptic device handler
 	handler = new cHapticDeviceHandler();
 
@@ -497,6 +432,9 @@ int main(int argc, char **argv)
 	// start the haptic tool
 	tool->start();
 
+
+	// only if second device should be used
+#if 0
 	// only if second device should be used
 	if (useSecondHapticDevice == true)
 	{
@@ -514,7 +452,6 @@ int main(int argc, char **argv)
 		tool2->setHapticDevice(hapticDevice2);
 
 		// define a radius for the tool
-		tool->setRadius(TOOL_RADIUS);
 		tool2->setRadius(TOOL_RADIUS);
 
 		// enable if objects in the scene are going to rotate of translate
@@ -534,6 +471,8 @@ int main(int argc, char **argv)
 		tool2->start();
 	}
 
+#endif
+
 	// retrieve information about the current haptic device
 	hapticDeviceInfoX = hapticDevice->getSpecifications();
 
@@ -544,13 +483,9 @@ int main(int argc, char **argv)
 	// retrieve max stiffness
 	maxStiffness = hapticDeviceInfoX.m_maxLinearStiffness / workspaceScaleFactor;
 
-#endif
-
 	//--------------------------------------------------------------------------
 	// CREATE ROOM
 	//--------------------------------------------------------------------------
-
-#if 1
 
 	cout << "Creating the room." << endl;
 
@@ -575,188 +510,38 @@ int main(int argc, char **argv)
 	// front wall
 	new_plane(cVector3d((roomLength / 2), 0.0, (roomHeight / 2)), myFrontWall);
 
-#endif
+	// window
+	new_plane(cVector3d(-(roomLength / 2), 0.0, (roomHeight / 2)), myWindow);
+
+	// title
+	new_plane(cVector3d(-(roomLength / 2), 0.0, (roomHeight / 1.25)), myTitle);
 
 	//--------------------------------------------------------------------------
 	// CREATE OBJECT
 	//--------------------------------------------------------------------------
 
-	// rotating cube from 01-cube.cpp
-#if 0
-
-	// read the scale factor between the physical workspace of the haptic
-	// device and the virtual workspace defined for the tool
-	double workspaceScaleFactor = tool->getWorkspaceScaleFactor();
-
-	// stiffness properties
-	double maxStiffness = hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor;
-
-	// create a virtual mesh
-	object = new cMesh();
-
-	// add object to world
-	world->addChild(object);
-
-	// set the position of the object at the center of the world
-	object->setLocalPos(0.0, 0.0, 0.0);
-
-	// create cube
-	cCreateBox(object, 0.2, 0.2, 0.2);
-
-	// create a texture
-	cTexture2dPtr texture = cTexture2d::create();
-
-	fileload = texture->loadFromFile(RESOURCE_PATH("images/brick-color.png"));
-	if (!fileload)
-	{
-#if defined(_MSVC)
-		fileload = texture->loadFromFile("../../../bin/resources/images/brick-color.png");
-#endif
-	}
-	if (!fileload)
-	{
-		cout << "Error - Texture image failed to load correctly." << endl;
-		close();
-		return (-1);
-	}
-
-	// apply texture to object
-	object->setTexture(texture);
-
-	// enable texture rendering 
-	object->setUseTexture(true);
-
-	// Since we don't need to see our polygons from both sides, we enable culling.
-	object->setUseCulling(true);
-
-	// set material properties to light gray
-	object->m_material->setWhite();
-
-	// compute collision detection algorithm
-	object->createAABBCollisionDetector(TOOL_RADIUS);
-
-	// define a default stiffness for the object
-	object->m_material->setStiffness(0.3 * maxStiffness);
-
-	// define some static friction
-	object->m_material->setStaticFriction(0.2);
-
-	// define some dynamic friction
-	object->m_material->setDynamicFriction(0.2);
-
-	// define some texture rendering
-	object->m_material->setTextureLevel(0.1);
-
-	// render triangles haptically on front side only
-	object->m_material->setHapticTriangleSides(true, false);
-
-	// create a normal texture
-	cNormalMapPtr normalMap = cNormalMap::create();
-
-	// load normal map from file
-	fileload = normalMap->loadFromFile(RESOURCE_PATH("images/brick-normal.png"));
-	if (!fileload)
-	{
-#if defined(_MSVC)
-		fileload = normalMap->loadFromFile("../../../bin/resources/images/brick-normal.png");
-#endif
-	}
-	if (!fileload)
-	{
-		cout << "Error - Texture image failed to load correctly." << endl;
-		close();
-		return (-1);
-	}
-
-	// assign normal map to object
-	object->m_normalMap = normalMap;
-
-	// compute surface normals
-	object->computeAllNormals();
-
-	// compute tangent vectors
-	object->m_triangles->computeBTN();
-
-
-	//--------------------------------------------------------------------------
-	// CREATE SHADERS
-	//--------------------------------------------------------------------------
-
-	// create vertex shader
-	cShaderPtr vertexShader = cShader::create(C_VERTEX_SHADER);
-
-	// load vertex shader from file
-	fileload = vertexShader->loadSourceFile("../resources/shaders/bump.vert");
-	if (!fileload)
-	{
-#if defined(_MSVC)
-		fileload = vertexShader->loadSourceFile("../../../bin/resources/shaders/bump.vert");
-#endif
-	}
-
-	// create fragment shader
-	cShaderPtr fragmentShader = cShader::create(C_FRAGMENT_SHADER);
-
-	// load fragment shader from file
-	fileload = fragmentShader->loadSourceFile("../resources/shaders/bump.frag");
-	if (!fileload)
-	{
-#if defined(_MSVC)
-		fileload = fragmentShader->loadSourceFile("../../../bin/resources/shaders/bump.frag");
-#endif
-	}
-
-	// create program shader
-	cShaderProgramPtr programShader = cShaderProgram::create();
-
-	// assign vertex shader to program shader
-	programShader->attachShader(vertexShader);
-
-	// assign fragment shader to program shader
-	programShader->attachShader(fragmentShader);
-
-	// assign program shader to object
-	object->setShaderProgram(programShader);
-
-	// link program shader
-	programShader->linkProgram();
-
-	// set uniforms
-	programShader->setUniformi("uColorMap", 0);
-	programShader->setUniformi("uShadowMap", 0);
-	programShader->setUniformi("uNormalMap", 2);
-	programShader->setUniformf("uInvRadius", 0.0f);
-
-#endif
-
-#if 0
-	new_object(cVector3d(-1.0, -0.5, 0.15), Cube_Aluminium);
-
-	new_object(cVector3d(0.0, -0.5, 0.15), Cube_Aluminium);
-
-	new_object(cVector3d(-1.0, 0.5, 0.2), Sphere_Steel);
-
-	new_object(cVector3d(-1.0, 1.5, 0.0), Cylinder_Granite);
-
-	new_object(cVector3d(1.0, 1.0, 0.2), Cube_WoodProfiled);
-
-#else
-
 	new_object_cMesh(cVector3d(-1.0, -0.5, 0.15), Cube_Aluminium);
 
-	new_object_cMesh(cVector3d(0.0, -0.5, 0.15), Cube_Aluminium);
+	new_object_cMesh(cVector3d(-1.0, 0.0, 0.15), Cube_Rubber);
 
-	new_object_cMesh(cVector3d(-1.0, 0.5, 0.2), Sphere_Steel);
+	new_object_cMesh(cVector3d(1.0, 0.5, 0.35), Sphere_Steel);
 
-	new_object_cMesh(cVector3d(-1.0, 1.5, 0.0), Cylinder_Granite);
+	new_object_cMesh(cVector3d(-1.0, 1.5, 0.0), Cylinder_Coarsefoam);
 
-	new_object_cMesh(cVector3d(1.0, 1.0, 0.2), Cube_WoodProfiled);
+	new_object_cMesh(cVector3d(-1.0, 1.0, 0.2), Cube_WoodProfiled);
 
-	new_object_cMultiMesh(cVector3d(0.0, 0.0, 1.0), Cube_WoodProfiled);
+	new_object_cMesh(cVector3d(-1.0, -1.0, 0.15), Cube_CrushedRock);
+
+	new_object_cMesh(cVector3d(-1.0, -1.5, 0.15), Cube_SilverOak);
+
+	new_object_cMesh(cVector3d(+1.0, 1.0, 0.15), Cube_Ice);
+
+	new_object_cMesh(cVector3d(+1.0, -1.0, 0.15), Cube_Lava);
 
 
-#endif
+	new_object_cMultiMesh(cVector3d(1.0, 0.5, 0.0), Cube_WoodProfiled, "table.3ds");
 
+	//new_object_cMultiMesh(cVector3d(-1.0, 0.5, 0.0), Cube_WoodProfiled, "sofa1.3ds");
 
 
 	//--------------------------------------------------------------------------
@@ -1047,42 +832,38 @@ void computeMatricesFromInput()
 	{
 		if (myTemp != heating)
 		{
-			sendHot(1);
-			cout << "Enabling Heating!" << endl;
+			sendHot('2');
+			cout << "Enable Heating!" << endl;
 			myTemp = heating;
 		}
 	}
 	if (keyState[(unsigned char)'2'] == 1) // special function 2
 	{
-		if (myTemp != standby)
+		if (myTemp != cooling)
 		{
-			sendHot(0);
-			cout << "Disabling Heating!" << endl;
-			myTemp = standby;
+			sendCold('2');
+			cout << "Enable Cooling!" << endl;
+			myTemp = cooling;
 		}
 	}
 	if (keyState[(unsigned char)'3'] == 1) // special function 3
 	{
-		if (myTemp != cooling)
+		if (myTemp != standby)
 		{
-			sendCold(1);
-			cout << "Enabling Cooling!" << endl;
-			myTemp = cooling;
+			sendReset();
+			cout << "Disable Peltier element!" << endl;
+			myTemp = standby;
 		}
 	}
 	if (keyState[(unsigned char)'4'] == 1) // special function 4
 	{
-		if (myTemp != standby)
-		{
-			sendCold(0);
-			cout << "Disabling Cooling!" << endl;
-			myTemp = standby;
-		}
-	}
-	if (keyState[(unsigned char)'5'] == 1) // special function 5
-	{
-		cVector3d devPosition = /*tool->getDeviceLocalPos() +*/ tool->getDeviceGlobalPos();
-		cout << "tool->getDevGlobPos = (" << devPosition.x() << "/" << devPosition.y() << "/" << devPosition.z() << ")" << endl;
+		cVector3d devPosition = tool->getDeviceGlobalPos();
+		cout << "tool->getDevGlobPos = (";
+		printf("%.2f/", devPosition.x());
+		printf("%.2f/", devPosition.y());
+		printf("%.2f)\n", devPosition.z());
+		
+		cSleepMs(100);
 	}
 
 	// recalculate the viewing direction
@@ -1096,6 +877,9 @@ void computeMatricesFromInput()
 
 void close(void)
 {
+	// Disable heating and cooling
+	sendReset();
+
 	// stop the simulation
 	simulationRunning = false;
 
@@ -1113,21 +897,17 @@ void close(void)
 	for (int i = 0; i < audioBufferCounter; i++)
 	{
 		cout << "Deleting audioBuffer[" << i << "]" << endl;
-		//delete audioBufferY[i];
+		//delete audioBuffer[i];
 	}
 
 	for (int i = 0; i < objectCounter; i++)
-		delete objectY[i];
+		delete object[i];
 	
 	for (int i = 0; i < tempRegionCounter; i++)
 	{
 		delete tempRegion[i];
 	}
 	*/
-
-	// Disable heating and cooling
-	sendHot(0);
-	sendCold(0);
 
 	// close haptic device
 	tool->stop();
@@ -1291,157 +1071,6 @@ void updateHaptics(void)
 	simulationFinished = true;
 }
 
-
-void updateHapticsALTERNATIVE(void)
-{
-	// initialize frequency counter
-	frequencyCounter.reset();
-
-	// simulation in now running
-	simulationRunning = true;
-	simulationFinished = false;
-
-	// main haptic simulation loop
-	while (simulationRunning)
-	{
-		/////////////////////////////////////////////////////////////////////
-		// READ HAPTIC DEVICE
-		/////////////////////////////////////////////////////////////////////
-
-		// read position 
-		cVector3d position;
-		hapticDevice->getPosition(position);
-
-		// read orientation 
-		cMatrix3d rotation;
-		hapticDevice->getRotation(rotation);
-
-		// read gripper position
-		double gripperAngle;
-		hapticDevice->getGripperAngleRad(gripperAngle);
-
-		// read linear velocity 
-		cVector3d linearVelocity;
-		hapticDevice->getLinearVelocity(linearVelocity);
-
-		// read angular velocity
-		cVector3d angularVelocity;
-		hapticDevice->getAngularVelocity(angularVelocity);
-
-		// read gripper angular velocity
-		double gripperAngularVelocity;
-		hapticDevice->getGripperAngularVelocity(gripperAngularVelocity);
-
-		// read user-switch status (button 0)
-		bool button0, button1, button2, button3;
-		button0 = false;
-		button1 = false;
-		button2 = false;
-		button3 = false;
-
-		hapticDevice->getUserSwitch(0, button0);
-		hapticDevice->getUserSwitch(1, button1);
-		hapticDevice->getUserSwitch(2, button2);
-		hapticDevice->getUserSwitch(3, button3);
-
-
-		/////////////////////////////////////////////////////////////////////
-		// UPDATE 3D CURSOR MODEL
-		/////////////////////////////////////////////////////////////////////
-
-		// update arrow
-		//velocity->m_pointA = position;
-		//velocity->m_pointB = cAdd(position, linearVelocity);
-
-		// update position and orientation of cursor
-		cursor->setLocalPos(position);
-		cursor->setLocalRot(rotation);
-
-		// adjust the  color of the cursor according to the status of
-		// the user-switch (ON = TRUE / OFF = FALSE)
-		if (button0)
-		{
-			cursor->m_material->setGreenMediumAquamarine();
-		}
-		else if (button1)
-		{
-			cursor->m_material->setYellowGold();
-		}
-		else if (button2)
-		{
-			cursor->m_material->setOrangeCoral();
-		}
-		else if (button3)
-		{
-			cursor->m_material->setPurpleLavender();
-		}
-		else
-		{
-			cursor->m_material->setBlueRoyal();
-		}
-
-		// update global variable for graphic display update
-		//hapticDevicePosition = position;
-		//hapticDeviceVelocity = linearVelocity;
-
-
-		/////////////////////////////////////////////////////////////////////
-		// COMPUTE AND APPLY FORCES
-		/////////////////////////////////////////////////////////////////////
-
-		cVector3d force(0, 0, 0);
-		cVector3d torque(0, 0, 0);
-		double gripperForce = 0.0;
-
-		// apply force field
-		//if (useForceField)
-		if (0)
-		{
-			// compute linear force
-			double Kp = 25; // [N/m]
-			cVector3d forceField = -Kp * position;
-			force.add(forceField);
-
-			// compute angular torque
-			double Kr = 0.05; // [N/m.rad]
-			cVector3d axis;
-			double angle;
-			rotation.toAxisAngle(axis, angle);
-			torque = (-Kr * angle) * axis;
-		}
-
-		// apply damping term
-		//if (useDamping)
-		if (0)
-		{
-			cHapticDeviceInfo info = hapticDevice->getSpecifications();
-
-			// compute linear damping force
-			double Kv = 1.0 * info.m_maxLinearDamping;
-			cVector3d forceDamping = -Kv * linearVelocity;
-			force.add(forceDamping);
-
-			// compute angular damping force
-			double Kvr = 1.0 * info.m_maxAngularDamping;
-			cVector3d torqueDamping = -Kvr * angularVelocity;
-			torque.add(torqueDamping);
-
-			// compute gripper angular damping force
-			double Kvg = 1.0 * info.m_maxGripperAngularDamping;
-			gripperForce = gripperForce - Kvg * gripperAngularVelocity;
-		}
-
-		// send computed force, torque, and gripper force to haptic device	
-		hapticDevice->setForceAndTorqueAndGripperForce(force, torque, gripperForce);
-
-		// update frequency counter
-		frequencyCounter.signal(1);
-	}
-
-	// exit haptics thread
-	simulationFinished = true;
-}
-
 //------------------------------------------------------------------------------
 
 void checkBoundaries()
@@ -1534,210 +1163,6 @@ void drawCoordinates(cVector3d position, double length, double width)
 
 //------------------------------------------------------------------------------
 
-#if 0 
-void new_object(cVector3d position, MyProperties properties)
-{
-	cout << "Creating new object " << endl;
-
-	// create a virtual mesh
-	objectX = new cMesh();
-
-	// add object to world
-	world->addChild(objectX);
-
-	// set the position of the object at the center of the world
-	objectX->setLocalPos(position);
-
-	switch (properties.shape)
-	{
-	case(cube) :
-		// create cube
-		chai3d::cCreateBox(objectX, properties.size.x(), properties.size.y(), properties.size.z());
-		break;
-	case (sphere) :
-		// create sphere
-		chai3d::cCreateSphere(objectX, (const double)properties.size.length() / 2.5);
-		break;
-	case(cylinder) :
-		chai3d::cCreateCylinder(objectX, (const double)properties.size.z(), cVector3d(properties.size.x(), properties.size.y(), 0.0).length() / 2);
-		break;
-
-/*	case(complex3ds) :
-		break;
-*/
-	}
-
-	// create a texture
-	cTexture2dPtr texture = cTexture2d::create();
-
-	// load texture image from file
-	if (texture->loadFromFile(RESOURCE_PATH(STR_ADD("images/", properties.textureImage))) != 1)
-	{
-		cout << "ERROR: Cannot load texture file!" << endl;
-	}
-
-	// apply texture to object
-	objectX->setTexture(texture);
-
-	// enable texture rendering 
-	objectX->setUseTexture(true);
-
-	// Since we don't need to see our polygons from both sides, we enable culling.
-	objectX->setUseCulling(true);
-
-	// set material properties to light gray
-	objectX->m_material->setWhite();
-
-	// compute collision detection algorithm
-	objectX->createAABBCollisionDetector(TOOL_RADIUS);
-
-	// define a default stiffness for the object
-	objectX->m_material->setStiffness(properties.stiffness * maxStiffness);
-
-	// define some static friction
-	objectX->m_material->setStaticFriction(properties.staticFriction);
-
-	// define some dynamic friction
-	objectX->m_material->setDynamicFriction(properties.dynamicFriction);
-
-	// define some texture rendering
-	objectX->m_material->setTextureLevel(properties.textureLevel);
-
-	// render triangles haptically on front side only
-	objectX->m_material->setHapticTriangleSides(true, false);
-
-	// create a normal texture
-	cNormalMapPtr normalMap = cNormalMap::create();
-
-	// load normal map from file
-	if (normalMap->loadFromFile(RESOURCE_PATH(STR_ADD("images/", properties.normalImage))) != 1)
-	{
-		cout << "ERROR: Cannot load normal map file!" << endl;
-		normalMap->createMap(objectX->m_texture);
-	}
-
-	// assign normal map to object
-	objectX->m_normalMap = normalMap;
-
-	// compute surface normals
-	objectX->computeAllNormals();
-
-
-	// #################################################################
-	// THIS RISES PROBLEMS FOR SHPERES !!!
-
-	// compute tangent vectors
-	
-	if (properties.shape != sphere)
-		objectX->m_triangles->computeBTN();
-
-	// #################################################################
-
-	//--------------------------------------------------------------------------
-	// CREATE SHADERS
-	//--------------------------------------------------------------------------
-
-	// create vertex shader
-	cShaderPtr vertexShader = cShader::create(C_VERTEX_SHADER);
-
-	// load vertex shader from file
-	fileload = vertexShader->loadSourceFile("../resources/shaders/bump.vert");
-	if (!fileload)
-	{
-#if defined(_MSVC)
-		fileload = vertexShader->loadSourceFile("../../../bin/resources/shaders/bump.vert");
-#endif
-	}
-
-	// create fragment shader
-	cShaderPtr fragmentShader = cShader::create(C_FRAGMENT_SHADER);
-
-	// load fragment shader from file
-	fileload = fragmentShader->loadSourceFile("../resources/shaders/bump.frag");
-	if (!fileload)
-	{
-#if defined(_MSVC)
-		fileload = fragmentShader->loadSourceFile("../../../bin/resources/shaders/bump.frag");
-#endif
-	}
-
-	// create program shader
-	cShaderProgramPtr programShader = cShaderProgram::create();
-
-	// assign vertex shader to program shader
-	programShader->attachShader(vertexShader);
-
-	// assign fragment shader to program shader
-	programShader->attachShader(fragmentShader);
-
-	// assign program shader to object
-	objectX->setShaderProgram(programShader);
-
-	// link program shader
-	programShader->linkProgram();
-
-	// set uniforms
-	programShader->setUniformi("uColorMap", 0);
-	programShader->setUniformi("uShadowMap", 0);
-	programShader->setUniformi("uNormalMap", 2);
-	programShader->setUniformf("uInvRadius", 0.0f);
-
-
-	//--------------------------------------------------------------------------
-	// SETUP AUDIO MATERIAL
-	//--------------------------------------------------------------------------
-
-	// check if audio gain is bigger than zero
-	if (properties.audioGain > 0.0f)
-	{
-		// create an audio device to play sounds
-		audioDevice = new cAudioDevice();
-
-		// attach audio device to camera
-		camera->attachAudioDevice(audioDevice);
-
-		// create an audio buffer and load audio wave file
-		audioBuffer1 = audioDevice->newAudioBuffer();
-
-		if (audioBuffer1->loadFromFile(RESOURCE_PATH((STR_ADD("sounds/", properties.audio)))) != 1)
-		{
-			cout << "ERROR: Cannot load audio file!" << endl;
-		}
-
-		// here we convert all files to mono. this allows for 3D sound support. if this code
-		// is commented files are kept in stereo format and 3D sound is disabled. Compare both!
-		audioBuffer1->convertToMono();
-
-		// create an audio source for this tool.
-		tool->createAudioSource(audioDevice);
-
-		// assign auio buffer to audio source
-		//audioSourceObject->setAudioBuffer(audioBuffer1);
-
-		// loop playing of sound
-		//audioSourceObject->setLoop(true);
-
-		// turn off sound for now
-		//audioSourceObject->setGain(0.0);
-
-		// set pitch
-		//audioSourceObject->setPitch(0.2);
-
-		// play sound
-		//audioSourceObject->play();
-		
-		// set audio properties
-		objectX->m_material->setAudioImpactBuffer(audioBuffer1);
-		objectX->m_material->setAudioFrictionBuffer(audioBuffer1);
-		objectX->m_material->setAudioFrictionGain((const double)properties.audioGain);
-		objectX->m_material->setAudioFrictionPitchGain((const double)properties.audioPitchGain);
-		objectX->m_material->setAudioFrictionPitchOffset((const double)properties.audioPitchOffset);
-	}
-}
-#endif
-
-//------------------------------------------------------------------------------
-
 int new_object_cMesh(cVector3d position, MyProperties properties)
 {
 	if (objectCounter < MAX_OBJECT_COUNT)
@@ -1751,26 +1176,26 @@ int new_object_cMesh(cVector3d position, MyProperties properties)
 	}
 
 	// create a virtual mesh
-	objectY[objectCounter] = new cMesh();
+	object[objectCounter] = new cMesh();
 
 	// add object to world
-	world->addChild(objectY[objectCounter]);
+	world->addChild(object[objectCounter]);
 
 	// set the position of the object at the center of the world
-	objectY[objectCounter]->setLocalPos(position);
+	object[objectCounter]->setLocalPos(position);
 
 	switch (properties.shape)
 	{
 	case(cube) :
 		// create cube
-		chai3d::cCreateBox(objectY[objectCounter], properties.size.x(), properties.size.y(), properties.size.z());
+		chai3d::cCreateBox(object[objectCounter], properties.size.x(), properties.size.y(), properties.size.z());
 		break;
 	case (sphere) :
 		// create sphere
-		chai3d::cCreateSphere(objectY[objectCounter], (const double)properties.size.length() / 2.5);
+		chai3d::cCreateSphere(object[objectCounter], (const double)properties.size.length() / 2.5);
 		break;
 	case(cylinder) :
-		chai3d::cCreateCylinder(objectY[objectCounter], (const double)properties.size.z(), cVector3d(properties.size.x(), properties.size.y(), 0.0).length() / 2);
+		chai3d::cCreateCylinder(object[objectCounter], (const double)properties.size.z(), cVector3d(properties.size.x(), properties.size.y(), 0.0).length() / 2);
 		break;
 
 	case(complex3ds) :
@@ -1788,34 +1213,34 @@ int new_object_cMesh(cVector3d position, MyProperties properties)
 	}
 
 	// apply texture to object
-	objectY[objectCounter]->setTexture(texture);
+	object[objectCounter]->setTexture(texture);
 
 	// enable texture rendering 
-	objectY[objectCounter]->setUseTexture(true);
+	object[objectCounter]->setUseTexture(true);
 
 	// Since we don't need to see our polygons from both sides, we enable culling.
-	objectY[objectCounter]->setUseCulling(true);
+	object[objectCounter]->setUseCulling(true);
 
 	// set material properties to light gray
-	objectY[objectCounter]->m_material->setWhite();
+	object[objectCounter]->m_material->setWhite();
 
 	// compute collision detection algorithm
-	objectY[objectCounter]->createAABBCollisionDetector(TOOL_RADIUS);
+	object[objectCounter]->createAABBCollisionDetector(TOOL_RADIUS);
 
 	// define a default stiffness for the object
-	objectY[objectCounter]->m_material->setStiffness(properties.stiffness * maxStiffness);
+	object[objectCounter]->m_material->setStiffness(properties.stiffness * maxStiffness);
 
 	// define some static friction
-	objectY[objectCounter]->m_material->setStaticFriction(properties.staticFriction);
+	object[objectCounter]->m_material->setStaticFriction(properties.staticFriction);
 
 	// define some dynamic friction
-	objectY[objectCounter]->m_material->setDynamicFriction(properties.dynamicFriction);
+	object[objectCounter]->m_material->setDynamicFriction(properties.dynamicFriction);
 
 	// define some texture rendering
-	objectY[objectCounter]->m_material->setTextureLevel(properties.textureLevel);
+	object[objectCounter]->m_material->setTextureLevel(properties.textureLevel);
 
 	// render triangles haptically on front side only
-	objectY[objectCounter]->m_material->setHapticTriangleSides(true, false);
+	object[objectCounter]->m_material->setHapticTriangleSides(true, false);
 
 	// create a normal texture
 	cNormalMapPtr normalMap = cNormalMap::create();
@@ -1824,14 +1249,14 @@ int new_object_cMesh(cVector3d position, MyProperties properties)
 	if (normalMap->loadFromFile(RESOURCE_PATH(STR_ADD("images/", properties.normalImage))) != 1)
 	{
 		cout << "ERROR: Cannot load normal map file!" << endl;
-		normalMap->createMap(objectY[objectCounter]->m_texture);
+		normalMap->createMap(object[objectCounter]->m_texture);
 	}
 
 	// assign normal map to object
-	objectY[objectCounter]->m_normalMap = normalMap;
+	object[objectCounter]->m_normalMap = normalMap;
 
 	// compute surface normals
-	objectY[objectCounter]->computeAllNormals();
+	object[objectCounter]->computeAllNormals();
 
 
 	// #################################################################
@@ -1840,7 +1265,7 @@ int new_object_cMesh(cVector3d position, MyProperties properties)
 	// compute tangent vectors
 
 	if (properties.shape != sphere)
-		objectY[objectCounter]->m_triangles->computeBTN();
+		object[objectCounter]->m_triangles->computeBTN();
 
 	// #################################################################
 
@@ -1882,7 +1307,7 @@ int new_object_cMesh(cVector3d position, MyProperties properties)
 	programShader->attachShader(fragmentShader);
 
 	// assign program shader to object
-	objectY[objectCounter]->setShaderProgram(programShader);
+	object[objectCounter]->setShaderProgram(programShader);
 
 	// link program shader
 	programShader->linkProgram();
@@ -1894,7 +1319,7 @@ int new_object_cMesh(cVector3d position, MyProperties properties)
 	programShader->setUniformf("uInvRadius", 0.0f);
 
 	// set the orientation
-	objectY[objectCounter]->rotateAboutLocalAxisDeg(properties.orientation.axis, properties.orientation.rotation);
+	object[objectCounter]->rotateAboutLocalAxisDeg(properties.orientation.axis, properties.orientation.rotation);
 
 	//--------------------------------------------------------------------------
 	// SETUP AUDIO MATERIAL
@@ -1906,24 +1331,24 @@ int new_object_cMesh(cVector3d position, MyProperties properties)
 		if (audioBufferCounter < MAX_AUDIOBUFFER_COUNT)
 		{
 			// create an audio buffer and load audio wave file
-			audioBufferY[audioBufferCounter] = audioDevice->newAudioBuffer();
+			audioBuffer[audioBufferCounter] = audioDevice->newAudioBuffer();
 
 			// load audio from file
-			if (audioBufferY[audioBufferCounter]->loadFromFile(RESOURCE_PATH((STR_ADD("sounds/", properties.audio)))) != 1)
+			if (audioBuffer[audioBufferCounter]->loadFromFile(RESOURCE_PATH((STR_ADD("sounds/", properties.audio)))) != 1)
 			{
 				cout << "ERROR: Cannot load audio file!" << endl;
 			}
 
 			// here we convert all files to mono. this allows for 3D sound support. if this code
 			// is commented files are kept in stereo format and 3D sound is disabled. Compare both!
-			audioBufferY[audioBufferCounter]->convertToMono();
+			audioBuffer[audioBufferCounter]->convertToMono();
 
 			// set audio properties
-			objectY[objectCounter]->m_material->setAudioImpactBuffer(audioBufferY[audioBufferCounter]);
-			objectY[objectCounter]->m_material->setAudioFrictionBuffer(audioBufferY[audioBufferCounter]);
-			objectY[objectCounter]->m_material->setAudioFrictionGain((const double)properties.audioGain);
-			objectY[objectCounter]->m_material->setAudioFrictionPitchGain((const double)properties.audioPitchGain);
-			objectY[objectCounter]->m_material->setAudioFrictionPitchOffset((const double)properties.audioPitchOffset);
+			object[objectCounter]->m_material->setAudioImpactBuffer(audioBuffer[audioBufferCounter]);
+			object[objectCounter]->m_material->setAudioFrictionBuffer(audioBuffer[audioBufferCounter]);
+			object[objectCounter]->m_material->setAudioFrictionGain((const double)properties.audioGain);
+			object[objectCounter]->m_material->setAudioFrictionPitchGain((const double)properties.audioPitchGain);
+			object[objectCounter]->m_material->setAudioFrictionPitchOffset((const double)properties.audioPitchOffset);
 
 			// increment counter
 			audioBufferCounter++;
@@ -1947,7 +1372,7 @@ int new_object_cMesh(cVector3d position, MyProperties properties)
 			// create a region where a temperature needs to be checked
 			tempRegion[tempRegionCounter] = new MyRegions(cVector3d(position), properties.size, properties.temperature);
 
-			cout << "New temp region created Nr." << tempRegionCounter+1 << endl;
+			cout << "  -> New temp region created (Nr." << tempRegionCounter+1 << ")" << endl;
 
 			//cout << "size (x/y/z): (" << properties.size.x() << "/" << properties.size.y() << "/" << properties.size.z() << ")" << endl;
 
@@ -1968,11 +1393,11 @@ int new_object_cMesh(cVector3d position, MyProperties properties)
 
 //------------------------------------------------------------------------------
 
-int new_object_cMultiMesh(cVector3d position, MyProperties properties)
+int new_object_cMultiMesh(cVector3d position, MyProperties properties, string objectFile)
 {
 	if (objectWCounter < MAX_OBJECT_COUNT)
 	{
-		cout << "Creating new object Nr. " << objectWCounter + 1 << endl;
+		cout << "Creating new object Nr. " << objectWCounter + 1 << "Used 3ds file: " << objectFile << endl;
 	}
 	else
 	{
@@ -1990,7 +1415,7 @@ int new_object_cMultiMesh(cVector3d position, MyProperties properties)
 	objectW[objectWCounter]->setLocalPos(position);
 
 	// load normal map from file
-	if (objectW[objectWCounter]->loadFromFile(RESOURCE_PATH(STR_ADD("3ds/", "eagle.3ds"))) != 1)
+	if (objectW[objectWCounter]->loadFromFile(RESOURCE_PATH(STR_ADD("3ds/", objectFile))) != 1)
 	{
 		cout << "ERROR: Cannot load 3ds file!" << endl;
 	}
@@ -2010,20 +1435,20 @@ int new_object_cMultiMesh(cVector3d position, MyProperties properties)
 	cTexture2dPtr texture = cTexture2d::create();
 
 	// load texture image from file
-	//if (texture->loadFromFile(RESOURCE_PATH(STR_ADD("images/", properties.textureImage))) != 1)
-	//{
-	//	cout << "ERROR: Cannot load texture file!" << endl;
-	//	}
+	if (texture->loadFromFile(RESOURCE_PATH(STR_ADD("images/", properties.textureImage))) != 1)
+	{
+		cout << "ERROR: Cannot load texture file!" << endl;
+	}
 
 	// apply texture to object
-	//objectW[objectWCounter]->setTexture(texture);
+	objectW[objectWCounter]->setTexture(texture);
 
 	// enable texture rendering 
-	//objectW[objectWCounter]->setUseTexture(true);
+	objectW[objectWCounter]->setUseTexture(true);
 
 	// set material properties to light gray
 	objectW[objectWCounter]->m_material->setBlack();
-	
+
 	// compute collision detection algorithm
 	objectW[objectWCounter]->createAABBCollisionDetector(.02);
 
@@ -2037,7 +1462,7 @@ int new_object_cMultiMesh(cVector3d position, MyProperties properties)
 	//objectW[objectWCounter]->setLocalPos(-1.0 * objectW[objectWCounter]->getBoundaryCenter());
 
 	// rotate object in scene
-	objectW[objectWCounter]->rotateExtrinsicEulerAnglesDeg(0, 0, 90, C_EULER_ORDER_XYZ);
+	objectW[objectWCounter]->rotateExtrinsicEulerAnglesDeg(0, 0, 0, C_EULER_ORDER_XYZ);
 
 #if 1
 
@@ -2047,11 +1472,8 @@ int new_object_cMultiMesh(cVector3d position, MyProperties properties)
 	mat.setStiffness(properties.stiffness * maxStiffness);
 	mat.setStaticFriction(properties.staticFriction);
 	mat.setDynamicFriction(properties.dynamicFriction);
-
-	mat.setBrownCornsilk();
-
 	objectW[objectWCounter]->setMaterial(mat);
-
+	objectW[objectWCounter]->computeAllNormals();
 
 
 
@@ -2107,7 +1529,7 @@ int new_object_cMultiMesh(cVector3d position, MyProperties properties)
 	// compute tangent vectors
 
 	//if (properties.shape != sphere)
-		//objectW[objectWCounter]->m_triangles->computeBTN();
+	//objectW[objectWCounter]->m_triangles->computeBTN();
 
 	// #################################################################
 
@@ -2173,21 +1595,21 @@ int new_object_cMultiMesh(cVector3d position, MyProperties properties)
 		if (audioBufferCounter < MAX_AUDIOBUFFER_COUNT)
 		{
 			// create an audio buffer and load audio wave file
-			audioBufferY[audioBufferCounter] = audioDevice->newAudioBuffer();
+			audioBuffer[audioBufferCounter] = audioDevice->newAudioBuffer();
 
 			// load audio from file
-			if (audioBufferY[audioBufferCounter]->loadFromFile(RESOURCE_PATH((STR_ADD("sounds/", properties.audio)))) != 1)
+			if (audioBuffer[audioBufferCounter]->loadFromFile(RESOURCE_PATH((STR_ADD("sounds/", properties.audio)))) != 1)
 			{
 				cout << "ERROR: Cannot load audio file!" << endl;
 			}
 
 			// here we convert all files to mono. this allows for 3D sound support. if this code
 			// is commented files are kept in stereo format and 3D sound is disabled. Compare both!
-			audioBufferY[audioBufferCounter]->convertToMono();
+			audioBuffer[audioBufferCounter]->convertToMono();
 
 			// set audio properties
-			objectW[objectWCounter]->m_material->setAudioImpactBuffer(audioBufferY[audioBufferCounter]);
-			objectW[objectWCounter]->m_material->setAudioFrictionBuffer(audioBufferY[audioBufferCounter]);
+			objectW[objectWCounter]->m_material->setAudioImpactBuffer(audioBuffer[audioBufferCounter]);
+			objectW[objectWCounter]->m_material->setAudioFrictionBuffer(audioBuffer[audioBufferCounter]);
 			objectW[objectWCounter]->m_material->setAudioFrictionGain((const double)properties.audioGain);
 			objectW[objectWCounter]->m_material->setAudioFrictionPitchGain((const double)properties.audioPitchGain);
 			objectW[objectWCounter]->m_material->setAudioFrictionPitchOffset((const double)properties.audioPitchOffset);
@@ -2304,13 +1726,9 @@ int checkTempRegions()
 	// update position and orientation of tool
 	//tool->updateFromDevice();
 
-	// assign tools position
-	//cVector3d devPosition = tool->getDeviceGlobalPos();
+	// read tools position
+	cVector3d devPosition = tool->getDeviceGlobalPos();
 	
-	// read position 
-	cVector3d devPosition;
-	hapticDevice->getPosition(devPosition);
-
 	cVector3d distance = cVector3d(0, 0, 0);
 
 	// check each temperature region
@@ -2322,28 +1740,39 @@ int checkTempRegions()
 		// check if inside region
 		if (distance.length() < 0.5)
 		{
-			cout << "Inside region [" << i << "] Distance = ";
-			printf("%.3f\n", distance.length());
+			//cout << "Inside region [" << i << "] Distance = ";
+			//printf("%.3f\n", distance.length());
 
 			// check the if haptics device is in contact with any surface
 			double force = cVector3d(tool->getDeviceGlobalForce()).length();
 
-			if (force > 0.1)
+			if (force > 0.01)
 			{
-				cout << "IN CONTACT!" << endl;
+				// send the respective string + the intensity
+				sendTemperature(tempRegion[i]->temperature);
+				cout << "IN CONTACT!    \r";
 			}
 			else
 			{
-				cout << "NOT IN CONTACT!" << endl;
+				// decide which string to send back before the intensity (to make sure only the enable-relais is used)
+				if (tempRegion[i]->temperature < 3)
+					sendCold('0');
+				else
+					sendHot('0');
+
+				cout << "NOT IN CONTACT!\r";
 			}
 
 			result = 1;
 		}
 		else
 		{
+			cout << "                   \r";
+		
 			// set return value to zero
 			result = 0;
 		}
 	}
 	return result;
 }
+
