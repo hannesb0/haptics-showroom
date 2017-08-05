@@ -11,55 +11,63 @@ repository: https://github.com/hannesb0/haptics-showroom
 
 #include "MySerial.h"
 
-
 #define BAUDRATE 115200
+
+// this has to be changed depending on what computer this program is executed
 const char* SERIAL_COM_PORT = "\\\\.\\COM4";
 
-
-
-
 MySerial* mSerial;
-
 
 void InitSerial2Arduino()
 {
 	mSerial = new MySerial((char*)SERIAL_COM_PORT);    // adjust as needed
 	if (mSerial->IsConnected())
-		printf("We're connected.\n");
+		printf("Arduino connected!\n");
 	//char incomingData[256] = "";
 }
 
-void sendHot(bool hot) {
-	// ####### TESTING #########
-	//const int sizeInputBuffer = 50;
-	//char inputBuffer[sizeInputBuffer] = { 0 };
-	// ####### TESTING #########
-
+void sendHot(char temp)
+{
 	char buffer[] = "HOT#X\n";
-	if (hot)
-	{
-		buffer[4] = '1';
-	}
-	else
-	{
-		buffer[4] = '0';
-	}
+	buffer[4] = temp;
 	mSerial->WriteData(buffer, 6);
-
-	// ####### TESTING #########
-	//mSerial->ReadData(inputBuffer, sizeInputBuffer);
-	//cout << inputBuffer;
 }
 
-void sendCold(bool cold) {
+void sendCold(char temp) {
 	char buffer[] = "COLD#X\n";
-	if (cold)
-	{
-		buffer[5] = '1';
-	}
-	else
-	{
-		buffer[5] = '0';
-	}
+	buffer[5] = temp;
 	mSerial->WriteData(buffer, 7);
+}
+
+void sendReset()
+{
+	char buffer[] = "RESET";
+	mSerial->WriteData(buffer, 5);
+}
+
+void sendTemperature(int temperature)
+{
+	char intensity = '0';
+
+	switch (temperature)
+	{
+	case 1: // very cold
+		sendCold('2');
+		break;
+	case 2: // cold
+		sendCold('1');
+		break;
+	case 3: // normal
+		sendCold('0');
+		break;
+	case 4:	// hot
+		sendHot('1');
+		break;
+	case 5: // very hot
+		sendHot('2');
+		break;
+	default:
+		sendReset();
+		break;
+	}
 }
