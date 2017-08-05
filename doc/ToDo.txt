@@ -4,52 +4,6 @@ To do list for CHL final project
 
 ################################
 
-
-To be implemented:
-==================
-
-
-
-
-== sound stuff
-
-==== walls and floor (better looking)
-
-- moving objects? -> rotating
-
-- objects with different shapes (-> Ring ???)
-
-- get sound files
-
-- try voice coil
-
-
-
-
-- properties-class (all properties)
-  -> put orientation out of class !!!
-  -> StickSlipForceMax, StickSlipStiffness ???
-
-==== temperature stuff
-  
-==== 3ds objects
-
-- multidevice ??
-
-- add something in the if clause if *.exe is executed directly
-
-- vector<cMesh*> object(10)
-  -> delete function
-  -> global counter
-  -> use also for new_plane
-
-- extract current folder name (replace this with "haptics-showroom-V02")
-
-- rename function names (without "_")
-
-- rotating cube ???
-
-
 For presentation:
 =================
 
@@ -60,3 +14,41 @@ For presentation:
 - discuss who presents which part
 
 - create some representary objects with interesting combination of properties
+
+
+
+
+To be implemented:
+==================
+
+
+==== temperature stuff
+  
+== 3ds objects
+
+== sound stuff
+
+== images for walls and ceiling
+
+
+
+- check key functions ! (key 5)
+
+- delete unnecessary files (MyObject.cpp/.h)
+
+- properties-class (all properties)
+  -> put orientation out of class !!!
+
+- add something in the if clause if *.exe is executed directly
+
+- use also vector<cMesh*> for new_plane()
+
+- extract current folder name (replace this with "haptics-showroom-V02")
+
+- rename function names (without "_")
+
+- objects with different shapes (-> Ring ???)
+
+- moving objects? -> rotating
+
+- multidevice ??
