@@ -22,7 +22,7 @@ void InitSerial2Arduino()
 {
 	mSerial = new MySerial((char*)SERIAL_COM_PORT);    // adjust as needed
 	if (mSerial->IsConnected())
-		printf("Arduino connected!\n");
+		printf("Arduino connected.\n");
 	//char incomingData[256] = "";
 }
 
