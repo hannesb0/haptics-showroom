@@ -42,8 +42,8 @@ struct MyOrientation{
 
 // size of the room
 const double roomLength = 6.0;	// x-axis
-const double roomWidth = 6.0;	// y-axis
-const double roomHeight = 2.5;	// z-axis
+const double roomWidth = 3.0;	// y-axis
+const double roomHeight = 1.5;	// z-axis
 
 // default filename of image for graphical display 
 const string defaultTextureImage = "brick-color.png";
@@ -103,7 +103,7 @@ const double defaultAudioPitchOffset = 0.8;
 #define INITIAL_POSITION	cVector3d(2.0, 0.0, 0.4)
 
 // maximal number of objects
-#define MAX_OBJECT_COUNT		10
+#define MAX_OBJECT_COUNT		20
 #define MAX_AUDIOBUFFER_COUNT	MAX_OBJECT_COUNT
 #define MAX_REGIONS_COUNT		MAX_OBJECT_COUNT
 
