@@ -14,55 +14,6 @@ Remarks:	These files are tracked with git and are available on the github
 // initialize object identifier
 int MyProperties::id = 0;
 
-// Empty Constructor
-MyProperties::MyProperties()
-{
-	// set default filename of image for graphical display 
-	textureImage = defaultTextureImage;
-
-	// set default filename of normal map for haptics display 
-	normalImage = defaultNormalImage;
-
-	// set default audio file (for voice coil)
-	audio = defaultAudio;
-
-	// set default size
-	size = defaultSize;
-
-	// set default orientation
-	orientation = defaultOrientation;
-
-	// set default shape
-	shape = defaultShape;
-
-	// set default temperature of the object
-	temperature = defaultTemperature;
-
-	// set default stiffness of the object
-	stiffness = defaultStiffness;
-
-	// set default staticFriction of the object
-	staticFriction = defaultStaticFriction;
-
-	// set default dynamicFriction of the object
-	dynamicFriction = defaultDynamicFriction;
-
-	// set default texture level
-	textureLevel = defaultTextureLevel;
-
-	// set default audio friction gain
-	audioGain = defaultAudioGain;
-
-	// set default audio pitch
-	audioPitchGain = defaultAudioPitchGain;
-
-	// set default audio pitch offset
-	audioPitchOffset = defaultAudioPitchOffset;
-
-	// increase identifier
-	id++;
-}
-
 // Constructor with parameters
 MyProperties::MyProperties(string setTexture, string setNormalMap, string setAudio, cVector3d setSize, MyOrientation setOrientation, enum MyShape setShape, int setTemperature,
 	double setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitchGain, double setAudioPitchOffset)

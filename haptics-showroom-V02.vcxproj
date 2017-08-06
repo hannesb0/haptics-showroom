@@ -22,7 +22,6 @@
     <ClCompile Include="..\..\..\src\OVRDevice.cpp" />
     <ClCompile Include="..\..\..\src\OVRRenderContext.cpp" />
     <ClCompile Include="haptics-showroom-V02.cpp" />
-    <ClCompile Include="MyObject.cpp" />
     <ClCompile Include="MyProperties.cpp" />
     <ClCompile Include="MyRegions.cpp" />
     <ClCompile Include="MySerial.cpp" />
@@ -31,7 +30,6 @@
     <ClInclude Include="..\..\..\src\OVRDevice.h" />
     <ClInclude Include="..\..\..\src\OVRRenderContext.h" />
     <ClInclude Include="Global.h" />
-    <ClInclude Include="MyObject.h" />
     <ClInclude Include="MyObjectDatabase.h" />
     <ClInclude Include="MyProperties.h" />
     <ClInclude Include="MyRegions.h" />

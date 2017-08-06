@@ -77,8 +77,10 @@ MyProperties Cube_Granite("G2GraniteTypeVeneziano.jpg", "", "", cVector3d(0.5, 0
 MyProperties Cube_Ice("frost.jpg", "frostNormal.jpg", "", cVector3d(0.5, 0.35, 0.01), orientation1, MyShape(cube),
 	1, 0.8, 0.01, 0.01, 0.01, 0.0, 0.0, 0.0);
 
+/*
 MyProperties Cube_Coarsefoam("G7CoarseFoam.JPG", "G7CoarseFoam_NRM.JPG", "CoarseFoam_3_Z.wav", cVector3d(0.2, 0.2, 0.1), orientation1, MyShape(cube),
 	3, 0.6, 0.1, 0.1, 0.1, 1.0, 0.8, 0.8);
+*/
 
 MyProperties Property_3ds("whiteWall.jpg", "whiteWallNormal.png", "", cVector3d(0.2, 0.2, 0.4), orientation1, MyShape(cube),
 	3, 0.6, 0.4, 0.4, 0.2, 0.0, 0.2, 0.8);
@@ -113,7 +115,7 @@ MyProperties myWindow("window1.jpg", "", "", cVector3d(0.6, 0.8, 0.0), MyOrienta
 //------------------------------------------------------------------------------
 // Labels
 //------------------------------------------------------------------------------	
-
+#if 1
 MyProperties myTitle("title.jpg", "", "", cVector3d(0.3, 1.32, 0.0), MyOrientation{ cVector3d(0.0, 1.0, 0.0), 90.0 }, MyShape(plane),
 	3, 0.8, 0.1, 0.1, 0.1, 0.0, 0.0, 0.0);
 
@@ -149,3 +151,5 @@ MyProperties myRightLableFW("FrozenWater.png", "", "", cVector3d(0.615, 0.15, 0.
 
 MyProperties myRightLableCaution("CautionHot.jpg", "", "", cVector3d(0.3, 0.22, 0.0), MyOrientation{ cVector3d(1.0, 0.0, 0.0), 90.0 }, MyShape(plane),
 	3, 0.8, 0.1, 0.1, 0.1, 0.0, 0.0, 0.0);
+
+#endif

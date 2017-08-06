@@ -49,7 +49,7 @@ bool useOculus = false;
 #define WINDOW_SIZE_W		1000
 #define WINDOW_SIZE_H		1000
 #define TOOL_RADIUS			0.02
-#define TOOL_WORKSPACE		0.3
+#define TOOL_WORKSPACE		0.4
 
 //------------------------------------------------------------------------------
 // CHAI3D
@@ -62,7 +62,6 @@ cWorld* world;
 cCamera* camera;
 
 // a light source
-//cSpotLight *light;
 cDirectionalLight *light;
 
 // a haptic device handler
@@ -70,7 +69,6 @@ cHapticDeviceHandler* handler;
 
 // a pointer to the current haptic device
 cGenericHapticDevicePtr hapticDevice;
-cGenericHapticDevicePtr hapticDevice2;
 
 // a virtual tool representing the haptic device in the scene
 cToolCursor* tool;
@@ -132,8 +130,8 @@ cVector3d deviceOffset2 = cVector3d(0.2, 0.1, 0.0);
 
 // variable for changing the perspective and for walking
 double currentAngle = 0;
-double speed = 0.032;
-double rotationalSpeed = 0.022;
+double speed = 0.02;
+double rotationalSpeed = 0.02;
 //double currentAngleV = 15;
 
 // distances to walls and floor (& ceiling)

@@ -25,9 +25,6 @@ public:
 	// Public functions
 	//------------------------------------------------------------------------------	
 
-	// Empty Constructor
-	MyProperties();
-
 	// Constructor with parameters
 	MyProperties(string setTexture, string setNormalMap, string setAudio, cVector3d setSize, MyOrientation setOrientation, enum MyShape setShape, int setTemperature,
 		double setStiffness, double setStaticFriction, double setDynamicFriction, double setTextureLevel, double setAudioGain, double setAudioPitchGain, double setAudioPitchOffset);
