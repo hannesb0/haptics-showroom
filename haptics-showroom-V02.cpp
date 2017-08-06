@@ -39,11 +39,6 @@ using namespace std;
 bool useOculus = false;
 ////////////////////////////////////////
 
-////////////////////////////////////////
-// define if two haptic devices are used
-bool useSecondHapticDevice = false;
-////////////////////////////////////////
-
 
 
 
@@ -51,13 +46,10 @@ bool useSecondHapticDevice = false;
 // DECLARED MACROS
 //------------------------------------------------------------------------------
 
-// convert to resource path
-//#define RESOURCE_PATH(p)    (char*)((resourcesPath+string(p)).c_str())	// -> defined in Global.h
 #define WINDOW_SIZE_W		1000
 #define WINDOW_SIZE_H		1000
 #define TOOL_RADIUS			0.02
 #define TOOL_WORKSPACE		0.3
-//#define INITIAL_POSITION	cVector3d(2.0, 0.0, 0.3)						// -> defined in Global.h
 
 //------------------------------------------------------------------------------
 // CHAI3D
@@ -82,11 +74,6 @@ cGenericHapticDevicePtr hapticDevice2;
 
 // a virtual tool representing the haptic device in the scene
 cToolCursor* tool;
-cToolCursor* tool2;
-
-// a virtual mesh like object
-//cMesh* object;
-//cMesh* objectX;
 
 // a vector containing the virtual object pointers
 vector<cMesh*> object(MAX_OBJECT_COUNT);
@@ -95,10 +82,10 @@ vector<cMesh*> object(MAX_OBJECT_COUNT);
 int objectCounter = 0;
 
 // for 3ds objects
-vector<cMultiMesh*> objectW(MAX_OBJECT_COUNT);
+vector<cMultiMesh*> object3ds(MAX_OBJECT_COUNT);
 
 // a counter for virtual objects which use 3ds files
-int objectWCounter = 0;
+int object3dsCounter = 0;
 
 // a vector with objects containing information about the temperature regions
 vector<MyRegions*> tempRegion(MAX_OBJECT_COUNT);
@@ -114,9 +101,6 @@ int audioBufferCounter = 0;
 
 // audio device to play sound
 cAudioDevice* audioDevice;
-
-// audio buffers to store sound files
-//cAudioBuffer* audioBuffer1;
 
 // audio source of an object
 cAudioSource* audioSourceObject;
@@ -148,8 +132,9 @@ cVector3d deviceOffset2 = cVector3d(0.2, 0.1, 0.0);
 
 // variable for changing the perspective and for walking
 double currentAngle = 0;
-double speed = 0.012;
-double rotationalSpeed = 0.012;
+double speed = 0.032;
+double rotationalSpeed = 0.022;
+//double currentAngleV = 15;
 
 // distances to walls and floor (& ceiling)
 const double wallDistance = 0.75;
@@ -173,7 +158,6 @@ cHapticDeviceInfo hapticDeviceInfoX;
 
 // scale factor between the physical workspace of the haptic device and 
 // the virtual workspace defined for the tool -> retrieved at runtime
-
 double workspaceScaleFactor;
 
 // max stiffness -> retrieved at runtime
@@ -212,23 +196,17 @@ void checkBoundaries();
 // function which draws kartesian coordinates at some position
 void drawCoordinates(cVector3d position, double length, double width);
 
-// ############################# TESTING ###################################
-
 // function to check wether near a hot or cold object
 int checkTempRegions();
 
 // function to create planes with enabled force feedback (walls, floor)
 int new_plane(cVector3d position, MyProperties properties);
 
-// function to create haptic objects at run time 
-void new_object(cVector3d position, MyProperties properties);
-
+// function to create new objects based on cMesh
 int new_object_cMesh(cVector3d position, MyProperties properties);
 
-int new_object_cMultiMesh(cVector3d position, MyProperties properties, string objectFile);
-
-// ############################# TESTING ###################################
-
+// function to create new objects based on cMultiMesh (e.g. 3ds files)
+int new_object_cMultiMesh(cVector3d position, MyProperties properties, string objectFile, double scalingFactor);
 
 //==============================================================================
 // MAIN FUNCTION
@@ -248,7 +226,7 @@ int main(int argc, char **argv)
 	cout << "General Commands:" << endl << endl;
 	cout << "Space  - Recenter view point" << endl;
 	cout << "Escape - Exit application" << endl;
-	cout << "[4]    - Print haptic device position" << endl;
+	//cout << "[4]    - Print haptic device position" << endl;
 	cout << "----------------------------------------------------------" << endl;
 	cout << "Moving Commands:           |     Temperature Commands:" << endl;
 	cout << "                           |" << endl;
@@ -383,7 +361,6 @@ int main(int argc, char **argv)
 	light->m_diffuse.set(0.8f, 0.8f, 0.8f);
 	light->m_specular.set(1.0f, 1.0f, 1.0f);
 
-
 	//--------------------------------------------------------------------------
 	// HAPTIC DEVICES / TOOLS
 	//--------------------------------------------------------------------------
@@ -432,47 +409,6 @@ int main(int argc, char **argv)
 	// start the haptic tool
 	tool->start();
 
-
-	// only if second device should be used
-#if 0
-	// only if second device should be used
-	if (useSecondHapticDevice == true)
-	{
-		// get access to the first available haptic device
-		handler->getDevice(hapticDevice2, 1);
-
-		// retrieve information about the current haptic device
-		cHapticDeviceInfo hapticDeviceInfo2 = hapticDevice2->getSpecifications();
-
-		// create a 3D tool and add it to the world
-		tool2 = new cToolCursor(world);
-		world->addChild(tool2);
-
-		// connect the haptic device to the tool
-		tool2->setHapticDevice(hapticDevice2);
-
-		// define a radius for the tool
-		tool2->setRadius(TOOL_RADIUS);
-
-		// enable if objects in the scene are going to rotate of translate
-		// or possibly collide against the tool. If the environment
-		// is entirely static, you can set this parameter to "false"
-		tool2->enableDynamicObjects(true);
-
-		// map the physical workspace of the haptic device to a larger virtual workspace.
-		tool2->setWorkspaceRadius(TOOL_WORKSPACE);
-
-		// haptic forces are enabled only if small forces are first sent to the device;
-		// this mode avoids the force spike that occurs when the application starts when 
-		// the tool is located inside an object for instance. 
-		tool2->setWaitForSmallForce(true);
-
-		// start the haptic tool
-		tool2->start();
-	}
-
-#endif
-
 	// retrieve information about the current haptic device
 	hapticDeviceInfoX = hapticDevice->getSpecifications();
 
@@ -490,7 +426,7 @@ int main(int argc, char **argv)
 	cout << "Creating the room." << endl;
 
 	// draw a coordinate system for easier orientation
-	drawCoordinates(cVector3d(-0.5, -0.5, 0.05), 0.3, 1.0);
+	//drawCoordinates(cVector3d(-0.5, -0.5, 0.05), 0.3, 1.0);
 
 	// floor
 	new_plane(cVector3d(0.0, 0.0, 0.0), myFloor);
@@ -511,7 +447,7 @@ int main(int argc, char **argv)
 	new_plane(cVector3d((roomLength / 2), 0.0, (roomHeight / 2)), myFrontWall);
 
 	// window
-	new_plane(cVector3d(-(roomLength / 2), 0.0, (roomHeight / 2)), myWindow);
+	new_plane(cVector3d(-(roomLength / 2), 0.0, (roomHeight / 2.5)), myWindow);
 
 	// title
 	new_plane(cVector3d(-(roomLength / 2), 0.0, (roomHeight / 1.25)), myTitle);
@@ -520,29 +456,71 @@ int main(int argc, char **argv)
 	// CREATE OBJECT
 	//--------------------------------------------------------------------------
 
-	new_object_cMesh(cVector3d(-1.0, -0.5, 0.15), Cube_Aluminium);
+	cout << "Creating the objects." << endl;
 
-	new_object_cMesh(cVector3d(-1.0, 0.0, 0.15), Cube_Rubber);
+	// place the objects on the tables
 
-	new_object_cMesh(cVector3d(1.0, 0.5, 0.35), Sphere_Steel);
+	// LEFT SIDE
 
-	new_object_cMesh(cVector3d(-1.0, 1.5, 0.0), Cylinder_Coarsefoam);
+	// Aluminium Mesh
+	new_plane(cVector3d(2.0, -(roomWidth / 2), 0.75), myLeftLableAM);
+	new_object_cMultiMesh(cVector3d(2.0, (-(roomWidth / 2) + 0.5), -0.005), Property_3ds, "table.3ds", 1);
+	new_object_cMesh(cVector3d(2.0, (-(roomWidth / 2) + 0.5), 0.265), Cube_Aluminium);
 
-	new_object_cMesh(cVector3d(-1.0, 1.0, 0.2), Cube_WoodProfiled);
+	// Silver Oak Wood
+	new_plane(cVector3d(1.0, -(roomWidth / 2), 0.75), myLeftLableSO);
+	new_object_cMultiMesh(cVector3d(1.0, (-(roomWidth / 2) + 0.5), -0.005), Property_3ds, "table.3ds", 1);
+	new_object_cMesh(cVector3d(1.0, (-(roomWidth / 2) + 0.5), 0.265), Cube_SilverOak);
 
-	new_object_cMesh(cVector3d(-1.0, -1.0, 0.15), Cube_CrushedRock);
+	// Crushed Rock
+	new_plane(cVector3d(0.0, -(roomWidth / 2), 0.75), myLeftLableCR);
+	new_object_cMultiMesh(cVector3d(0.0, (-(roomWidth / 2) + 0.5), -0.005), Property_3ds, "table.3ds", 1);
+	new_object_cMesh(cVector3d(0.0, (-(roomWidth / 2) + 0.5), 0.265), Cube_CrushedRock);
 
-	new_object_cMesh(cVector3d(-1.0, -1.5, 0.15), Cube_SilverOak);
+	// Stainless Steel
+	new_plane(cVector3d(-1.0, -(roomWidth / 2), 0.75), myLeftLableSS);
+	new_object_cMultiMesh(cVector3d(-1.0, (-(roomWidth / 2) + 0.5), -0.005), Property_3ds, "table.3ds", 1);
+	new_object_cMesh(cVector3d(-1.0, (-(roomWidth / 2) + 0.5), 0.265), Cube_Steel);
 
-	new_object_cMesh(cVector3d(+1.0, 1.0, 0.15), Cube_Ice);
 
-	new_object_cMesh(cVector3d(+1.0, -1.0, 0.15), Cube_Lava);
+	// Profiled Wood
+	new_plane(cVector3d(-2.0, -(roomWidth / 2), 0.75), myLeftLablePW);
+	new_object_cMultiMesh(cVector3d(-2.0, (-(roomWidth / 2) + 0.5), -0.005), Property_3ds, "table.3ds", 1);
+	new_object_cMesh(cVector3d(-2.0, (-(roomWidth / 2) + 0.5), 0.265), Cube_WoodProfiled);
 
+	// RIGHT SIDE
 
-	new_object_cMultiMesh(cVector3d(1.0, 0.5, 0.0), Cube_WoodProfiled, "table.3ds");
+	// Ice
+	new_plane(cVector3d(2.0, (roomWidth / 2), 0.75), myRightLableFW);
+	new_object_cMultiMesh(cVector3d(2.0, ((roomWidth / 2) - 0.5), -0.005), Property_3ds, "table.3ds", 1);
+	new_object_cMesh(cVector3d(2.0, ((roomWidth / 2) - 0.5), 0.265), Cube_Ice);
 
-	//new_object_cMultiMesh(cVector3d(-1.0, 0.5, 0.0), Cube_WoodProfiled, "sofa1.3ds");
+	// Cold Granite
+	new_plane(cVector3d(1.0, (roomWidth / 2), 0.75), myRightLableCG);
+	new_object_cMultiMesh(cVector3d(1.0, ((roomWidth / 2) - 0.5), -0.005), Property_3ds, "table.3ds", 1);
+	new_object_cMesh(cVector3d(1.0, ((roomWidth / 2) - 0.5), 0.265), Cube_Granite);
 
+	// Lava
+	new_plane(cVector3d(0.0, (roomWidth / 2), 0.75), myRightLableSL);
+	new_object_cMultiMesh(cVector3d(0.0, ((roomWidth / 2) - 0.5), -0.005), Property_3ds, "table.3ds", 1);
+	new_object_cMesh(cVector3d(0.0, ((roomWidth / 2) - 0.5), 0.265), Cube_Lava);
+
+	// Glowing Metal
+	new_plane(cVector3d(-1.0, (roomWidth / 2), 0.75), myRightLableGS);
+	new_plane(cVector3d(-1.0, (roomWidth / 2), 0.5), myRightLableCaution);
+	new_object_cMultiMesh(cVector3d(-1.0, ((roomWidth / 2) - 0.5), -0.005), Property_3ds, "table.3ds", 1);
+	new_object_cMesh(cVector3d(-1.0, ((roomWidth / 2) - 0.5), 0.265), Cube_GlowingMetal);
+
+	// Rubber
+	new_plane(cVector3d(-2.0, (roomWidth / 2), 0.75), myRightLablePR);
+	new_object_cMultiMesh(cVector3d(-2.0, ((roomWidth / 2) - 0.5), -0.005), Property_3ds, "table.3ds", 1);
+	new_object_cMesh(cVector3d(-2.0, ((roomWidth / 2) - 0.5), 0.265), Cube_Rubber);
+
+	// Print how many objects got created
+	cout << "Created " << objectCounter + 1 << " objects." << endl;
+
+	// Print how many 3ds objects got created
+	cout << "Created " << object3dsCounter + 1 << " 3ds objects." << endl;
 
 	//--------------------------------------------------------------------------
 	// START SIMULATION
@@ -672,14 +650,6 @@ void processEvents()
 				close();
 				break;
 			}
-			// spacebar
-			/*
-			if (event.key.keysym.sym == SDLK_SPACE)
-			{
-				oculusVR.recenterPose();
-				break;
-			}
-			*/
 			if (event.key.keysym.sym == SDLK_SPACE)
 			{
 				keyState[(unsigned char)' '] = 1;
@@ -727,6 +697,14 @@ void processEvents()
 			if (event.key.keysym.sym == SDLK_e)
 			{
 				keyState[(unsigned char)'e'] = 1;
+			}
+			if (event.key.keysym.sym == SDLK_y)
+			{
+				keyState[(unsigned char)'y'] = 1;
+			}
+			if (event.key.keysym.sym == SDLK_c)
+			{
+				keyState[(unsigned char)'c'] = 1;
 			}
 
 			break;
@@ -781,6 +759,14 @@ void processEvents()
 			{
 				keyState[(unsigned char)'e'] = 0;
 			}
+			if (event.key.keysym.sym == SDLK_y)
+			{
+				keyState[(unsigned char)'y'] = 0;
+			}
+			if (event.key.keysym.sym == SDLK_c)
+			{
+				keyState[(unsigned char)'c'] = 0;
+			}
 
 			break;
 
@@ -814,6 +800,18 @@ void computeMatricesFromInput()
 	{
 		currentAngle -= rotationalSpeed;
 	}
+	/*
+	if (keyState[(unsigned char)'y'] == 1) // Turn down/up
+	{
+		if (currentAngle < 40 && currentAngle > -40)
+			currentAngleV += rotationalSpeed;
+	}
+	if (keyState[(unsigned char)'c'] == 1) // Turn down/up
+	{
+		if (currentAngle < 40 && currentAngle > -40)
+			currentAngleV -= rotationalSpeed;
+	}
+	*/
 	if (keyState[(unsigned char)' '] == 1) // Recenter
 	{
 		currentPosition = INITIAL_POSITION;
@@ -855,6 +853,7 @@ void computeMatricesFromInput()
 			myTemp = standby;
 		}
 	}
+	/*
 	if (keyState[(unsigned char)'4'] == 1) // special function 4
 	{
 		cVector3d devPosition = tool->getDeviceGlobalPos();
@@ -865,6 +864,7 @@ void computeMatricesFromInput()
 		
 		cSleepMs(100);
 	}
+	*/
 
 	// recalculate the viewing direction
 	currentDirection = cVector3d(-cos(currentAngle), -sin(currentAngle), 0.0);
@@ -959,8 +959,11 @@ void updateHaptics(void)
 
 		// update position and orientation of tool
 		tool->updateFromDevice();
+
 		cMatrix3d RotForce = cMatrix3d(cos(currentAngle), sin(currentAngle), 0.0, -sin(currentAngle), cos(currentAngle), 0.0, 0.0, 0.0, 1.0);
+		//cMatrix3d RotForce = cMatrix3d(cos(currentAngle), sin(currentAngle), 0.0, -sin(currentAngle), cos(currentAngle), cos(currentAngleV), -sin(currentAngleV), sin(currentAngleV), cos(currentAngleV));
 		cMatrix3d Rot = cMatrix3d(cos(currentAngle), -sin(currentAngle), 0.0, sin(currentAngle), cos(currentAngle), 0.0, 0.0, 0.0, 1.0);
+		//cMatrix3d Rot = cMatrix3d(cos(currentAngle), -sin(currentAngle), 0.0, sin(currentAngle), cos(currentAngle), cos(currentAngleV), -sin(currentAngleV), sin(currentAngleV), cos(currentAngleV));
 		tool->setDeviceGlobalRot(Rot);
 		cVector3d tmp = tool->getDeviceLocalPos();
 		tool->setDeviceGlobalPos(Rot*tmp + currentPosition + currentDirection);
@@ -973,98 +976,6 @@ void updateHaptics(void)
 
 		// send forces to haptic device
 		tool->applyToDevice();
-
-		if (useSecondHapticDevice == true)
-		{
-			// ############################################################################################
-
-
-
-			// => Insert haptics stuff for second device
-
-
-
-			// ############################################################################################
-		}
-
-
-#if 0
-
-		/////////////////////////////////////////////////////////////////////
-		// DYNAMIC SIMULATION
-		/////////////////////////////////////////////////////////////////////
-
-		cVector3d tmp2 = tool->getDeviceGlobalPos();
-
-		if (tmp2.x() < 0.3 && tmp2.x() > -0.3 && tmp2.y() < 0.3 && tmp2.y() > -0.3 
-			&& tmp2.z() < 0.3 && tmp2.z() > -0.3)
-		{
-			// some constants
-			const double INERTIA = 0.4;
-			const double MAX_ANG_VEL = 10.0;
-			const double DAMPING = 0.1;
-
-			// get position of cursor in global coordinates
-			cVector3d toolPos = tool->getDeviceGlobalPos();
-
-			// get position of object in global coordinates
-			cVector3d objectPos = object->getGlobalPos();
-
-			// compute a vector from the center of mass of the object (point of rotation) to the tool
-			cVector3d v = cSub(toolPos, objectPos);
-
-			// compute angular acceleration based on the interaction forces
-			// between the tool and the object
-			cVector3d angAcc(0, 0, 0);
-			if (v.length() > 0.0)
-			{
-				// get the last force applied to the cursor in global coordinates
-				// we negate the result to obtain the opposite force that is applied on the
-				// object
-				cVector3d toolForce = -tool->getDeviceGlobalForce();
-
-				// compute the effective force that contributes to rotating the object.
-				cVector3d force = toolForce - cProject(toolForce, v);
-
-				// compute the resulting torque
-				cVector3d torque = cMul(v.length(), cCross(cNormalize(v), force));
-
-				// update rotational acceleration
-				angAcc = (1.0 / INERTIA) * torque;
-			}
-
-			// update rotational velocity
-			angVel.add(timeInterval * angAcc);
-
-			// set a threshold on the rotational velocity term
-			double vel = angVel.length();
-			if (vel > MAX_ANG_VEL)
-			{
-				angVel.mul(MAX_ANG_VEL / vel);
-			}
-
-			// add some damping too
-			angVel.mul(1.0 - DAMPING * timeInterval);
-
-			// if user switch is pressed, set velocity to zero
-			if (tool->getUserSwitch(0) == 1)
-			{
-				angVel.zero();
-			}
-
-			// compute the next rotation configuration of the object
-			if (angVel.length() > C_SMALL)
-			{
-				object->rotateAboutGlobalAxisRad(cNormalize(angVel), timeInterval * angVel.length());
-			}
-		}
-		else
-		{
-			angVel.zero();
-		}
-		// END DYNAMIC SIMULATION
-
-#endif
 	}
 
 	// exit haptics thread
@@ -1167,7 +1078,7 @@ int new_object_cMesh(cVector3d position, MyProperties properties)
 {
 	if (objectCounter < MAX_OBJECT_COUNT)
 	{
-		cout << "Creating new object Nr. " << objectCounter+1 << endl;
+		//cout << "Creating new object Nr. " << objectCounter+1 << endl;
 	}
 	else
 	{
@@ -1248,7 +1159,7 @@ int new_object_cMesh(cVector3d position, MyProperties properties)
 	// load normal map from file
 	if (normalMap->loadFromFile(RESOURCE_PATH(STR_ADD("images/", properties.normalImage))) != 1)
 	{
-		cout << "ERROR: Cannot load normal map file!" << endl;
+		//cout << "ERROR: Cannot load normal map file!" << endl;
 		normalMap->createMap(object[objectCounter]->m_texture);
 	}
 
@@ -1372,7 +1283,7 @@ int new_object_cMesh(cVector3d position, MyProperties properties)
 			// create a region where a temperature needs to be checked
 			tempRegion[tempRegionCounter] = new MyRegions(cVector3d(position), properties.size, properties.temperature);
 
-			cout << "  -> New temp region created (Nr." << tempRegionCounter+1 << ")" << endl;
+			//cout << "  -> New temp region created (Nr." << tempRegionCounter+1 << ")" << endl;
 
 			//cout << "size (x/y/z): (" << properties.size.x() << "/" << properties.size.y() << "/" << properties.size.z() << ")" << endl;
 
@@ -1393,11 +1304,11 @@ int new_object_cMesh(cVector3d position, MyProperties properties)
 
 //------------------------------------------------------------------------------
 
-int new_object_cMultiMesh(cVector3d position, MyProperties properties, string objectFile)
+int new_object_cMultiMesh(cVector3d position, MyProperties properties, string objectFile, double scalingFactor)
 {
-	if (objectWCounter < MAX_OBJECT_COUNT)
+	if (object3dsCounter < MAX_OBJECT_COUNT)
 	{
-		cout << "Creating new object Nr. " << objectWCounter + 1 << "Used 3ds file: " << objectFile << endl;
+		//cout << "Creating new object Nr. " << object3dsCounter + 1 << " -> Used 3ds file: " << objectFile << endl;
 	}
 	else
 	{
@@ -1406,30 +1317,29 @@ int new_object_cMultiMesh(cVector3d position, MyProperties properties, string ob
 	}
 
 	// create a virtual mesh
-	objectW[objectWCounter] = new cMultiMesh();
+	object3ds[object3dsCounter] = new cMultiMesh();
 
 	// add object to world
-	world->addChild(objectW[objectWCounter]);
+	world->addChild(object3ds[object3dsCounter]);
 
 	// set the position of the object at the center of the world
-	objectW[objectWCounter]->setLocalPos(position);
+	object3ds[object3dsCounter]->setLocalPos(position);
 
 	// load normal map from file
-	if (objectW[objectWCounter]->loadFromFile(RESOURCE_PATH(STR_ADD("3ds/", objectFile))) != 1)
+	if (object3ds[object3dsCounter]->loadFromFile(RESOURCE_PATH(STR_ADD("3ds/", objectFile))) != 1)
 	{
 		cout << "ERROR: Cannot load 3ds file!" << endl;
 	}
 
 	// get dimensions of object
-	objectW[objectWCounter]->computeBoundaryBox(true);
-	double size = cSub(objectW[objectWCounter]->getBoundaryMax(), objectW[objectWCounter]->getBoundaryMin()).length();
+	object3ds[object3dsCounter]->computeBoundaryBox(true);
+	double size = cSub(object3ds[object3dsCounter]->getBoundaryMax(), object3ds[object3dsCounter]->getBoundaryMin()).length();
 
 	// resize object to screen
 	if (size > 0.001)
 	{
-		objectW[objectWCounter]->scale(1 / size);
+		object3ds[object3dsCounter]->scale(1 / (size * scalingFactor));
 	}
-
 
 	// create a texture
 	cTexture2dPtr texture = cTexture2d::create();
@@ -1441,28 +1351,28 @@ int new_object_cMultiMesh(cVector3d position, MyProperties properties, string ob
 	}
 
 	// apply texture to object
-	objectW[objectWCounter]->setTexture(texture);
+	object3ds[object3dsCounter]->setTexture(texture);
 
 	// enable texture rendering 
-	objectW[objectWCounter]->setUseTexture(true);
+	object3ds[object3dsCounter]->setUseTexture(true);
 
 	// set material properties to light gray
-	objectW[objectWCounter]->m_material->setBlack();
+	object3ds[object3dsCounter]->m_material->setBrown();
 
 	// compute collision detection algorithm
-	objectW[objectWCounter]->createAABBCollisionDetector(.02);
+	object3ds[object3dsCounter]->createAABBCollisionDetector(.02);
 
 	// disable culling so that faces are rendered on both sides
-	objectW[objectWCounter]->setUseCulling(false);
+	object3ds[object3dsCounter]->setUseCulling(false);
 
 	// enable display list for faster graphic rendering
-	objectW[objectWCounter]->setUseDisplayList(true);
+	object3ds[object3dsCounter]->setUseDisplayList(true);
 
 	// center object in scene
-	//objectW[objectWCounter]->setLocalPos(-1.0 * objectW[objectWCounter]->getBoundaryCenter());
+	//object3ds[object3dsCounter]->setLocalPos(-1.0 * object3ds[object3dsCounter]->getBoundaryCenter());
 
 	// rotate object in scene
-	objectW[objectWCounter]->rotateExtrinsicEulerAnglesDeg(0, 0, 0, C_EULER_ORDER_XYZ);
+	object3ds[object3dsCounter]->rotateExtrinsicEulerAnglesDeg(0, 0, 0, C_EULER_ORDER_XYZ);
 
 #if 1
 
@@ -1472,38 +1382,34 @@ int new_object_cMultiMesh(cVector3d position, MyProperties properties, string ob
 	mat.setStiffness(properties.stiffness * maxStiffness);
 	mat.setStaticFriction(properties.staticFriction);
 	mat.setDynamicFriction(properties.dynamicFriction);
-	objectW[objectWCounter]->setMaterial(mat);
-	objectW[objectWCounter]->computeAllNormals();
-
-
-
-
+	object3ds[object3dsCounter]->setMaterial(mat);
+	object3ds[object3dsCounter]->computeAllNormals();
 
 #else
 
 	// Since we don't need to see our polygons from both sides, we enable culling.
-	objectW[objectWCounter]->setUseCulling(true);
+	object3ds[object3dsCounter]->setUseCulling(true);
 
 	// set material properties to light gray
-	objectW[objectWCounter]->m_material->setWhite();
+	object3ds[object3dsCounter]->m_material->setWhite();
 
 	// compute collision detection algorithm
-	objectW[objectWCounter]->createAABBCollisionDetector(TOOL_RADIUS);
+	object3ds[object3dsCounter]->createAABBCollisionDetector(TOOL_RADIUS);
 
 	// define a default stiffness for the object
-	objectW[objectWCounter]->m_material->setStiffness(properties.stiffness * maxStiffness);
+	object3ds[object3dsCounter]->m_material->setStiffness(properties.stiffness * maxStiffness);
 
 	// define some static friction
-	objectW[objectWCounter]->m_material->setStaticFriction(properties.staticFriction);
+	object3ds[object3dsCounter]->m_material->setStaticFriction(properties.staticFriction);
 
 	// define some dynamic friction
-	objectW[objectWCounter]->m_material->setDynamicFriction(properties.dynamicFriction);
+	object3ds[object3dsCounter]->m_material->setDynamicFriction(properties.dynamicFriction);
 
 	// define some texture rendering
-	objectW[objectWCounter]->m_material->setTextureLevel(properties.textureLevel);
+	object3ds[object3dsCounter]->m_material->setTextureLevel(properties.textureLevel);
 
 	// render triangles haptically on front side only
-	objectW[objectWCounter]->m_material->setHapticTriangleSides(true, false);
+	object3ds[object3dsCounter]->m_material->setHapticTriangleSides(true, false);
 
 	// create a normal texture
 	cNormalMapPtr normalMap = cNormalMap::create();
@@ -1512,26 +1418,16 @@ int new_object_cMultiMesh(cVector3d position, MyProperties properties, string ob
 	if (normalMap->loadFromFile(RESOURCE_PATH(STR_ADD("images/", properties.normalImage))) != 1)
 	{
 		cout << "ERROR: Cannot load normal map file!" << endl;
-		normalMap->createMap(objectW[objectWCounter]->m_texture);
+		normalMap->createMap(object3ds[object3dsCounter]->m_texture);
 	}
 
 	// assign normal map to object
-	objectW[objectWCounter]->m_normalMap = normalMap;
+	object3ds[object3dsCounter]->m_normalMap = normalMap;
 
 	// compute surface normals
-	objectW[objectWCounter]->computeAllNormals();
+	object3ds[object3dsCounter]->computeAllNormals();
 
 #endif
-
-	// #################################################################
-	// THIS RISES PROBLEMS FOR SHPERES !!!
-
-	// compute tangent vectors
-
-	//if (properties.shape != sphere)
-	//objectW[objectWCounter]->m_triangles->computeBTN();
-
-	// #################################################################
 
 	//--------------------------------------------------------------------------
 	// CREATE SHADERS
@@ -1571,7 +1467,7 @@ int new_object_cMultiMesh(cVector3d position, MyProperties properties, string ob
 	programShader->attachShader(fragmentShader);
 
 	// assign program shader to object
-	objectW[objectWCounter]->setShaderProgram(programShader);
+	object3ds[object3dsCounter]->setShaderProgram(programShader);
 
 	// link program shader
 	programShader->linkProgram();
@@ -1583,74 +1479,10 @@ int new_object_cMultiMesh(cVector3d position, MyProperties properties, string ob
 	programShader->setUniformf("uInvRadius", 0.0f);
 
 	// set the orientation
-	objectW[objectWCounter]->rotateAboutLocalAxisDeg(properties.orientation.axis, properties.orientation.rotation);
+	object3ds[object3dsCounter]->rotateAboutLocalAxisDeg(properties.orientation.axis, properties.orientation.rotation);
 
-	//--------------------------------------------------------------------------
-	// SETUP AUDIO MATERIAL
-	//--------------------------------------------------------------------------
-#if 1
-	// check if audio gain is bigger than zero
-	if (properties.audioGain > 0.0f)
-	{
-		if (audioBufferCounter < MAX_AUDIOBUFFER_COUNT)
-		{
-			// create an audio buffer and load audio wave file
-			audioBuffer[audioBufferCounter] = audioDevice->newAudioBuffer();
-
-			// load audio from file
-			if (audioBuffer[audioBufferCounter]->loadFromFile(RESOURCE_PATH((STR_ADD("sounds/", properties.audio)))) != 1)
-			{
-				cout << "ERROR: Cannot load audio file!" << endl;
-			}
-
-			// here we convert all files to mono. this allows for 3D sound support. if this code
-			// is commented files are kept in stereo format and 3D sound is disabled. Compare both!
-			audioBuffer[audioBufferCounter]->convertToMono();
-
-			// set audio properties
-			objectW[objectWCounter]->m_material->setAudioImpactBuffer(audioBuffer[audioBufferCounter]);
-			objectW[objectWCounter]->m_material->setAudioFrictionBuffer(audioBuffer[audioBufferCounter]);
-			objectW[objectWCounter]->m_material->setAudioFrictionGain((const double)properties.audioGain);
-			objectW[objectWCounter]->m_material->setAudioFrictionPitchGain((const double)properties.audioPitchGain);
-			objectW[objectWCounter]->m_material->setAudioFrictionPitchOffset((const double)properties.audioPitchOffset);
-
-			// increment counter
-			audioBufferCounter++;
-		}
-		else
-		{
-			cout << "ERROR: Cannot create an audio buffer for this object. Maximal audio buffer count reached!" << endl;
-		}
-	}
-#endif
-
-	//--------------------------------------------------------------------------
-	// SETUP TEMPERATURE REGIONS
-	//--------------------------------------------------------------------------
-#if 1	
-	// if temperature is not normal (cold or hot) assign heat region
-	if (properties.temperature != 3)
-	{
-		if (tempRegionCounter < MAX_REGIONS_COUNT)
-		{
-			// create a region where a temperature needs to be checked
-			tempRegion[tempRegionCounter] = new MyRegions(cVector3d(position), properties.size, properties.temperature);
-
-			cout << "New temp region created Nr." << tempRegionCounter + 1 << endl;
-
-			//cout << "size (x/y/z): (" << properties.size.x() << "/" << properties.size.y() << "/" << properties.size.z() << ")" << endl;
-
-			// increment counter
-			tempRegionCounter++;
-		}
-		else
-		{
-			cout << "ERROR: No region for detecting temperature can be assigned to this object!" << endl;
-		}
-	}
-#endif
 	// incrementing counter
-	objectWCounter++;
+	object3dsCounter++;
 
 	return 0;
 }
