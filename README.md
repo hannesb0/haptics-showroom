@@ -53,8 +53,9 @@ The general idea is to create a virtual room (like a show room), where you can w
 
 ## Structure of this Repository
 
-* [src](https://github.com/hannesb0/haptics-showroom/tree/master/src) contains the source code of the application
-* [doc](https://github.com/hannesb0/haptics-showroom/tree/master/doc) contains the documents related to this project
+* [doc](./doc) contains the documents related to this project.
+* [material](./material) contains additional material concerning the project.
+
 
 ## Misc
 

@@ -1,0 +1,27 @@
+################################
+
+To do list for CHL final project
+
+################################
+
+
+Possible future stuff
+=====================
+
+
+- check key functions ! (key 5)
+
+- properties-class (all properties)
+  -> put orientation out of class !!!
+
+- add something in the if clause if *.exe is executed directly
+
+- use also vector<cMesh*> for new_plane()
+
+- extract current folder name (replace this with "haptics-showroom-V02")
+
+- objects with different shapes (-> Ring ???)
+
+- moving objects? -> rotating
+
+- multidevice ??
