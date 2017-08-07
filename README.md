@@ -9,6 +9,10 @@ The general idea is to create a virtual room (like a show room), where you can w
 
 **This readme is not finished yet!**
 
+## A view into the room
+
+![](doc/presentation/HapticsShowroom.jpg "Haptics Showroom from the front")
+
 ### Objects
 
 * Fixed
