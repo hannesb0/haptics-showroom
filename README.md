@@ -13,44 +13,6 @@ The general idea is to create a virtual room (like a show room), where you can w
 
 ![](doc/presentation/HapticsShowroom.jpg "Haptics Showroom from the front")
 
-### Objects
-
-* Fixed
-  * Something cold: A glass bottle (or ice cube?) : smooth; Hardness; cold -> Peltier, Voice Coil
-  * Something hot: Stone: coarse Roughness; Hardness; HOT -> Peltier,Voice Coil
-  * Something sticky: have no idea what should the object be,maybe a cube first.
-  * Something a bit rough: Metal can: Fine Roughness -> Voice coil
-  * something a bit soft: Balloon: a littel bit soft; light; stickslip force; transparent -> Voice coil
-* Moving
-  * Ball
-
-### To do
-
-
-* The scenario is made up of a really big Sphere (details see OCULUS template one:cube) and a plate on bottom. 
-* Naina will find a picture to show a Seebeach Scenario.
-* Finishing the hardware tool (attaching the peltier element)
-* Make two Classes: 
-  - one is Class Cworld ::Object. It contains all the basic object properties.Each time we call back this class to get 5 Objects.
-  - one is Class Cworld:: Database Object. It contains 5 objects' other properties, like sounds, texture, temperature....
-* Highly recommended: Make one Global constant.h file.
-
-### Ideas
-
-* window or door you can open and close (perhaps with a lock)
-* light switch or ligth dimmer which changes the light inside the show room
-* a surface test wall with different properties like:
-  - texture
-  - friction
-  - stiffness
-  - magnetic
-* brush to paint other objects
-* pool filled with water to experince liquids
-* interact with lying objects (throw, pile, pick up, etc.)
-* haptic interface device modeled as line (by using two Falcons) -> display torque
-* TV screen which shows room from another viewing angle
-* anything with sound (e.g. squeaking door)
-
 ### Required Devices
 
 * [Novint's Falcon](https://hapticshouse.com/pages/novints-falcon-haptic-device) haptic device
