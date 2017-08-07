@@ -24,8 +24,9 @@ The general idea is to create a virtual room (like a show room), where you can w
 
 ## Structure of this Repository
 
-* [doc](./doc) contains the documents related to this project.
-* [material](./material) contains additional material concerning the project.
+* [doc](doc) contains the documents related to this project.
+* [material](material) contains additional material concerning the project.
+* [resources](resources) contains resource files (e.g. texture images or sound files).
 
 ## Members
 
