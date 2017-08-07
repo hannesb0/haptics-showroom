@@ -1,9 +1,13 @@
 # haptics-showroom
-This is repository will contain the source code and documentation of the final project of the Computational Haptics lab conducted at the TUM summer semester 2017.
+This is repository contains the source code and documentation of the final project of the Computational Haptics lab conducted at the TUM summer semester 2017.
 
 ## General Idea
 
 The general idea is to create a virtual room (like a show room), where you can walk around by pressing some keys (like in an ego shooter). Optionally also the Oculus Rift could be used to make the experience even more realistic. With one or two haptic devices as tools (or "hands") it is possible to interact with different objects placed inside the room. In this way people who are not familiar with Computational Haptics get to know many different possibilities what can be done in with haptic devices. 
+
+## Important Notes
+
+**This readme is not finished yet!**
 
 ### Objects
 
@@ -45,21 +49,17 @@ The general idea is to create a virtual room (like a show room), where you can w
 
 ### Required Devices
 
-* one ore two [Novint's Falcon](https://hapticshouse.com/pages/novints-falcon-haptic-device) haptic device
+* [Novint's Falcon](https://hapticshouse.com/pages/novints-falcon-haptic-device) haptic device
+* [Phantom Omni](http://www.geomagic.com/de/products/phantom-omni/overview) haptic device (preferred, since compatible with the tool adapter)
 * [Oculus Rift](https://www.oculus.com/rift/)
-* Arduino 
-* heating / cooling device
-* if using two Falcons (as "hands"), some kind of pedals could be used to change the viewing angle
+* Arduino Nano
+* Peltier element
+* Voice Coil (type: NCM02-05-005-4JB, [see here](https://www.h2wtech.com/product/voice-coil-actuators/NCM02-05-005-4JB))
 
 ## Structure of this Repository
 
 * [doc](./doc) contains the documents related to this project.
 * [material](./material) contains additional material concerning the project.
-
-
-## Misc
-
-* [Presentation template](https://www.it.tum.de/en/faq/it-services/media-production-design/corporate-design/where-can-i-find-templates-for-the-tum-corporate-design/)
 
 ## Members
 
